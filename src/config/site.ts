@@ -10,6 +10,12 @@ export const sections = [
 
 export type SectionSlug = (typeof sections)[number]["slug"];
 
+// Neprázdná tuple slugů pro runtime validaci (z.enum) ve schématu fotek.
+export const sectionSlugs = sections.map((s) => s.slug) as [
+  SectionSlug,
+  ...SectionSlug[],
+];
+
 // Odkazy v hlavní navigaci a v patičce — odvozené ze sekcí + Kontakt.
 export const navLinks = [
   ...sections.map((s) => ({ text: s.title, href: `/${s.slug}/` })),

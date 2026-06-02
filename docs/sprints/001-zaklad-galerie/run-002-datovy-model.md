@@ -3,6 +3,9 @@
 **Status:** TODO
 **Date:** 2026-06-02
 **Sprint:** 001-zaklad-galerie
+**Dashboard Run:** 37
+
+<!-- dashboard-tasks: {"Validace sekce ve schématu": 166, "Content collection fotek": 167, "Ukázkové fotky a popisky": 168} -->
 
 ## Kontext
 Run 001 postavil branding, navigaci ze sekcí (`src/config/site.ts` → `sections`, `navLinks`)
