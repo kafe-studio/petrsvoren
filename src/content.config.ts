@@ -30,4 +30,18 @@ const photos = defineCollection({
     }),
 });
 
-export const collections = { blog, photos };
+// Tipy / aktuality na homepage (fotka měsíce, nová kniha, výstava…).
+// title + tělo = text upoutávky, volitelný obrázek a odkaz. active vypne tip bez mazání.
+const tips = defineCollection({
+  loader: glob({ pattern: "**/*.{md,mdx}", base: "./src/content/tips" }),
+  schema: ({ image }) =>
+    z.object({
+      title: z.string(),
+      image: image().optional(),
+      link: z.string().optional(),
+      order: z.number().default(0),
+      active: z.boolean().default(true),
+    }),
+});
+
+export const collections = { blog, photos, tips };

@@ -1,6 +1,7 @@
 ---
 export const prerender = true;
 import BaseLayout from "../layouts/BaseLayout.astro";
+import Tips from "../components/home/Tips.astro";
 import { siteConfig } from "../config/site";
 const metadata = { title: siteConfig.name, description: siteConfig.description, ignoreTitleTemplate: true };
 // Úvodní fotka: nahraj soubor do public/hero.jpg. Než bude, zobrazí se tmavé pozadí.
@@ -24,6 +25,8 @@ const metadata = { title: siteConfig.name, description: siteConfig.description, 
       </p>
     </div>
   </section>
+
+  <Tips />
 
   <section class="py-24 px-6">
     <div class="mx-auto max-w-5xl">
