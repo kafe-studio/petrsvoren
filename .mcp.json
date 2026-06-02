@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "cloudflare-docs": {
+      "type": "http",
+      "url": "https://mcp.cloudflare.com/mcp"
+    },
+    "worker-mcp": {
+      "type": "http",
+      "url": "https://mcp.pefen.dev/mcp",
+      "headers": {
+        "CF-Access-Client-Id": "f6b4c013e1fbe75374a336ae2d9c8d54.access",
+        "CF-Access-Client-Secret": "d6f96f55e78f685eb8382c8e41dec9aa653ae899cd9a3f0496161f5a6e3275d2",
+        "Authorization": "Bearer 85b82dd7f12df60f0dd29e9e863ed0270650736addedda7d0f695b17996ef462"
+      }
+    }
+  }
+}
