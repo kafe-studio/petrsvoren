@@ -11,5 +11,5 @@ stránku kontaktu (FB + e-mail), na kterou už odkazuje navigace. Doladit SEO/OG
 Po dokončení je web kompletní dle zadání.
 
 ## Runy
-- [ ] Run 005 — Blok tipů: content collection + zobrazení na homepage
+- [x] Run 005 — Blok tipů: content collection + zobrazení na homepage
 - [ ] Run 006 — Kontakt (FB + e-mail), SEO/OG, doladění + deploy
