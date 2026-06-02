@@ -1,5 +1,6 @@
 ---
 import { Image } from "astro:assets";
+import { render } from "astro:content";
 import type { CollectionEntry } from "astro:content";
 
 interface Props {
@@ -7,24 +8,109 @@ interface Props {
 }
 
 const { photos } = Astro.props;
+
+// Předrenderuj tělo (dlouhý text) každé fotky; hasText řídí, zda se v detailu zobrazí.
+const items = await Promise.all(
+  photos.map(async (photo, index) => {
+    const { Content } = await render(photo);
+    return {
+      photo,
+      Content,
+      hasText: Boolean(photo.body?.trim()),
+      dialogId: `photo-${index}`,
+    };
+  }),
+);
 ---
 
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
   {
-    photos.map((photo) => (
-      <figure class="group reveal">
-        <div class="overflow-hidden bg-muted">
-          <Image
-            src={photo.data.cover}
-            alt={photo.data.coverAlt ?? photo.data.caption}
-            widths={[400, 800]}
-            sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-            loading="lazy"
-            class="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105"
-          />
-        </div>
+    items.map(({ photo, Content, hasText, dialogId }) => (
+      <figure class="reveal">
+        <button
+          type="button"
+          data-dialog-open={dialogId}
+          class="group block w-full cursor-pointer"
+          aria-label={`Zobrazit detail: ${photo.data.caption}`}
+        >
+          <span class="block overflow-hidden bg-muted">
+            <Image
+              src={photo.data.cover}
+              alt={photo.data.coverAlt ?? photo.data.caption}
+              widths={[400, 800]}
+              sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+              loading="lazy"
+              class="block w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+          </span>
+        </button>
         <figcaption class="mt-3 text-sm text-muted-foreground">{photo.data.caption}</figcaption>
+
+        <dialog
+          id={dialogId}
+          data-lightbox
+          class="m-auto w-[92vw] max-w-5xl max-h-[92vh] overflow-y-auto bg-background text-foreground p-0 backdrop:bg-black/85"
+        >
+          <form method="dialog" class="sticky top-0 flex justify-end p-3">
+            <button
+              type="submit"
+              class="rounded-full p-2 text-muted-foreground hover:text-foreground"
+              aria-label="Zavřít"
+            >
+              <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </form>
+          <div class="px-6 pb-10 -mt-6">
+            <Image
+              src={photo.data.cover}
+              alt={photo.data.coverAlt ?? photo.data.caption}
+              widths={[800, 1600]}
+              sizes="(min-width: 1024px) 80vw, 100vw"
+              loading="lazy"
+              class="mx-auto max-h-[70vh] w-auto h-auto object-contain"
+            />
+            <p class="mt-6 text-base font-medium">{photo.data.caption}</p>
+            {hasText && (
+              <div class="prose prose-neutral dark:prose-invert mt-4 max-w-2xl">
+                <Content />
+              </div>
+            )}
+          </div>
+        </dialog>
       </figure>
     ))
   }
 </div>
+
+<script>
+  function setupLightbox() {
+    document.querySelectorAll<HTMLElement>("[data-dialog-open]").forEach((btn) => {
+      if (btn.dataset.bound) return;
+      btn.dataset.bound = "1";
+      const id = btn.getAttribute("data-dialog-open");
+      const dlg = id ? (document.getElementById(id) as HTMLDialogElement | null) : null;
+      if (!dlg) return;
+      btn.addEventListener("click", () => {
+        dlg.showModal();
+        document.documentElement.style.overflow = "hidden";
+      });
+    });
+
+    document.querySelectorAll<HTMLDialogElement>("dialog[data-lightbox]").forEach((dlg) => {
+      if (dlg.dataset.bound) return;
+      dlg.dataset.bound = "1";
+      // Klik na pozadí (mimo obsah) zavře dialog.
+      dlg.addEventListener("click", (e) => {
+        if (e.target === dlg) dlg.close();
+      });
+      // Zámek scrollu se uvolní při jakémkoli zavření (×, Esc, pozadí).
+      dlg.addEventListener("close", () => {
+        document.documentElement.style.overflow = "";
+      });
+    });
+  }
+
+  document.addEventListener("astro:page-load", setupLightbox);
+</script>
