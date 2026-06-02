@@ -19,7 +19,7 @@ a e-mail. Nic na prodej, žádná diskuse, žádný admin — správa přes git.
 
 ### MVP (Sprint 001)
 - [x] Branding a layout (sekce v navigaci, kontakt v patičce, hero)
-- [ ] Datový model fotek (sekce, krátký popisek, dlouhý text)
+- [x] Datový model fotek (sekce, krátký popisek, dlouhý text)
 - [ ] Galerie — mřížka fotek po sekcích
 - [ ] Rozklik fotky na detail s dlouhým textem
 
@@ -29,5 +29,5 @@ a e-mail. Nic na prodej, žádná diskuse, žádný admin — správa přes git.
 
 ## Stav
 **Sprint:** 001
-**Hotové runy:** 001
-**Aktuální run:** 002
+**Hotové runy:** 001, 002
+**Aktuální run:** 003

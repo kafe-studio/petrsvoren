@@ -1,0 +1,38 @@
+---
+export const prerender = true;
+import { getCollection } from "astro:content";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import PhotoGrid from "../components/gallery/PhotoGrid.astro";
+import { sections } from "../config/site";
+
+export async function getStaticPaths() {
+  const all = await getCollection("photos");
+  return sections.map((section) => ({
+    params: { section: section.slug },
+    props: {
+      title: section.title,
+      photos: all
+        .filter((photo) => photo.data.section === section.slug)
+        .sort((a, b) => a.data.order - b.data.order),
+    },
+  }));
+}
+
+const { title, photos } = Astro.props;
+const metadata = { title, description: `Fotografie — ${title}` };
+---
+
+<BaseLayout {metadata}>
+  <section class="pt-28 pb-24 px-6">
+    <div class="mx-auto max-w-7xl">
+      <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight mb-10 reveal">{title}</h1>
+      {
+        photos.length === 0 ? (
+          <p class="text-muted-foreground reveal">Tato sekce zatím nemá žádné fotografie.</p>
+        ) : (
+          <PhotoGrid photos={photos} />
+        )
+      }
+    </div>
+  </section>
+</BaseLayout>
