@@ -1,21 +1,32 @@
+// Sekce galerie. Slug = část URL (/street/), title = popisek v navigaci.
+// Přidání/přejmenování sekce = jeden řádek tady. Pořadí určuje pořadí v menu.
+export const sections = [
+  { slug: "street", title: "Street" },
+  { slug: "lide", title: "Lidé" },
+  { slug: "samota", title: "Samota" },
+  { slug: "krajina", title: "Krajina" },
+  { slug: "cesty", title: "Cesty" },
+] as const;
+
+export type SectionSlug = (typeof sections)[number]["slug"];
+
+// Odkazy v hlavní navigaci a v patičce — odvozené ze sekcí + Kontakt.
+export const navLinks = [
+  ...sections.map((s) => ({ text: s.title, href: `/${s.slug}/` })),
+  { text: "Kontakt", href: "/kontakt/" },
+];
+
 export const siteConfig = {
-  name: "Kostra",
-  description: "Popis webu.",
-  url: "https://example.com/",
+  name: "Petr Svoreň",
+  description: "Fotografie Petra Svoreně — klidná, černobílá i barevná prezentace.",
+  url: "https://petrsvoren.kafe.studio/",
   lang: "cs",
   locale: "cs_CZ",
-  author: "Autor",
-  twitter: "",
+  author: "Petr Svoreň",
   ogImage: "/og-image.png",
-  phone: "+420 000 000 000",
-  email: "info@example.com",
-  address: "Ulice 123, Mesto",
+  email: "petr@example.com",
   socialLinks: {
-    instagram: "",
-    facebook: "",
+    facebook: "https://www.facebook.com/",
   },
-  navLinks: [
-    { text: "Domu", href: "/" },
-    { text: "Blog", href: "/blog/" },
-  ],
+  sections,
 };

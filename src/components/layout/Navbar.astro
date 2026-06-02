@@ -1,5 +1,5 @@
 ---
-import { siteConfig } from "../../config/site";
+import { siteConfig, navLinks } from "../../config/site";
 ---
 
 <nav class="fixed top-0 z-50 w-full bg-background/70 backdrop-blur-xl border-b border-border" aria-label="Hlavni navigace">
@@ -8,7 +8,7 @@ import { siteConfig } from "../../config/site";
       {siteConfig.name}
     </a>
     <div class="hidden md:flex items-center gap-8">
-      {siteConfig.navLinks.map((link) => (
+      {navLinks.map((link) => (
         <a href={link.href} class="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">{link.text}</a>
       ))}
     </div>
@@ -19,7 +19,7 @@ import { siteConfig } from "../../config/site";
   </div>
   <div class="hidden md:hidden" id="mobile-menu">
     <div class="glass mx-4 mb-4 p-2 rounded-xl space-y-1">
-      {siteConfig.navLinks.map((link) => (
+      {navLinks.map((link) => (
         <a href={link.href} class="block rounded-lg px-4 py-3 text-base font-medium text-foreground hover:text-primary transition-colors">{link.text}</a>
       ))}
     </div>

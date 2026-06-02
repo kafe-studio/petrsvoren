@@ -3,30 +3,42 @@ export const prerender = true;
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { siteConfig } from "../config/site";
 const metadata = { title: siteConfig.name, description: siteConfig.description, ignoreTitleTemplate: true };
+// Úvodní fotka: nahraj soubor do public/hero.jpg. Než bude, zobrazí se tmavé pozadí.
 ---
 
 <BaseLayout {metadata}>
-  <section class="min-h-[80vh] flex items-center justify-center text-center px-6 pt-24">
-    <div class="max-w-3xl">
-      <h1 class="text-4xl md:text-6xl font-extrabold tracking-tight mb-6 reveal">
+  <section class="relative min-h-[88vh] flex items-end overflow-hidden">
+    <div
+      class="absolute inset-0 bg-neutral-900 bg-cover bg-center"
+      style="background-image: url('/hero.jpg');"
+      aria-hidden="true"
+    >
+    </div>
+    <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" aria-hidden="true"></div>
+    <div class="relative mx-auto w-full max-w-7xl px-6 pb-16 lg:px-8">
+      <h1 class="text-4xl md:text-6xl font-extrabold tracking-tight text-white mb-4 reveal">
         {siteConfig.name}
       </h1>
-      <p class="text-lg md:text-xl text-muted-foreground mb-10 reveal">
+      <p class="text-lg md:text-xl text-white/80 max-w-2xl reveal">
         {siteConfig.description}
       </p>
-      <div class="flex flex-col sm:flex-row items-center justify-center gap-4 reveal">
-        <a href="/blog/" class="btn-primary">Blog</a>
-        <a href="#content" class="btn-outline">Zjistit vice</a>
-      </div>
     </div>
   </section>
 
-  <section id="content" class="py-24 px-6">
-    <div class="mx-auto max-w-5xl text-center reveal">
-      <h2 class="text-3xl font-bold mb-6">Obsah</h2>
-      <p class="text-muted-foreground max-w-2xl mx-auto">
-        Zde bude obsah webu.
-      </p>
+  <section class="py-24 px-6">
+    <div class="mx-auto max-w-5xl">
+      <h2 class="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-10 reveal">Sekce</h2>
+      <nav class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px bg-border reveal" aria-label="Sekce galerie">
+        {siteConfig.sections.map((section) => (
+          <a
+            href={`/${section.slug}/`}
+            class="group flex items-center justify-between bg-background px-6 py-8 transition-colors hover:bg-muted"
+          >
+            <span class="text-xl font-semibold tracking-tight">{section.title}</span>
+            <span class="text-muted-foreground transition-transform group-hover:translate-x-1">&rarr;</span>
+          </a>
+        ))}
+      </nav>
     </div>
   </section>
 </BaseLayout>
