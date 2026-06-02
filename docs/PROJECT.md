@@ -21,13 +21,13 @@ a e-mail. Nic na prodej, žádná diskuse, žádný admin — správa přes git.
 - [x] Branding a layout (sekce v navigaci, kontakt v patičce, hero)
 - [x] Datový model fotek (sekce, krátký popisek, dlouhý text)
 - [x] Galerie — mřížka fotek po sekcích
-- [ ] Rozklik fotky na detail s dlouhým textem
+- [x] Rozklik fotky na detail s dlouhým textem
 
 ### Doladění (Sprint 002)
 - [ ] Blok tipů (fotka měsíce, nová kniha, výstava)
 - [ ] Kontakt, SEO/OG, deploy
 
 ## Stav
-**Sprint:** 001
-**Hotové runy:** 001, 002, 003
-**Aktuální run:** 004
+**Sprint:** 002 (MVP Sprint 001 hotový)
+**Hotové runy:** 001, 002, 003, 004
+**Aktuální run:** 005

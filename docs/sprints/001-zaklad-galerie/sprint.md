@@ -1,6 +1,6 @@
 # Sprint 001: Základ a galerie
 
-**Status:** TODO
+**Status:** DONE
 **Cíl:** Použitelná fotoprezentace — homepage, sekce, mřížka fotek, rozklik na dlouhý text.
 **Runy:** 001–004
 **Dashboard Sprint:** 9
@@ -15,4 +15,4 @@ fotky a popisky se přidávají přes git.
 - [x] Run 001 — Branding & layout: config, Navbar (sekce), Footer (FB + e-mail), hero
 - [x] Run 002 — Datový model fotek: content collection (sekce, krátký + dlouhý text), sharp náhledy, ukázky
 - [x] Run 003 — Galerie: přehled sekcí + stránka sekce s mřížkou fotek
-- [ ] Run 004 — Rozklik fotky: lightbox/modal s dlouhým textem
+- [x] Run 004 — Rozklik fotky: lightbox/modal s dlouhým textem
