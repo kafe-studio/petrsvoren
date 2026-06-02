@@ -1,7 +1,7 @@
 # Plan: petrsvoren
 
 **Vytvořeno:** 2026-06-02
-**Aktualizováno:** 2026-06-02
+**Aktualizováno:** 2026-06-02 (Run 001 hotový)
 
 ## Cíl
 Klidná fotoprezentace Petra Svoreně: homepage s úvodní fotkou, fotky rozdělené do ~5
@@ -14,8 +14,8 @@ a kontakt přes FB + e-mail. Vše statické na content collections, nasazené na
 **Stav:** čeká
 **Cíl:** Použitelná fotoprezentace — homepage, sekce, mřížka fotek, rozklik na dlouhý text.
 
-- [ ] Run 001 — Branding & layout (config, Navbar, Footer, hero) → docs/sprints/001-zaklad-galerie/run-001-branding-layout.md
-- [ ] Run 002 — Datový model fotek (collection, sharp náhledy, ukázky)
+- [x] Run 001 — Branding & layout (config, Navbar, Footer, hero) → docs/sprints/001-zaklad-galerie/run-001-branding-layout.done.md
+- [ ] Run 002 — Datový model fotek (collection, sharp náhledy, ukázky) → docs/sprints/001-zaklad-galerie/run-002-datovy-model.md
 - [ ] Run 003 — Galerie: přehled sekcí + mřížka fotek v sekci
 - [ ] Run 004 — Rozklik fotky: lightbox/modal s dlouhým textem
 
