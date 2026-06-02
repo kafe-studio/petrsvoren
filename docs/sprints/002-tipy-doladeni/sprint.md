@@ -1,6 +1,6 @@
 # Sprint 002: Tipy a doladění
 
-**Status:** TODO
+**Status:** DONE
 **Cíl:** Aktuality (tipy), kontakt, SEO, nasazení.
 **Runy:** 005–006
 **Dashboard Sprint:** 10
@@ -12,4 +12,4 @@ Po dokončení je web kompletní dle zadání.
 
 ## Runy
 - [x] Run 005 — Blok tipů: content collection + zobrazení na homepage
-- [ ] Run 006 — Kontakt (FB + e-mail), SEO/OG, doladění + deploy
+- [x] Run 006 — Kontakt (FB + e-mail), SEO/OG, doladění + deploy

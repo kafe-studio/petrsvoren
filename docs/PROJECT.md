@@ -24,10 +24,11 @@ a e-mail. Nic na prodej, žádná diskuse, žádný admin — správa přes git.
 - [x] Rozklik fotky na detail s dlouhým textem
 
 ### Doladění (Sprint 002)
-- [ ] Blok tipů (fotka měsíce, nová kniha, výstava)
-- [ ] Kontakt, SEO/OG, deploy
+- [x] Blok tipů (fotka měsíce, nová kniha, výstava)
+- [x] Kontakt, SEO/OG, deploy
 
 ## Stav
-**Sprint:** 002 (MVP Sprint 001 hotový)
-**Hotové runy:** 001, 002, 003, 004
-**Aktuální run:** 005
+**Sprint:** 002 hotový — projekt kompletní dle zadání
+**Hotové runy:** 001–006
+**Aktuální run:** —
+**Zbývá Petrovi:** reálné fotky + hero.jpg, nahradit placeholdery (e-mail, FB URL, doména)

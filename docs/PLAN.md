@@ -1,7 +1,7 @@
 # Plan: petrsvoren
 
 **Vytvořeno:** 2026-06-02
-**Aktualizováno:** 2026-06-02 (Run 005 hotový)
+**Aktualizováno:** 2026-06-02 (Sprint 002 hotový — projekt kompletní)
 
 ## Cíl
 Klidná fotoprezentace Petra Svoreně: homepage s úvodní fotkou, fotky rozdělené do ~5
@@ -23,7 +23,7 @@ a kontakt přes FB + e-mail. Vše statické na content collections, nasazené na
 **Cíl:** Aktuality, kontakt, SEO, nasazení.
 
 - [x] Run 005 — Blok „Tipy" (fotka měsíce, nová kniha, výstava) → docs/sprints/002-tipy-doladeni/run-005-tipy.done.md
-- [ ] Run 006 — Kontakt (FB + e-mail), SEO/OG/Schema pro fotky, doladění + deploy → docs/sprints/002-tipy-doladeni/run-006-kontakt.md
+- [x] Run 006 — Kontakt (FB + e-mail), SEO/OG/Schema pro fotky, doladění + deploy → docs/sprints/002-tipy-doladeni/run-006-kontakt.done.md
 
 ## Poznámky
 - Vše na content collections → správa přes git, fotky do `public/` nebo přímo do kolekce,
