@@ -1,5 +1,6 @@
 ---
 title: "Výstava: Ticho ve městě"
+image: "./vystava.jpg"
 link: "https://www.facebook.com/"
 order: 2
 active: true
