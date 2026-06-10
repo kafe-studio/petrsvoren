@@ -1,11 +1,12 @@
 ---
+# placeholder fotka (volná licence, Picsum/Unsplash) — nahradit Petrovým originálem
 section: lide
-caption: "Tvář, která nehraje"
+caption: "Sám u řeky"
 cover: "./portret.jpg"
-coverAlt: "Portrét staršího muže"
+coverAlt: "Postava sedící sama na kamenných schodech nábřeží"
 order: 1
 ---
 
-Nejtěžší na portrétu není světlo ani kompozice — je to ten okamžik, kdy člověk
-přestane pózovat. Čekal jsem, povídali jsme si o úplných hloupostech, a pak to
-přišlo samo. Tohle je on, ne jeho představa o tom, jak má vypadat na fotce.
+Schody k řece, kámen ošlapaný staletími, a člověk, který si na pár minut sedl
+jen tak. Nefotil jsem jeho tvář — fotil jsem to, jak se na chvíli ztrácí
+v něčem mnohem větším, než je on sám.

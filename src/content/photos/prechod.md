@@ -1,12 +1,12 @@
 ---
+# placeholder fotka (volná licence, Picsum/Unsplash) — nahradit Petrovým originálem
 section: street
-caption: "Přechod"
+caption: "Poslední spoj"
 cover: "./prechod.jpg"
-coverAlt: "Lidé na přechodu pro chodce"
+coverAlt: "Mlhavé noční nádraží s rozsvícenými lampami nad prázdnými nástupišti"
 order: 2
 ---
 
-Přechod je malé divadlo, které se odehraje dvakrát za minutu a nikdo mu netleská.
-Lidé z obou stran, pár vteřin společného prostoru, a pak zase každý svým směrem.
-Stál jsem tam a fotil několik cyklů, než přišel ten jediný, kde se rytmus kroků,
-stíny a pohledy poskládaly do jednoho obrazu. Mikropříběh, jakých je všude plno.
+Mlha spolkla koleje i čas. Nástupiště dvě a tři, ani noha, jen lampy hoří do
+prázdna a kdesi vzadu možná přijede poslední vlak. Nádraží v noci je
+nejosamělejší místo, jaké znám — a zároveň jedno z nejkrásnějších.

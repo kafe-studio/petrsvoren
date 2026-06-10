@@ -1,8 +1,9 @@
 ---
+# placeholder fotka (volná licence, Picsum/Unsplash) — nahradit Petrovým originálem
 section: street
 caption: "Když se město ještě neprobudilo"
 cover: "./ulice-rano.jpg"
-coverAlt: "Prázdná ulice za ranního světla"
+coverAlt: "Prázdná ulice ve stromořadí v ranním protisvětle"
 order: 1
 ---
 
