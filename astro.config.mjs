@@ -4,9 +4,10 @@ import sitemap from "@astrojs/sitemap";
 import tailwindcss from "@tailwindcss/vite";
 import icon from "astro-icon";
 import remarkReadingTime from "remark-reading-time";
+import { siteConfig } from "./src/config/site";
 
 export default defineConfig({
-  site: "https://example.com/",
+  site: siteConfig.url,
   output: "server",
   trailingSlash: "always",
   adapter: cloudflare({

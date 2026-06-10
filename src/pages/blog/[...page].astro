@@ -12,7 +12,7 @@ export async function getStaticPaths({ paginate }: GetStaticPathsOptions) {
 }
 
 const { page } = Astro.props;
-const metadata = { title: "Blog", description: "Vsechny clanky." };
+const metadata = { title: "Blog", description: "Všechny články." };
 ---
 
 <BaseLayout {metadata}>
@@ -20,7 +20,7 @@ const metadata = { title: "Blog", description: "Vsechny clanky." };
     <div class="mx-auto max-w-4xl">
       <h1 class="text-4xl font-extrabold mb-12 reveal">Blog</h1>
       {page.data.length === 0 && (
-        <p class="text-muted-foreground">Zatim zadne clanky.</p>
+        <p class="text-muted-foreground">Zatím žádné články.</p>
       )}
       <div class="space-y-8">
         {page.data.map((post) => (
@@ -36,9 +36,9 @@ const metadata = { title: "Blog", description: "Vsechny clanky." };
         ))}
       </div>
       {(page.url.prev || page.url.next) && (
-        <nav class="flex justify-between mt-12" aria-label="Strankovani">
-          {page.url.prev ? <a href={page.url.prev} class="btn-outline py-2 px-6 text-sm">Novejsi</a> : <span />}
-          {page.url.next ? <a href={page.url.next} class="btn-outline py-2 px-6 text-sm">Starsi</a> : <span />}
+        <nav class="flex justify-between mt-12" aria-label="Stránkování">
+          {page.url.prev ? <a href={page.url.prev} class="btn-outline py-2 px-6 text-sm">Novější</a> : <span />}
+          {page.url.next ? <a href={page.url.next} class="btn-outline py-2 px-6 text-sm">Starší</a> : <span />}
         </nav>
       )}
     </div>
