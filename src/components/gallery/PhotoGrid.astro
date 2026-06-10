@@ -25,7 +25,7 @@ const items = await Promise.all(
 
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
   {
-    items.map(({ photo, Content, hasText, dialogId }) => (
+    items.map(({ photo, Content, hasText, dialogId }, index) => (
       <figure class="reveal">
         <button
           type="button"
@@ -49,20 +49,46 @@ const items = await Promise.all(
         <dialog
           id={dialogId}
           data-lightbox
+          data-index={index}
           class="m-auto w-[92vw] max-w-5xl max-h-[92vh] overflow-y-auto bg-background text-foreground p-0 backdrop:bg-black/85"
         >
-          <form method="dialog" class="sticky top-0 flex justify-end p-3">
-            <button
-              type="submit"
-              class="rounded-full p-2 text-muted-foreground hover:text-foreground"
-              aria-label="Zavřít"
-            >
-              <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </form>
-          <div class="px-6 pb-10 -mt-6">
+          <div class="sticky top-0 z-10 flex items-center justify-between gap-3 bg-background/90 px-3 py-2 backdrop-blur">
+            <div class="flex items-center gap-1">
+              <button
+                type="button"
+                data-nav="prev"
+                class="rounded-full p-2 text-muted-foreground transition-colors hover:text-foreground"
+                aria-label="Předchozí fotka"
+              >
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              <button
+                type="button"
+                data-nav="next"
+                class="rounded-full p-2 text-muted-foreground transition-colors hover:text-foreground"
+                aria-label="Další fotka"
+              >
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
+            <span class="text-xs text-muted-foreground tabular-nums">{index + 1} / {items.length}</span>
+            <form method="dialog" class="contents">
+              <button
+                type="submit"
+                class="rounded-full p-2 text-muted-foreground transition-colors hover:text-foreground"
+                aria-label="Zavřít"
+              >
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </form>
+          </div>
+          <div class="px-6 pb-10">
             <Image
               src={photo.data.cover}
               alt={photo.data.coverAlt ?? photo.data.caption}
@@ -85,17 +111,45 @@ const items = await Promise.all(
 </div>
 
 <script>
+  function lockScroll(on: boolean) {
+    document.documentElement.style.overflow = on ? "hidden" : "";
+  }
+
+  // Otevře lightbox dané fotky a zavře případný jiný otevřený.
+  function openLightbox(index: number) {
+    const dlg = document.getElementById(`photo-${index}`) as HTMLDialogElement | null;
+    if (!dlg) return;
+    document
+      .querySelectorAll<HTMLDialogElement>("dialog[data-lightbox][open]")
+      .forEach((d) => {
+        if (d !== dlg) d.close();
+      });
+    if (!dlg.open) dlg.showModal();
+    lockScroll(true);
+  }
+
+  // Posun na předchozí/další fotku (wrap-around) podle aktuálně otevřeného.
+  function step(delta: number) {
+    const open = document.querySelector<HTMLDialogElement>("dialog[data-lightbox][open]");
+    if (!open) return;
+    const total = document.querySelectorAll("dialog[data-lightbox]").length;
+    const idx = Number(open.dataset.index);
+    openLightbox((idx + delta + total) % total);
+  }
+
   function setupLightbox() {
     document.querySelectorAll<HTMLElement>("[data-dialog-open]").forEach((btn) => {
       if (btn.dataset.bound) return;
       btn.dataset.bound = "1";
       const id = btn.getAttribute("data-dialog-open");
-      const dlg = id ? (document.getElementById(id) as HTMLDialogElement | null) : null;
-      if (!dlg) return;
-      btn.addEventListener("click", () => {
-        dlg.showModal();
-        document.documentElement.style.overflow = "hidden";
-      });
+      const index = id ? Number(id.replace("photo-", "")) : NaN;
+      btn.addEventListener("click", () => openLightbox(index));
+    });
+
+    document.querySelectorAll<HTMLElement>("[data-nav]").forEach((btn) => {
+      if (btn.dataset.bound) return;
+      btn.dataset.bound = "1";
+      btn.addEventListener("click", () => step(btn.dataset.nav === "next" ? 1 : -1));
     });
 
     document.querySelectorAll<HTMLDialogElement>("dialog[data-lightbox]").forEach((dlg) => {
@@ -105,10 +159,22 @@ const items = await Promise.all(
       dlg.addEventListener("click", (e) => {
         if (e.target === dlg) dlg.close();
       });
-      // Zámek scrollu se uvolní při jakémkoli zavření (×, Esc, pozadí).
+      // Scroll odemkni jen když není otevřený žádný jiný lightbox (kvůli listování).
       dlg.addEventListener("close", () => {
-        document.documentElement.style.overflow = "";
+        if (!document.querySelector("dialog[data-lightbox][open]")) lockScroll(false);
       });
+    });
+  }
+
+  // Klávesy ←/→ registruj jen jednou (přežije soft-navigaci ClientRouteru).
+  const w = window as unknown as { __lightboxKeys?: boolean };
+  if (!w.__lightboxKeys) {
+    w.__lightboxKeys = true;
+    document.addEventListener("keydown", (e) => {
+      if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+      if (!document.querySelector("dialog[data-lightbox][open]")) return;
+      e.preventDefault();
+      step(e.key === "ArrowRight" ? 1 : -1);
     });
   }
 
