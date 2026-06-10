@@ -1,5 +1,5 @@
 ---
-import { Image } from "astro:assets";
+import { Image, getImage } from "astro:assets";
 import { render } from "astro:content";
 import type { CollectionEntry } from "astro:content";
 
@@ -13,11 +13,14 @@ const { photos } = Astro.props;
 const items = await Promise.all(
   photos.map(async (photo, index) => {
     const { Content } = await render(photo);
+    // Plná velikost = originál ve své přirozené šířce (otevře se v nové záložce).
+    const full = await getImage({ src: photo.data.cover, width: photo.data.cover.width });
     return {
       photo,
       Content,
       hasText: Boolean(photo.body?.trim()),
       dialogId: `photo-${index}`,
+      fullSrc: full.src,
     };
   }),
 );
@@ -25,7 +28,7 @@ const items = await Promise.all(
 
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
   {
-    items.map(({ photo, Content, hasText, dialogId }, index) => (
+    items.map(({ photo, Content, hasText, dialogId, fullSrc }, index) => (
       <figure class="reveal">
         <button
           type="button"
@@ -52,12 +55,56 @@ const items = await Promise.all(
           data-index={index}
           class="m-auto w-[92vw] max-w-5xl max-h-[92vh] overflow-y-auto bg-background text-foreground p-0 backdrop:bg-black/85"
         >
-          <div class="sticky top-0 z-10 flex items-center justify-between gap-3 bg-background/90 px-3 py-2 backdrop-blur">
+          <div class="sticky top-0 z-20 flex items-center justify-between gap-3 bg-background/90 px-3 py-2 backdrop-blur">
+            <span class="text-xs text-muted-foreground tabular-nums">{index + 1} / {items.length}</span>
             <div class="flex items-center gap-1">
+              <a
+                href={fullSrc}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="rounded-full p-2 text-muted-foreground transition-colors hover:text-foreground"
+                aria-label="Zobrazit v plné velikosti"
+                title="Plná velikost"
+              >
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 9V5a1 1 0 011-1h4M20 9V5a1 1 0 00-1-1h-4M4 15v4a1 1 0 001 1h4M20 15v4a1 1 0 01-1 1h-4" />
+                </svg>
+              </a>
+              <form method="dialog" class="contents">
+                <button
+                  type="submit"
+                  class="rounded-full p-2 text-muted-foreground transition-colors hover:text-foreground"
+                  aria-label="Zavřít"
+                >
+                  <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </form>
+            </div>
+          </div>
+          <div class="px-6 pb-10">
+            <div class="relative mx-auto w-fit">
+              <a
+                href={fullSrc}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="block cursor-zoom-in"
+                aria-label="Zobrazit v plné velikosti"
+              >
+                <Image
+                  src={photo.data.cover}
+                  alt={photo.data.coverAlt ?? photo.data.caption}
+                  widths={[800, 1600]}
+                  sizes="(min-width: 1024px) 80vw, 100vw"
+                  loading="lazy"
+                  class="max-h-[70vh] w-auto h-auto object-contain"
+                />
+              </a>
               <button
                 type="button"
                 data-nav="prev"
-                class="rounded-full p-2 text-muted-foreground transition-colors hover:text-foreground"
+                class="absolute left-2 top-1/2 z-10 -translate-y-1/2 rounded-full bg-black/20 p-2 text-white/70 backdrop-blur-sm transition hover:bg-black/40 hover:text-white"
                 aria-label="Předchozí fotka"
               >
                 <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
@@ -67,7 +114,7 @@ const items = await Promise.all(
               <button
                 type="button"
                 data-nav="next"
-                class="rounded-full p-2 text-muted-foreground transition-colors hover:text-foreground"
+                class="absolute right-2 top-1/2 z-10 -translate-y-1/2 rounded-full bg-black/20 p-2 text-white/70 backdrop-blur-sm transition hover:bg-black/40 hover:text-white"
                 aria-label="Další fotka"
               >
                 <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
@@ -75,28 +122,6 @@ const items = await Promise.all(
                 </svg>
               </button>
             </div>
-            <span class="text-xs text-muted-foreground tabular-nums">{index + 1} / {items.length}</span>
-            <form method="dialog" class="contents">
-              <button
-                type="submit"
-                class="rounded-full p-2 text-muted-foreground transition-colors hover:text-foreground"
-                aria-label="Zavřít"
-              >
-                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </form>
-          </div>
-          <div class="px-6 pb-10">
-            <Image
-              src={photo.data.cover}
-              alt={photo.data.coverAlt ?? photo.data.caption}
-              widths={[800, 1600]}
-              sizes="(min-width: 1024px) 80vw, 100vw"
-              loading="lazy"
-              class="mx-auto max-h-[70vh] w-auto h-auto object-contain"
-            />
             <p class="mt-6 text-base font-medium">{photo.data.caption}</p>
             {hasText && (
               <div class="prose prose-neutral dark:prose-invert mt-4 max-w-2xl">
