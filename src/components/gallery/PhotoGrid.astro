@@ -3,7 +3,9 @@
 // filmový pás), nic nepřesahuje a nejsou tam žádné posuvníky. Funkce:
 //   • listování ←/→ a bočními šipkami (dokola), počítadlo X / N
 //   • plná velikost (klik na fotku / lupa → třída lb-full: skryje pás i popisek,
-//     fotka dostane celé okno); stav se drží i při listování
+//     fotka dostane celé okno, vycentrovaná); stav se drží i při listování
+//   • ve full view zaměřovací křížek + lupa: podržení myši pomalu zvětší místo
+//     pod kurzorem až k nativnímu rozlišení, puštění vrátí (CSS transform/transition)
 //   • popisek + delší text pod fotkou (strop výšky 30vh → vše se vejde bez posuvníku)
 //   • pás náhledů sekce pod fotkou (jen v náhledu): krytí 5 %, hover plný jas,
 //     klik = přepne fotku; roztažený na šířku okna, aktuální zvýrazněná
@@ -105,13 +107,14 @@ const items = await Promise.all(
             </div>
           </div>
 
-          <button type="button" data-zoom class="lb-stage" aria-label="Přepnout plnou velikost">
+          <button type="button" data-stage class="lb-stage" aria-label="Zvětšit detail (podržet tlačítko myši)">
             <Image
               src={photo.data.cover}
               alt={photo.data.coverAlt ?? photo.data.caption}
               widths={[800, 1600]}
               sizes="100vw"
               loading="lazy"
+              draggable={false}
               class="lb-img"
             />
           </button>
@@ -180,6 +183,40 @@ const items = await Promise.all(
   // Plná velikost = skryje pás i popisek, fotka dostane celé okno (zůstává v okně).
   function setZoom(dlg: HTMLDialogElement, on: boolean) {
     dlg.classList.toggle("lb-full", on);
+    // Vynuluj případné přiblížení lupou.
+    const img = dlg.querySelector<HTMLElement>(".lb-img");
+    if (img) {
+      img.style.transition = "none";
+      img.style.transform = "none";
+      img.style.transformOrigin = "";
+    }
+  }
+
+  // Lupa ve full view: podržením myši se místo pod kurzorem pomalu zvětší až
+  // k nativnímu rozlišení fotky; po puštění se pomalu vrátí. CSS transform + transition.
+  function magnifyStart(e: PointerEvent) {
+    const stage = e.currentTarget as HTMLElement;
+    const dlg = stage.closest("dialog");
+    if (!dlg || !dlg.classList.contains("lb-full")) return;
+    const img = stage.querySelector(".lb-img") as HTMLImageElement | null;
+    if (!img) return;
+    const rect = img.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    const cx = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
+    const cy = Math.max(0, Math.min(100, ((e.clientY - rect.top) / rect.height) * 100));
+    const maxScale = img.naturalWidth ? Math.max(1, img.naturalWidth / rect.width) : 2.5;
+    stage.setPointerCapture?.(e.pointerId);
+    img.style.transformOrigin = `${cx}% ${cy}%`;
+    img.style.transition = "transform 3.5s cubic-bezier(0.22, 1, 0.36, 1)";
+    img.style.transform = `scale(${maxScale})`;
+  }
+
+  function magnifyEnd(e: PointerEvent) {
+    const stage = e.currentTarget as HTMLElement;
+    const img = stage.querySelector(".lb-img") as HTMLImageElement | null;
+    if (!img) return;
+    img.style.transition = "transform 1.4s cubic-bezier(0.22, 1, 0.36, 1)";
+    img.style.transform = "scale(1)";
   }
 
   // Pozadí náhledu: 0 = černá … 100 = bílá. Nastaví proporcionální šeď + kontrastní text.
@@ -238,6 +275,20 @@ const items = await Promise.all(
         const dlg = btn.closest("dialog") as HTMLDialogElement | null;
         if (dlg) setZoom(dlg, !dlg.classList.contains("lb-full"));
       });
+    });
+
+    // Plocha s fotkou: v náhledu klik = plná velikost; ve full view podržení = lupa.
+    document.querySelectorAll<HTMLElement>("[data-stage]").forEach((stage) => {
+      if (stage.dataset.bound) return;
+      stage.dataset.bound = "1";
+      stage.addEventListener("click", () => {
+        const dlg = stage.closest("dialog") as HTMLDialogElement | null;
+        if (dlg && !dlg.classList.contains("lb-full")) setZoom(dlg, true);
+      });
+      stage.addEventListener("pointerdown", magnifyStart);
+      stage.addEventListener("pointerup", magnifyEnd);
+      stage.addEventListener("pointercancel", magnifyEnd);
+      stage.addEventListener("dragstart", (e) => e.preventDefault());
     });
 
     // Klik na náhled v pásu → zobraz tu fotku (zůstává v náhledu).
@@ -343,9 +394,13 @@ const items = await Promise.all(
     max-height: 100%;
     max-width: 100%;
     object-fit: contain;
+    user-select: none;
+    -webkit-user-drag: none;
+    will-change: transform;
   }
+  /* Ve full view zaměřovací křížek — podržením myši se místo pod kurzorem pomalu zvětší. */
   dialog.lb-full .lb-stage {
-    cursor: zoom-out;
+    cursor: crosshair;
   }
   /* V plné velikosti je lišta overlay (mimo tok), aby se fotka centrovala přes
      celé okno — stejně daleko od horního i spodního okraje. */
