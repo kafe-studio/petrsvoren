@@ -1,4 +1,10 @@
 ---
+// Mřížka fotek + velký náhled (lightbox). Funkce náhledu:
+//   • listování ←/→ a bočními šipkami (dokola), počítadlo X / N
+//   • plná velikost (klik na fotku / lupa → třída lb-full přes celou obrazovku)
+//   • posuvník pozadí černá→bílá (proměnné --lb-bg/--lb-fg na <html>, uloženo v localStorage)
+//   • zavření křížkem / Esc / klikem na pozadí
+// Podrobnosti a možnosti úprav: docs/FOTOSABLONA.md (sekce „Velký náhled").
 import { Image } from "astro:assets";
 import { render } from "astro:content";
 import type { CollectionEntry } from "astro:content";
@@ -50,15 +56,28 @@ const items = await Promise.all(
           id={dialogId}
           data-lightbox
           data-index={index}
-          class="m-auto w-[92vw] max-w-5xl max-h-[92vh] overflow-y-auto bg-background text-foreground p-0 backdrop:bg-black/85"
+          class="m-auto w-[92vw] max-w-5xl max-h-[92vh] overflow-y-auto p-0 backdrop:bg-black/85"
         >
-          <div class="sticky top-0 z-20 flex items-center justify-between gap-3 bg-background/90 px-3 py-2 backdrop-blur">
-            <span class="text-xs text-muted-foreground tabular-nums">{index + 1} / {items.length}</span>
-            <div class="flex items-center gap-1">
+          <div class="lb-bar sticky top-0 z-20 flex items-center gap-3 px-3 py-2 backdrop-blur">
+            <span class="shrink-0 text-xs tabular-nums opacity-60">{index + 1} / {items.length}</span>
+            <label class="flex min-w-0 flex-1 items-center justify-center" title="Pozadí náhledu: černá → bílá">
+              <span class="sr-only">Pozadí náhledu od černé po bílou</span>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                step="1"
+                value="6"
+                data-lb-bg
+                class="lb-range w-full max-w-56"
+                aria-label="Pozadí náhledu od černé po bílou"
+              />
+            </label>
+            <div class="flex shrink-0 items-center gap-1">
               <button
                 type="button"
                 data-zoom
-                class="rounded-full p-2 text-muted-foreground transition-colors hover:text-foreground"
+                class="rounded-full p-2 opacity-70 transition hover:opacity-100"
                 aria-label="Přepnout plnou velikost"
                 title="Plná velikost"
               >
@@ -69,7 +88,7 @@ const items = await Promise.all(
               <form method="dialog" class="contents">
                 <button
                   type="submit"
-                  class="rounded-full p-2 text-muted-foreground transition-colors hover:text-foreground"
+                  class="rounded-full p-2 opacity-70 transition hover:opacity-100"
                   aria-label="Zavřít"
                 >
                   <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
@@ -134,6 +153,14 @@ const items = await Promise.all(
     if (!on) dlg.scrollTop = 0;
   }
 
+  // Pozadí náhledu: 0 = černá … 100 = bílá. Nastaví proporcionální šeď + kontrastní text.
+  function applyLightboxBg(value: number) {
+    const g = Math.round((value / 100) * 255);
+    const root = document.documentElement.style;
+    root.setProperty("--lb-bg", `rgb(${g}, ${g}, ${g})`);
+    root.setProperty("--lb-fg", g < 140 ? "#f2f2f2" : "#161616");
+  }
+
   // Otevře lightbox dané fotky a zavře případný jiný otevřený.
   function openLightbox(index: number) {
     const dlg = document.getElementById(`photo-${index}`) as HTMLDialogElement | null;
@@ -181,6 +208,31 @@ const items = await Promise.all(
       });
     });
 
+    // Posuvník pozadí (černá → bílá). Hodnota je globální + uložená v localStorage.
+    let stored = 6;
+    try {
+      const raw = localStorage.getItem("lb-bg");
+      if (raw !== null && Number.isFinite(Number(raw))) stored = Number(raw);
+    } catch {}
+    applyLightboxBg(stored);
+    document.querySelectorAll<HTMLInputElement>("[data-lb-bg]").forEach((slider) => {
+      slider.value = String(stored);
+      if (slider.dataset.bound) return;
+      slider.dataset.bound = "1";
+      slider.addEventListener("input", () => {
+        const v = Number(slider.value);
+        applyLightboxBg(v);
+        try {
+          localStorage.setItem("lb-bg", String(v));
+        } catch {}
+        document
+          .querySelectorAll<HTMLInputElement>("[data-lb-bg]")
+          .forEach((other) => {
+            if (other !== slider) other.value = String(v);
+          });
+      });
+    });
+
     document.querySelectorAll<HTMLDialogElement>("dialog[data-lightbox]").forEach((dlg) => {
       if (dlg.dataset.bound) return;
       dlg.dataset.bound = "1";
@@ -201,6 +253,9 @@ const items = await Promise.all(
     w.__lightboxKeys = true;
     document.addEventListener("keydown", (e) => {
       if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+      // Když ovládáš posuvník (nebo jiný input), šipky patří jemu, ne listování.
+      const ae = document.activeElement;
+      if (ae && (ae.tagName === "INPUT" || ae.tagName === "TEXTAREA")) return;
       if (!document.querySelector("dialog[data-lightbox][open]")) return;
       e.preventDefault();
       step(e.key === "ArrowRight" ? 1 : -1);
@@ -211,6 +266,22 @@ const items = await Promise.all(
 </script>
 
 <style>
+  /* Pozadí náhledu řídí posuvník přes proměnné --lb-bg / --lb-fg (na <html>).
+     Fallback drží tmavý vzhled, než se spustí JS. */
+  dialog[data-lightbox] {
+    background: var(--lb-bg, #0a0a0f);
+    color: var(--lb-fg, #ededed);
+  }
+  .lb-bar {
+    background: color-mix(in srgb, var(--lb-bg, #0a0a0f) 88%, transparent);
+  }
+  /* Dlouhý text (prose) přebarvi podle zvoleného pozadí, ať zůstane čitelný. */
+  dialog[data-lightbox] .prose {
+    --tw-prose-body: var(--lb-fg, #ededed);
+    --tw-prose-headings: var(--lb-fg, #ededed);
+    --tw-prose-bold: var(--lb-fg, #ededed);
+  }
+
   /* Náhled: fotka se vejde do okna. Klik / lupa přepne na plnou velikost. */
   .lb-img {
     max-height: 78vh;
@@ -227,5 +298,34 @@ const items = await Promise.all(
   dialog.lb-full .lb-img {
     max-height: 86vh;
     cursor: zoom-out;
+  }
+
+  /* Posuvník pozadí — track má gradient černá→bílá, takže je samovysvětlující. */
+  .lb-range {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 6px;
+    border-radius: 9999px;
+    background: linear-gradient(to right, #000, #fff);
+    border: 1px solid color-mix(in srgb, var(--lb-fg, #888) 35%, transparent);
+    cursor: pointer;
+  }
+  .lb-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 9999px;
+    background: var(--lb-fg, #fff);
+    border: 2px solid color-mix(in srgb, var(--lb-bg, #000) 55%, var(--lb-fg, #fff));
+    box-shadow: 0 1px 3px rgb(0 0 0 / 0.5);
+  }
+  .lb-range::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 9999px;
+    background: var(--lb-fg, #fff);
+    border: 2px solid color-mix(in srgb, var(--lb-bg, #000) 55%, var(--lb-fg, #fff));
+    box-shadow: 0 1px 3px rgb(0 0 0 / 0.5);
   }
 </style>
