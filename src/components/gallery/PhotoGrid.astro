@@ -13,8 +13,8 @@
 //     klik = přepne fotku; roztažený na šířku okna, aktuální zvýrazněná
 //   • posuvník pozadí černá→bílá (jen myší; --lb-bg/--lb-fg na <html>, localStorage);
 //     vždy svisle v pravém dolním rohu (náhled i full view)
-//   • zavření do galerie: × (v náhledu v liště, ve full view vpravo nahoře) / Esc;
-//     Esc ve full view nejdřív zpět na náhled
+//   • ve full view tlačítko vpravo nahoře = zpět na náhled (ne rovnou do galerie);
+//     z náhledu zavírá × v liště / Esc / klik na pozadí
 // Podrobnosti a možnosti úprav: docs/FOTOSABLONA.md (sekce „Velký náhled").
 import { Image } from "astro:assets";
 import { render } from "astro:content";
@@ -178,13 +178,11 @@ const items = await Promise.all(
             {siteConfig.name}
           </a>
 
-          <form method="dialog" class="lb-close">
-            <button type="submit" aria-label="Zpět do galerie" title="Zpět do galerie">
-              <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </form>
+          <button type="button" data-zoom class="lb-close" aria-label="Zpět na náhled" title="Zpět na náhled">
+            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 9V4.5M9 9H4.5M9 9 3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5 5.25 5.25" />
+            </svg>
+          </button>
 
           <label class="lb-vslider" title="Pozadí: tmavé → světlé">
             <span class="sr-only">Pozadí náhledu od černé po bílou</span>
@@ -588,18 +586,13 @@ const items = await Promise.all(
     display: block;
   }
 
-  /* Tlačítko zpět do galerie (×) vpravo nahoře — jen ve full view (v náhledu je × v liště). */
+  /* Tlačítko zpět na náhled vpravo nahoře — jen ve full view (v náhledu je vše v liště). */
   .lb-close {
     display: none;
     position: fixed;
     right: 0.7rem;
     top: 0.55rem;
     z-index: 40;
-  }
-  dialog.lb-full .lb-close {
-    display: block;
-  }
-  .lb-close button {
     border-radius: 9999px;
     padding: 0.4rem;
     color: var(--lb-fg, #ededed);
@@ -607,8 +600,11 @@ const items = await Promise.all(
     cursor: pointer;
     transition: opacity 0.15s ease;
   }
-  .lb-close button:hover {
+  .lb-close:hover {
     opacity: 1;
+  }
+  dialog.lb-full .lb-close {
+    display: block;
   }
 
   /* Svislý posuvník pozadí — vždy v pravém dolním rohu (náhled i full view). */
