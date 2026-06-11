@@ -24,7 +24,19 @@ const items = await Promise.all(
         <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
           {items.map(({ tip, Content }) => (
             <article class="reveal">
-              {tip.data.image && (
+              {tip.data.image && tip.data.link && (
+                <a href={tip.data.link} class="group mb-4 block overflow-hidden" aria-label={tip.data.title}>
+                  <Image
+                    src={tip.data.image}
+                    alt={tip.data.title}
+                    widths={[400, 800]}
+                    sizes="(min-width: 768px) 50vw, 100vw"
+                    loading="lazy"
+                    class="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                </a>
+              )}
+              {tip.data.image && !tip.data.link && (
                 <Image
                   src={tip.data.image}
                   alt={tip.data.title}
@@ -34,7 +46,9 @@ const items = await Promise.all(
                   class="mb-4 w-full h-auto object-cover"
                 />
               )}
-              <h3 class="text-xl font-semibold tracking-tight">{tip.data.title}</h3>
+              <h3 class="text-xl font-semibold tracking-tight">
+                {tip.data.link ? <a href={tip.data.link} class="hover:text-primary transition-colors">{tip.data.title}</a> : tip.data.title}
+              </h3>
               <div class="prose prose-neutral dark:prose-invert mt-2 max-w-none text-muted-foreground">
                 <Content />
               </div>

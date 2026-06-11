@@ -1,6 +1,7 @@
 ---
 title: "Fotka měsíce"
 image: "./fotka-mesice.jpg"
+link: "/krajina/#krajina-jezero"
 order: 1
 active: true
 ---

@@ -67,6 +67,7 @@ const items = await Promise.all(
           id={dialogId}
           data-lightbox
           data-index={index}
+          data-slug={photo.id}
           class="lb-dialog backdrop:bg-black/85"
         >
           <div class="lb-bar flex shrink-0 items-center gap-3 px-3 py-2">
@@ -410,7 +411,19 @@ const items = await Promise.all(
     });
   }
 
-  document.addEventListener("astro:page-load", setupLightbox);
+  // Deep-link: /<sekce>/#<slug> otevře rovnou lightbox dané fotky.
+  function openFromHash() {
+    const slug = decodeURIComponent(location.hash.replace(/^#/, "")).trim();
+    if (!slug) return;
+    const sel = `dialog[data-lightbox][data-slug="${(window.CSS && CSS.escape ? CSS.escape(slug) : slug)}"]`;
+    const dlg = document.querySelector(sel) as HTMLDialogElement | null;
+    if (dlg) openLightbox(Number(dlg.dataset.index));
+  }
+
+  document.addEventListener("astro:page-load", () => {
+    setupLightbox();
+    openFromHash();
+  });
 </script>
 
 <style>
