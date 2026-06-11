@@ -167,8 +167,10 @@ Funkce:
 - **Lupa ve full view** — v plné velikosti je kurzor zaměřovací křížek; podržením
   myši se místo pod kurzorem pomalu zvětší tak, že **fotka naroste přes okraje okna**
   (strop měřítka je `Math.max(nativeScale, 3)` — aspoň 3×, u fotek s vysokým rozlišením
-  až na nativní pixely), po puštění se pomalu vrátí. CSS `transform: scale` + `transition`;
-  rychlost i strop lze ladit ve funkcích `magnifyStart` / `magnifyEnd`.
+  až na nativní pixely). **Při pohybu křížkem obraz plynule jede za kurzorem**
+  (`transform-origin` sleduje bod pod křížkem). Po puštění se pomalu vrátí.
+  CSS `transform: scale` + `transition`; rychlost i strop lze ladit ve funkcích
+  `magnifyStart` / `setMagOrigin` / `magnifyEnd`.
 - **Plná velikost = čistá fotka** — ve full view se skryje horní lišta i boční šipky,
   aby fotku nic nepřekrývalo (`dialog.lb-full .lb-bar, dialog.lb-full [data-nav] { display: none }`).
   Listuje se klávesami ←/→.
