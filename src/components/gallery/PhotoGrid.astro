@@ -3,7 +3,7 @@
 //   • listování ←/→ a bočními šipkami (dokola), počítadlo X / N
 //   • plná velikost (klik na fotku / lupa → třída lb-full přes celou obrazovku);
 //     stav plné velikosti se drží i při listování
-//   • pás náhledů sekce pod fotkou (jen v náhledu): 20% průhledný, hover plný jas,
+//   • pás náhledů sekce pod fotkou (jen v náhledu): výchozí krytí 5 %, hover plný jas,
 //     klik = přepne fotku; aktuální je zvýrazněná
 //   • posuvník pozadí černá→bílá (jen myší; proměnné --lb-bg/--lb-fg na <html>, localStorage)
 //   • zavření křížkem / Esc / klikem na pozadí
@@ -348,7 +348,7 @@ const items = await Promise.all(
     display: none;
   }
   .lb-thumb {
-    opacity: 0.8; /* výchozí 20% průhlednost */
+    opacity: 0.05; /* výchozí krytí 5 % */
     outline: 2px solid transparent;
     outline-offset: 2px;
     cursor: pointer;

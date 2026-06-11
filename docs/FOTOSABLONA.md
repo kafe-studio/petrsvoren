@@ -156,8 +156,8 @@ Veškerá logika náhledu je v jednom souboru. Funkce:
   (CSS třída `lb-full`); opětovný klik vrátí do náhledu. Listuje-li se v plné velikosti,
   každá další fotka se zobrazí rovnou taky v plné velikosti.
 - **Pás náhledů** — pod fotkou (jen v náhledu, ne v plné velikosti) je vodorovný pás
-  všech fotek sekce. Výchozí je 20% průhledný (`opacity: 0.8`), po najetí myší se fotka
-  rozsvítí naplno, kliknutím se zobrazí. Aktuální fotka je zvýrazněná rámečkem.
+  všech fotek sekce. Výchozí krytí je 5 % (`opacity: 0.05`) — pás je sotva znatelný,
+  po najetí myší se fotka rozsvítí naplno, kliknutím se zobrazí. Aktuální je zvýrazněná rámečkem.
 - **Posuvník pozadí** — táhlo v horní liště nastaví pozadí náhledu proporcionálně
   od černé (0) po bílou (100). Ovládá se **jen myší** (`tabindex="-1"`), aby klávesy
   ←/→ vždy sloužily listování. Hodnota se ukládá do `localStorage` (klíč `lb-bg`)
@@ -172,7 +172,7 @@ Co se dá snadno doladit (vše v tom souboru):
 | Výchozí pozadí náhledu | `value="6"` u `input[data-lb-bg]` a fallback `--lb-bg` ve `<style>` |
 | Práh přepnutí světlý/tmavý text | `g < 140` ve funkci `applyLightboxBg` |
 | Velikost fotky v náhledu / plné velikosti | `.lb-img` (`max-height: 78vh`) a `dialog.lb-full .lb-img` (`86vh`) |
-| Průhlednost pásu náhledů | `.lb-thumb { opacity: 0.8 }` (hover `1`) |
+| Krytí pásu náhledů | `.lb-thumb { opacity: 0.05 }` (hover `1`) |
 | Vzhled šipek | třídy u tlačítek `data-nav` |
 
 ---
