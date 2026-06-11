@@ -2,16 +2,17 @@
 // Mřížka fotek + velký náhled (lightbox). Náhled vyplní okno prohlížeče (fotka +
 // filmový pás), nic nepřesahuje a nejsou tam žádné posuvníky. Funkce:
 //   • listování ←/→ a bočními šipkami (dokola), počítadlo X / N
-//   • plná velikost (klik na fotku / lupa → třída lb-full: skryje pás i popisek,
-//     fotka dostane celé okno, vycentrovaná); stav se drží i při listování
+//   • plná velikost (klik na fotku / lupa → třída lb-full): fotka přes celé okno,
+//     vycentrovaná, nic ji nepřekrývá (lišta i šipky skryté); stav se drží při listování
 //   • ve full view zaměřovací křížek + lupa: podržení myši pomalu zvětší místo pod
 //     kurzorem tak, že fotka naroste přes okraje okna (min. 3×, u vysokého rozlišení
 //     až na nativní pixely); puštění vrátí (CSS transform/transition)
 //   • popisek + delší text pod fotkou (strop výšky 30vh → vše se vejde bez posuvníku)
 //   • pás náhledů sekce pod fotkou (jen v náhledu): krytí 5 %, hover plný jas,
 //     klik = přepne fotku; roztažený na šířku okna, aktuální zvýrazněná
-//   • posuvník pozadí černá→bílá (jen myší; --lb-bg/--lb-fg na <html>, localStorage)
-//   • zavření křížkem / Esc
+//   • posuvník pozadí černá→bílá (jen myší; --lb-bg/--lb-fg na <html>, localStorage);
+//     v náhledu v horní liště, ve full view svisle v pravém dolním rohu
+//   • zavření × (náhled) / Esc; Esc ve full view → zpět na náhled
 // Podrobnosti a možnosti úprav: docs/FOTOSABLONA.md (sekce „Velký náhled").
 import { Image } from "astro:assets";
 import { render } from "astro:content";
@@ -170,6 +171,21 @@ const items = await Promise.all(
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7" />
             </svg>
           </button>
+
+          <label class="lb-vslider" title="Pozadí: tmavé → světlé">
+            <span class="sr-only">Pozadí náhledu od černé po bílou</span>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              step="1"
+              value="6"
+              data-lb-bg
+              tabindex="-1"
+              class="lb-vrange"
+              aria-label="Pozadí náhledu od černé po bílou (jen myší)"
+            />
+          </label>
         </dialog>
       </figure>
     ))
@@ -337,6 +353,13 @@ const items = await Promise.all(
       dlg.addEventListener("close", () => {
         if (!document.querySelector("dialog[data-lightbox][open]")) lockScroll(false);
       });
+      // Esc ve full view → zpět na náhled (lišta s × tam není); v náhledu → zavřít.
+      dlg.addEventListener("cancel", (e) => {
+        if (dlg.classList.contains("lb-full")) {
+          e.preventDefault();
+          setZoom(dlg, false);
+        }
+      });
     });
   }
 
@@ -405,12 +428,12 @@ const items = await Promise.all(
   dialog.lb-full .lb-stage {
     cursor: crosshair;
   }
-  /* V plné velikosti je lišta overlay (mimo tok), aby se fotka centrovala přes
-     celé okno — stejně daleko od horního i spodního okraje. */
-  dialog.lb-full .lb-bar {
-    position: absolute;
-    inset: 0 0 auto 0;
-    z-index: 30;
+  /* Ve full view nesmí fotku nic překrývat: skryj horní lištu i boční šipky.
+     Lišta je mimo tok (display:none), takže fotka se centruje přes celé okno
+     — stejně daleko od horního i spodního okraje. */
+  dialog.lb-full .lb-bar,
+  dialog.lb-full [data-nav] {
+    display: none;
   }
 
   /* Popisek + delší text pod fotkou. Strop výšky je pojistka proti přetečení —
@@ -482,6 +505,53 @@ const items = await Promise.all(
   .lb-range::-moz-range-thumb {
     width: 2px;
     height: 12px;
+    border: 0;
+    border-radius: 0;
+    background: var(--lb-fg, #fff);
+  }
+
+  /* Svislý posuvník pozadí v pravém dolním rohu — jen ve full view. */
+  .lb-vslider {
+    display: none;
+    position: fixed;
+    right: 0.85rem;
+    bottom: 0.85rem;
+    z-index: 40;
+  }
+  dialog.lb-full .lb-vslider {
+    display: block;
+  }
+  .lb-vrange {
+    -webkit-appearance: none;
+    appearance: none;
+    writing-mode: vertical-lr;
+    direction: rtl;
+    width: 14px;
+    height: 160px;
+    background: transparent;
+    cursor: pointer;
+  }
+  .lb-vrange::-webkit-slider-runnable-track {
+    width: 1px;
+    background: color-mix(in srgb, var(--lb-fg, #888) 35%, transparent);
+  }
+  .lb-vrange::-moz-range-track {
+    width: 1px;
+    background: color-mix(in srgb, var(--lb-fg, #888) 35%, transparent);
+  }
+  .lb-vrange::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 12px;
+    height: 2px;
+    margin-left: -5.5px;
+    border: 0;
+    border-radius: 0;
+    background: var(--lb-fg, #fff);
+  }
+  .lb-vrange::-moz-range-thumb {
+    width: 12px;
+    height: 2px;
     border: 0;
     border-radius: 0;
     background: var(--lb-fg, #fff);

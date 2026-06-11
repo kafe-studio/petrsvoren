@@ -169,12 +169,15 @@ Funkce:
   (strop měřítka je `Math.max(nativeScale, 3)` — aspoň 3×, u fotek s vysokým rozlišením
   až na nativní pixely), po puštění se pomalu vrátí. CSS `transform: scale` + `transition`;
   rychlost i strop lze ladit ve funkcích `magnifyStart` / `magnifyEnd`.
-- **Posuvník pozadí** — táhlo v horní liště nastaví pozadí náhledu proporcionálně
-  od černé (0) po bílou (100). Ovládá se **jen myší** (`tabindex="-1"`), aby klávesy
-  ←/→ vždy sloužily listování. Hodnota se ukládá do `localStorage` (klíč `lb-bg`)
-  a platí pro všechny fotky. Pozadí řídí proměnné `--lb-bg` / `--lb-fg` na `<html>`;
-  text i ovládání se automaticky přebarví na kontrastní odstín.
-- **Zavření** — křížek nebo Esc; vrátí zpět do galerie.
+- **Plná velikost = čistá fotka** — ve full view se skryje horní lišta i boční šipky,
+  aby fotku nic nepřekrývalo (`dialog.lb-full .lb-bar, dialog.lb-full [data-nav] { display: none }`).
+  Listuje se klávesami ←/→.
+- **Posuvník pozadí** — nastaví pozadí náhledu proporcionálně od černé (0) po bílou (100).
+  V náhledu je v horní liště, **ve full view svisle v pravém dolním rohu** (`.lb-vslider`).
+  Ovládá se **jen myší** (`tabindex="-1"`), aby klávesy ←/→ vždy sloužily listování.
+  Hodnota se ukládá do `localStorage` (klíč `lb-bg`) a platí pro všechny fotky; pozadí
+  řídí proměnné `--lb-bg` / `--lb-fg` na `<html>`, text i ovládání se přebarví na kontrast.
+- **Zavření** — v náhledu křížek nebo Esc; **ve full view Esc vrátí na náhled** (druhý Esc zavře).
 
 Co se dá snadno doladit (vše v tom souboru):
 
