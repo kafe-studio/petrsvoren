@@ -3,7 +3,20 @@ export const prerender = true;
 import BaseLayout from "../layouts/BaseLayout.astro";
 import Tips from "../components/home/Tips.astro";
 import { siteConfig } from "../config/site";
+import { getCollection } from "astro:content";
+import { Image } from "astro:assets";
 const metadata = { title: siteConfig.name, description: siteConfig.description, ignoreTitleTemplate: true };
+
+// Vedoucí fotka každé sekce (nejnižší order) jako výřez do dlaždice.
+const photos = await getCollection("photos");
+const sectionCover = new Map(
+  siteConfig.sections.map((s) => {
+    const lead = photos
+      .filter((p) => p.data.section === s.slug)
+      .sort((a, b) => a.data.order - b.data.order)[0];
+    return [s.slug, lead?.data.cover];
+  }),
+);
 // Úvodní fotka: nahraj soubor do public/hero.jpg. Než bude, zobrazí se tmavé pozadí.
 ---
 
@@ -31,16 +44,32 @@ const metadata = { title: siteConfig.name, description: siteConfig.description, 
   <section class="py-24 px-6">
     <div class="mx-auto max-w-5xl">
       <h2 class="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-10 reveal">Sekce</h2>
-      <nav class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px bg-border reveal" aria-label="Sekce galerie">
-        {siteConfig.sections.map((section) => (
-          <a
-            href={`/${section.slug}/`}
-            class="group flex items-center justify-between bg-background px-6 py-8 transition-colors hover:bg-muted"
-          >
-            <span class="text-xl font-semibold tracking-tight">{section.title}</span>
-            <span class="text-muted-foreground transition-transform group-hover:translate-x-1">&rarr;</span>
-          </a>
-        ))}
+      <nav class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 reveal" aria-label="Sekce galerie">
+        {siteConfig.sections.map((section) => {
+          const cover = sectionCover.get(section.slug);
+          return (
+            <a
+              href={`/${section.slug}/`}
+              class="group relative flex items-end overflow-hidden rounded-sm bg-neutral-900 aspect-[4/3]"
+            >
+              {cover && (
+                <Image
+                  src={cover}
+                  alt={`Sekce ${section.title}`}
+                  widths={[400, 800]}
+                  sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                  loading="lazy"
+                  class="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+              )}
+              <span class="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent" aria-hidden="true"></span>
+              <span class="relative z-10 flex w-full items-center justify-between px-5 py-4">
+                <span class="text-xl font-semibold tracking-tight text-white">{section.title}</span>
+                <span class="text-white/70 transition-transform group-hover:translate-x-1">&rarr;</span>
+              </span>
+            </a>
+          );
+        })}
       </nav>
     </div>
   </section>
