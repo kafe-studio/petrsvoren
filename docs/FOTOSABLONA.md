@@ -174,7 +174,7 @@ Funkce:
 - **Plná velikost** — ve full view se skryje horní lišta (`dialog.lb-full .lb-bar { display: none }`);
   zůstanou jen **decentní šipky** pro listování (nízké krytí, na hover plné) a listuje se i klávesami ←/→.
 - **Posuvník pozadí** — nastaví pozadí náhledu proporcionálně od černé (0) po bílou (100).
-  V náhledu je v horní liště, **ve full view svisle v pravém dolním rohu** (`.lb-vslider`).
+  Je **vždy svisle v pravém dolním rohu** (`.lb-vslider`, náhled i full view).
   Ovládá se **jen myší** (`tabindex="-1"`), aby klávesy ←/→ vždy sloužily listování.
   Hodnota se ukládá do `localStorage` (klíč `lb-bg`) a platí pro všechny fotky; pozadí
   řídí proměnné `--lb-bg` / `--lb-fg` na `<html>`, text i ovládání se přebarví na kontrast.

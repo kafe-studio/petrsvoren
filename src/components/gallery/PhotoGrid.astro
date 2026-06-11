@@ -12,7 +12,7 @@
 //   • pás náhledů sekce pod fotkou (jen v náhledu): krytí 5 %, hover plný jas,
 //     klik = přepne fotku; roztažený na šířku okna, aktuální zvýrazněná
 //   • posuvník pozadí černá→bílá (jen myší; --lb-bg/--lb-fg na <html>, localStorage);
-//     v náhledu v horní liště, ve full view svisle v pravém dolním rohu
+//     vždy svisle v pravém dolním rohu (náhled i full view)
 //   • zavření × (náhled) / Esc; Esc ve full view → zpět na náhled
 // Podrobnosti a možnosti úprav: docs/FOTOSABLONA.md (sekce „Velký náhled").
 import { Image } from "astro:assets";
@@ -79,20 +79,7 @@ const items = await Promise.all(
               {siteConfig.name}
             </a>
             <span class="shrink-0 text-xs tabular-nums opacity-50">{index + 1} / {items.length}</span>
-            <label class="flex min-w-0 flex-1 items-center justify-center" title="Pozadí náhledu: černá → bílá">
-              <span class="sr-only">Pozadí náhledu od černé po bílou</span>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                step="1"
-                value="6"
-                data-lb-bg
-                tabindex="-1"
-                class="lb-range w-full max-w-56"
-                aria-label="Pozadí náhledu od černé po bílou (jen myší)"
-              />
-            </label>
+            <div class="flex-1"></div>
             <div class="flex shrink-0 items-center gap-1">
               <button
                 type="button"
@@ -592,16 +579,12 @@ const items = await Promise.all(
     display: block;
   }
 
-  /* Svislý posuvník pozadí v pravém dolním rohu — jen ve full view. */
+  /* Svislý posuvník pozadí — vždy v pravém dolním rohu (náhled i full view). */
   .lb-vslider {
-    display: none;
     position: fixed;
     right: 0.85rem;
     bottom: 0.85rem;
     z-index: 40;
-  }
-  dialog.lb-full .lb-vslider {
-    display: block;
   }
   .lb-vrange {
     -webkit-appearance: none;
