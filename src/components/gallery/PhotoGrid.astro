@@ -1,8 +1,11 @@
 ---
 // Mřížka fotek + velký náhled (lightbox). Funkce náhledu:
 //   • listování ←/→ a bočními šipkami (dokola), počítadlo X / N
-//   • plná velikost (klik na fotku / lupa → třída lb-full přes celou obrazovku)
-//   • posuvník pozadí černá→bílá (proměnné --lb-bg/--lb-fg na <html>, uloženo v localStorage)
+//   • plná velikost (klik na fotku / lupa → třída lb-full přes celou obrazovku);
+//     stav plné velikosti se drží i při listování
+//   • pás náhledů sekce pod fotkou (jen v náhledu): 20% průhledný, hover plný jas,
+//     klik = přepne fotku; aktuální je zvýrazněná
+//   • posuvník pozadí černá→bílá (jen myší; proměnné --lb-bg/--lb-fg na <html>, localStorage)
 //   • zavření křížkem / Esc / klikem na pozadí
 // Podrobnosti a možnosti úprav: docs/FOTOSABLONA.md (sekce „Velký náhled").
 import { Image } from "astro:assets";
@@ -69,8 +72,9 @@ const items = await Promise.all(
                 step="1"
                 value="6"
                 data-lb-bg
+                tabindex="-1"
                 class="lb-range w-full max-w-56"
-                aria-label="Pozadí náhledu od černé po bílou"
+                aria-label="Pozadí náhledu od černé po bílou (jen myší)"
               />
             </label>
             <div class="flex shrink-0 items-center gap-1">
@@ -129,6 +133,26 @@ const items = await Promise.all(
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7" />
               </svg>
             </button>
+            <nav class="lb-strip mt-5 flex gap-2 overflow-x-auto pb-1" aria-label="Fotky v sekci">
+              {items.map((it, i) => (
+                <button
+                  type="button"
+                  data-go={i}
+                  class:list={["lb-thumb shrink-0 overflow-hidden rounded-sm", { "is-current": i === index }]}
+                  aria-label={`Fotka ${i + 1}: ${it.photo.data.caption}`}
+                  aria-current={i === index ? "true" : undefined}
+                >
+                  <Image
+                    src={it.photo.data.cover}
+                    alt=""
+                    widths={[120, 240]}
+                    sizes="96px"
+                    loading="lazy"
+                    class="h-16 w-24 object-cover"
+                  />
+                </button>
+              ))}
+            </nav>
             <p class="mt-6 text-base font-medium">{photo.data.caption}</p>
             {hasText && (
               <div class="prose prose-neutral dark:prose-invert mt-4 max-w-2xl">
@@ -174,6 +198,12 @@ const items = await Promise.all(
     if (!dlg.open) dlg.showModal();
     setZoom(dlg, full);
     dlg.scrollTop = 0;
+    // Posuň pás tak, aby aktuální fotka byla vidět (jen vodorovně).
+    const strip = dlg.querySelector<HTMLElement>(".lb-strip");
+    const cur = dlg.querySelector<HTMLElement>(".lb-thumb.is-current");
+    if (strip && cur) {
+      strip.scrollLeft = cur.offsetLeft - strip.clientWidth / 2 + cur.clientWidth / 2;
+    }
     lockScroll(true);
   }
 
@@ -210,6 +240,13 @@ const items = await Promise.all(
         const dlg = btn.closest("dialog") as HTMLDialogElement | null;
         if (dlg) setZoom(dlg, !dlg.classList.contains("lb-full"));
       });
+    });
+
+    // Klik na náhled v pásu → zobraz tu fotku (zůstává v náhledu).
+    document.querySelectorAll<HTMLElement>("[data-go]").forEach((btn) => {
+      if (btn.dataset.bound) return;
+      btn.dataset.bound = "1";
+      btn.addEventListener("click", () => openLightbox(Number(btn.dataset.go)));
     });
 
     // Posuvník pozadí (černá → bílá). Hodnota je globální + uložená v localStorage.
@@ -257,10 +294,8 @@ const items = await Promise.all(
     w.__lightboxKeys = true;
     document.addEventListener("keydown", (e) => {
       if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
-      // Když ovládáš posuvník (nebo jiný input), šipky patří jemu, ne listování.
-      const ae = document.activeElement;
-      if (ae && (ae.tagName === "INPUT" || ae.tagName === "TEXTAREA")) return;
       if (!document.querySelector("dialog[data-lightbox][open]")) return;
+      // Šipky vždy listují mezi fotkami (i když má fokus posuvník — ten je jen pro myš).
       e.preventDefault();
       step(e.key === "ArrowRight" ? 1 : -1);
     });
@@ -302,6 +337,31 @@ const items = await Promise.all(
   dialog.lb-full .lb-img {
     max-height: 86vh;
     cursor: zoom-out;
+  }
+
+  /* Pás náhledů sekce pod fotkou — jen v náhledu, ne v plné velikosti. */
+  .lb-strip {
+    position: relative;
+    scrollbar-width: thin;
+  }
+  dialog.lb-full .lb-strip {
+    display: none;
+  }
+  .lb-thumb {
+    opacity: 0.8; /* výchozí 20% průhlednost */
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+    cursor: pointer;
+    transition:
+      opacity 0.15s ease,
+      outline-color 0.15s ease;
+  }
+  .lb-thumb:hover {
+    opacity: 1; /* po najetí myší se rozsvítí bez průhlednosti */
+  }
+  .lb-thumb.is-current {
+    opacity: 1;
+    outline-color: var(--lb-fg, #fff);
   }
 
   /* Posuvník pozadí — track má gradient černá→bílá, takže je samovysvětlující. */
