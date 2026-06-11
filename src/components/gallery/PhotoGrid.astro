@@ -1,15 +1,15 @@
 ---
-// Mřížka fotek + velký náhled (lightbox). Funkce náhledu:
+// Mřížka fotek + velký náhled (lightbox). Náhled vyplní okno prohlížeče (fotka +
+// filmový pás), nic nepřesahuje a nejsou tam žádné posuvníky. Funkce:
 //   • listování ←/→ a bočními šipkami (dokola), počítadlo X / N
-//   • plná velikost (klik na fotku / lupa → třída lb-full přes celou obrazovku);
-//     stav plné velikosti se drží i při listování
-//   • pás náhledů sekce pod fotkou (jen v náhledu): výchozí krytí 5 %, hover plný jas,
-//     klik = přepne fotku; aktuální je zvýrazněná
-//   • posuvník pozadí černá→bílá (jen myší; proměnné --lb-bg/--lb-fg na <html>, localStorage)
-//   • zavření křížkem / Esc / klikem na pozadí
+//   • plná velikost (klik na fotku / lupa → třída lb-full: skryje pás i popisek,
+//     fotka dostane celé okno); stav se drží i při listování
+//   • pás náhledů sekce pod fotkou (jen v náhledu): krytí 5 %, hover plný jas,
+//     klik = přepne fotku; roztažený na šířku okna, aktuální zvýrazněná
+//   • posuvník pozadí černá→bílá (jen myší; --lb-bg/--lb-fg na <html>, localStorage)
+//   • zavření křížkem / Esc
 // Podrobnosti a možnosti úprav: docs/FOTOSABLONA.md (sekce „Velký náhled").
 import { Image } from "astro:assets";
-import { render } from "astro:content";
 import type { CollectionEntry } from "astro:content";
 
 interface Props {
@@ -18,23 +18,15 @@ interface Props {
 
 const { photos } = Astro.props;
 
-// Předrenderuj tělo (dlouhý text) každé fotky; hasText řídí, zda se v detailu zobrazí.
-const items = await Promise.all(
-  photos.map(async (photo, index) => {
-    const { Content } = await render(photo);
-    return {
-      photo,
-      Content,
-      hasText: Boolean(photo.body?.trim()),
-      dialogId: `photo-${index}`,
-    };
-  }),
-);
+const items = photos.map((photo, index) => ({
+  photo,
+  dialogId: `photo-${index}`,
+}));
 ---
 
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
   {
-    items.map(({ photo, Content, hasText, dialogId }, index) => (
+    items.map(({ photo, dialogId }, index) => (
       <figure class="reveal">
         <button
           type="button"
@@ -59,9 +51,9 @@ const items = await Promise.all(
           id={dialogId}
           data-lightbox
           data-index={index}
-          class="m-auto w-[92vw] max-w-5xl max-h-[92vh] overflow-y-auto p-0 backdrop:bg-black/85"
+          class="lb-dialog backdrop:bg-black/85"
         >
-          <div class="lb-bar sticky top-0 z-20 flex items-center gap-3 px-3 py-2 backdrop-blur">
+          <div class="lb-bar flex shrink-0 items-center gap-3 px-3 py-2">
             <span class="shrink-0 text-xs tabular-nums opacity-60">{index + 1} / {items.length}</span>
             <label class="flex min-w-0 flex-1 items-center justify-center" title="Pozadí náhledu: černá → bílá">
               <span class="sr-only">Pozadí náhledu od černé po bílou</span>
@@ -102,64 +94,61 @@ const items = await Promise.all(
               </form>
             </div>
           </div>
-          <div class="px-6 pb-10">
-            <button type="button" data-zoom class="block w-full" aria-label="Přepnout plnou velikost">
-              <Image
-                src={photo.data.cover}
-                alt={photo.data.coverAlt ?? photo.data.caption}
-                widths={[800, 1600]}
-                sizes="(min-width: 1024px) 80vw, 100vw"
-                loading="lazy"
-                class="lb-img mx-auto block h-auto w-auto object-contain"
-              />
-            </button>
-            <button
-              type="button"
-              data-nav="prev"
-              class="fixed left-2 top-1/2 z-30 -translate-y-1/2 rounded-full bg-black/30 p-2 text-white/70 backdrop-blur-sm transition hover:bg-black/50 hover:text-white sm:left-4"
-              aria-label="Předchozí fotka"
-            >
-              <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-            <button
-              type="button"
-              data-nav="next"
-              class="fixed right-2 top-1/2 z-30 -translate-y-1/2 rounded-full bg-black/30 p-2 text-white/70 backdrop-blur-sm transition hover:bg-black/50 hover:text-white sm:right-4"
-              aria-label="Další fotka"
-            >
-              <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-            <nav class="lb-strip mt-5 flex gap-2 overflow-x-auto pb-1" aria-label="Fotky v sekci">
-              {items.map((it, i) => (
-                <button
-                  type="button"
-                  data-go={i}
-                  class:list={["lb-thumb shrink-0 overflow-hidden rounded-sm", { "is-current": i === index }]}
-                  aria-label={`Fotka ${i + 1}: ${it.photo.data.caption}`}
-                  aria-current={i === index ? "true" : undefined}
-                >
-                  <Image
-                    src={it.photo.data.cover}
-                    alt=""
-                    widths={[120, 240]}
-                    sizes="96px"
-                    loading="lazy"
-                    class="h-16 w-24 object-cover"
-                  />
-                </button>
-              ))}
-            </nav>
-            <p class="mt-6 text-base font-medium">{photo.data.caption}</p>
-            {hasText && (
-              <div class="prose prose-neutral dark:prose-invert mt-4 max-w-2xl">
-                <Content />
-              </div>
-            )}
-          </div>
+
+          <button type="button" data-zoom class="lb-stage" aria-label="Přepnout plnou velikost">
+            <Image
+              src={photo.data.cover}
+              alt={photo.data.coverAlt ?? photo.data.caption}
+              widths={[800, 1600]}
+              sizes="100vw"
+              loading="lazy"
+              class="lb-img"
+            />
+          </button>
+
+          <p class="lb-caption shrink-0 px-4 pb-1 pt-2 text-center text-sm font-medium">{photo.data.caption}</p>
+
+          <nav class="lb-strip flex shrink-0 gap-1 px-2 pb-2" aria-label="Fotky v sekci">
+            {items.map((it, i) => (
+              <button
+                type="button"
+                data-go={i}
+                class:list={["lb-thumb min-w-0 flex-1 overflow-hidden rounded-sm", { "is-current": i === index }]}
+                aria-label={`Fotka ${i + 1}: ${it.photo.data.caption}`}
+                aria-current={i === index ? "true" : undefined}
+              >
+                <Image
+                  src={it.photo.data.cover}
+                  alt=""
+                  widths={[120, 240]}
+                  sizes="160px"
+                  loading="lazy"
+                  class="block h-12 w-full object-cover sm:h-14"
+                />
+              </button>
+            ))}
+          </nav>
+
+          <button
+            type="button"
+            data-nav="prev"
+            class="fixed left-2 top-1/2 z-30 -translate-y-1/2 rounded-full bg-black/30 p-2 text-white/70 backdrop-blur-sm transition hover:bg-black/50 hover:text-white sm:left-4"
+            aria-label="Předchozí fotka"
+          >
+            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            data-nav="next"
+            class="fixed right-2 top-1/2 z-30 -translate-y-1/2 rounded-full bg-black/30 p-2 text-white/70 backdrop-blur-sm transition hover:bg-black/50 hover:text-white sm:right-4"
+            aria-label="Další fotka"
+          >
+            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
         </dialog>
       </figure>
     ))
@@ -171,10 +160,9 @@ const items = await Promise.all(
     document.documentElement.style.overflow = on ? "hidden" : "";
   }
 
-  // Plná velikost = roztažení náhledu přes celou obrazovku (zůstává v okně, ne nová záložka).
+  // Plná velikost = skryje pás i popisek, fotka dostane celé okno (zůstává v okně).
   function setZoom(dlg: HTMLDialogElement, on: boolean) {
     dlg.classList.toggle("lb-full", on);
-    if (!on) dlg.scrollTop = 0;
   }
 
   // Pozadí náhledu: 0 = černá … 100 = bílá. Nastaví proporcionální šeď + kontrastní text.
@@ -197,13 +185,6 @@ const items = await Promise.all(
       });
     if (!dlg.open) dlg.showModal();
     setZoom(dlg, full);
-    dlg.scrollTop = 0;
-    // Posuň pás tak, aby aktuální fotka byla vidět (jen vodorovně).
-    const strip = dlg.querySelector<HTMLElement>(".lb-strip");
-    const cur = dlg.querySelector<HTMLElement>(".lb-thumb.is-current");
-    if (strip && cur) {
-      strip.scrollLeft = cur.offsetLeft - strip.clientWidth / 2 + cur.clientWidth / 2;
-    }
     lockScroll(true);
   }
 
@@ -305,52 +286,56 @@ const items = await Promise.all(
 </script>
 
 <style>
-  /* Pozadí náhledu řídí posuvník přes proměnné --lb-bg / --lb-fg (na <html>).
-     Fallback drží tmavý vzhled, než se spustí JS. */
-  dialog[data-lightbox] {
+  /* Lightbox vyplní celé okno a vejde se celý — žádné posuvníky.
+     Pozadí řídí posuvník přes proměnné --lb-bg / --lb-fg (na <html>). */
+  .lb-dialog {
+    width: 100vw;
+    max-width: 100vw;
+    height: 100dvh;
+    max-height: 100dvh;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
     background: var(--lb-bg, #0a0a0f);
     color: var(--lb-fg, #ededed);
   }
   .lb-bar {
     background: color-mix(in srgb, var(--lb-bg, #0a0a0f) 88%, transparent);
   }
-  /* Dlouhý text (prose) přebarvi podle zvoleného pozadí, ať zůstane čitelný. */
-  dialog[data-lightbox] .prose {
-    --tw-prose-body: var(--lb-fg, #ededed);
-    --tw-prose-headings: var(--lb-fg, #ededed);
-    --tw-prose-bold: var(--lb-fg, #ededed);
-  }
 
-  /* Náhled: fotka se vejde do okna. Klik / lupa přepne na plnou velikost. */
-  .lb-img {
-    max-height: 78vh;
-    max-width: 100%;
+  /* Fotka zabere zbylé místo a celá se vejde (object-contain). */
+  .lb-stage {
+    flex: 1 1 0;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    overflow: hidden;
+    padding: 0 0.5rem;
     cursor: zoom-in;
   }
-  /* Plná velikost: dialog přes celou obrazovku, fotka co největší (bez vodorovného scrollu). */
-  dialog.lb-full {
-    width: 100vw;
-    max-width: 100vw;
-    height: 100dvh;
-    max-height: 100dvh;
+  .lb-img {
+    max-height: 100%;
+    max-width: 100%;
+    object-fit: contain;
   }
-  dialog.lb-full .lb-img {
-    max-height: 86vh;
+  dialog.lb-full .lb-stage {
     cursor: zoom-out;
   }
-
-  /* Pás náhledů sekce pod fotkou — jen v náhledu, ne v plné velikosti. */
-  .lb-strip {
-    position: relative;
-    scrollbar-width: thin;
-  }
-  dialog.lb-full .lb-strip {
+  /* Plná velikost: skryj pás i popisek → fotka dostane celé okno. */
+  dialog.lb-full .lb-strip,
+  dialog.lb-full .lb-caption {
     display: none;
   }
+
+  /* Pás náhledů sekce — roztažený na šířku okna, nikdy nepřesahuje (žádný scroll). */
   .lb-thumb {
     opacity: 0.05; /* výchozí krytí 5 % */
     outline: 2px solid transparent;
-    outline-offset: 2px;
+    outline-offset: -2px;
     cursor: pointer;
     transition:
       opacity 0.15s ease,

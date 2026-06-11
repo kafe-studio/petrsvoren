@@ -103,7 +103,8 @@ Když ho vynecháš, v náhledu se zobrazí jen fotka a popisek.
 
 - **`cover`** prochází optimalizací (`astro:assets`) → generují se WebP varianty automaticky.
 - **`order`** řídí pořadí v mřížce i listování v náhledu.
-- Obrázek může být libovolně velký; „plná velikost" v náhledu ukáže jeho nativní rozlišení.
+- Delší text v těle `.md` je volitelný; **ve velkém náhledu se aktuálně nezobrazuje**
+  (náhled vyplňuje celé okno — fotka + filmový pás), zůstává ale uložený v souboru.
 
 Přidání fotky = zkopíruj obrázek do `src/content/photos/`, vytvoř k němu `.md`. Hotovo.
 
@@ -149,7 +150,10 @@ Prázdná složka = blog ukáže „Zatím žádné články". (Aspoň jeden čl
 
 ## 6. Velký náhled (lightbox) — `src/components/gallery/PhotoGrid.astro`
 
-Veškerá logika náhledu je v jednom souboru. Funkce:
+Veškerá logika náhledu je v jednom souboru. Náhled **vyplňuje celé okno prohlížeče**
+(flex sloupec: lišta + fotka + popisek + pás), fotka pružně zabere zbylé místo a celá
+se vejde — **nic nepřetéká a nejsou tam žádné posuvníky** (`.lb-dialog { overflow: hidden }`).
+Funkce:
 
 - **Listování** — boční šipky + klávesy ←/→, dokola; počítadlo „X / N".
 - **Plná velikost** — klik na fotku nebo ikona lupy roztáhne náhled přes celou obrazovku
@@ -163,7 +167,7 @@ Veškerá logika náhledu je v jednom souboru. Funkce:
   ←/→ vždy sloužily listování. Hodnota se ukládá do `localStorage` (klíč `lb-bg`)
   a platí pro všechny fotky. Pozadí řídí proměnné `--lb-bg` / `--lb-fg` na `<html>`;
   text i ovládání se automaticky přebarví na kontrastní odstín.
-- **Zavření** — křížek, Esc nebo klik na pozadí; vrátí zpět do galerie.
+- **Zavření** — křížek nebo Esc; vrátí zpět do galerie.
 
 Co se dá snadno doladit (vše v tom souboru):
 
@@ -171,7 +175,9 @@ Co se dá snadno doladit (vše v tom souboru):
 |---|---|
 | Výchozí pozadí náhledu | `value="6"` u `input[data-lb-bg]` a fallback `--lb-bg` ve `<style>` |
 | Práh přepnutí světlý/tmavý text | `g < 140` ve funkci `applyLightboxBg` |
-| Velikost fotky v náhledu / plné velikosti | `.lb-img` (`max-height: 78vh`) a `dialog.lb-full .lb-img` (`86vh`) |
+| Layout náhledu (vždy přes celé okno) | `.lb-dialog` (flex sloupec, `overflow: hidden`) + `.lb-stage` (`flex: 1`) |
+| Co skrýt v plné velikosti | `dialog.lb-full .lb-strip, dialog.lb-full .lb-caption { display: none }` |
+| Výška náhledů v pásu | `.lb-thumb img` (`h-12 sm:h-14`) |
 | Krytí pásu náhledů | `.lb-thumb { opacity: 0.05 }` (hover `1`) |
 | Vzhled šipek | třídy u tlačítek `data-nav` |
 
