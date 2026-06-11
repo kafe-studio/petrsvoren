@@ -306,6 +306,7 @@ const items = await Promise.all(
   /* Lightbox vyplní celé okno a vejde se celý — žádné posuvníky.
      Pozadí řídí posuvník přes proměnné --lb-bg / --lb-fg (na <html>). */
   .lb-dialog {
+    position: relative;
     width: 100vw;
     max-width: 100vw;
     height: 100dvh;
@@ -345,6 +346,13 @@ const items = await Promise.all(
   }
   dialog.lb-full .lb-stage {
     cursor: zoom-out;
+  }
+  /* V plné velikosti je lišta overlay (mimo tok), aby se fotka centrovala přes
+     celé okno — stejně daleko od horního i spodního okraje. */
+  dialog.lb-full .lb-bar {
+    position: absolute;
+    inset: 0 0 auto 0;
+    z-index: 30;
   }
 
   /* Popisek + delší text pod fotkou. Strop výšky je pojistka proti přetečení —
