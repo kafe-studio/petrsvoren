@@ -18,6 +18,7 @@
 import { Image } from "astro:assets";
 import { render } from "astro:content";
 import type { CollectionEntry } from "astro:content";
+import { siteConfig } from "../../config/site";
 
 interface Props {
   photos: CollectionEntry<"photos">[];
@@ -69,7 +70,14 @@ const items = await Promise.all(
           class="lb-dialog backdrop:bg-black/85"
         >
           <div class="lb-bar flex shrink-0 items-center gap-3 px-3 py-2">
-            <span class="shrink-0 text-xs tabular-nums opacity-60">{index + 1} / {items.length}</span>
+            <a
+              href="/"
+              class="shrink-0 text-xs font-bold tracking-tight opacity-80 transition-opacity hover:opacity-100"
+              aria-label={`${siteConfig.name} — domů`}
+            >
+              {siteConfig.name}
+            </a>
+            <span class="shrink-0 text-xs tabular-nums opacity-50">{index + 1} / {items.length}</span>
             <label class="flex min-w-0 flex-1 items-center justify-center" title="Pozadí náhledu: černá → bílá">
               <span class="sr-only">Pozadí náhledu od černé po bílou</span>
               <input
@@ -389,6 +397,10 @@ const items = await Promise.all(
   const w = window as unknown as { __lightboxKeys?: boolean };
   if (!w.__lightboxKeys) {
     w.__lightboxKeys = true;
+    // Při odchodu ze stránky (např. klik na logo v lightboxu) uvolni zámek scrollu.
+    document.addEventListener("astro:before-swap", () => {
+      document.documentElement.style.overflow = "";
+    });
     document.addEventListener("keydown", (e) => {
       if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
       if (!document.querySelector("dialog[data-lightbox][open]")) return;
