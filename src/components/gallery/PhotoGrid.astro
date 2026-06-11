@@ -4,12 +4,14 @@
 //   • listování ←/→ a bočními šipkami (dokola), počítadlo X / N
 //   • plná velikost (klik na fotku / lupa → třída lb-full: skryje pás i popisek,
 //     fotka dostane celé okno); stav se drží i při listování
+//   • popisek + delší text pod fotkou (strop výšky 30vh → vše se vejde bez posuvníku)
 //   • pás náhledů sekce pod fotkou (jen v náhledu): krytí 5 %, hover plný jas,
 //     klik = přepne fotku; roztažený na šířku okna, aktuální zvýrazněná
 //   • posuvník pozadí černá→bílá (jen myší; --lb-bg/--lb-fg na <html>, localStorage)
 //   • zavření křížkem / Esc
 // Podrobnosti a možnosti úprav: docs/FOTOSABLONA.md (sekce „Velký náhled").
 import { Image } from "astro:assets";
+import { render } from "astro:content";
 import type { CollectionEntry } from "astro:content";
 
 interface Props {
@@ -18,15 +20,23 @@ interface Props {
 
 const { photos } = Astro.props;
 
-const items = photos.map((photo, index) => ({
-  photo,
-  dialogId: `photo-${index}`,
-}));
+// Předrenderuj tělo (volitelný delší text) každé fotky; hasText řídí, zda se zobrazí.
+const items = await Promise.all(
+  photos.map(async (photo, index) => {
+    const { Content } = await render(photo);
+    return {
+      photo,
+      Content,
+      hasText: Boolean(photo.body?.trim()),
+      dialogId: `photo-${index}`,
+    };
+  }),
+);
 ---
 
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
   {
-    items.map(({ photo, dialogId }, index) => (
+    items.map(({ photo, Content, hasText, dialogId }, index) => (
       <figure class="reveal">
         <button
           type="button"
@@ -106,7 +116,14 @@ const items = photos.map((photo, index) => ({
             />
           </button>
 
-          <p class="lb-caption shrink-0 px-4 pb-1 pt-2 text-center text-sm font-medium">{photo.data.caption}</p>
+          <div class="lb-meta shrink-0 px-4 pb-1 pt-2 text-center">
+            <p class="text-sm font-medium">{photo.data.caption}</p>
+            {hasText && (
+              <div class="lb-text">
+                <Content />
+              </div>
+            )}
+          </div>
 
           <nav class="lb-strip flex shrink-0 gap-1 px-2 pb-2" aria-label="Fotky v sekci">
             {items.map((it, i) => (
@@ -325,9 +342,26 @@ const items = photos.map((photo, index) => ({
   dialog.lb-full .lb-stage {
     cursor: zoom-out;
   }
-  /* Plná velikost: skryj pás i popisek → fotka dostane celé okno. */
+
+  /* Popisek + delší text pod fotkou. Strop výšky je pojistka proti přetečení —
+     reálné texty se vždy vejdou a posuvník se nikdy nezobrazí. */
+  .lb-meta {
+    max-height: 30vh;
+    overflow: hidden;
+  }
+  .lb-meta .lb-text {
+    margin: 0.25rem auto 0;
+    max-width: 42rem;
+    font-size: 0.875rem;
+    line-height: 1.55;
+    opacity: 0.85;
+  }
+  .lb-meta .lb-text :global(p) {
+    margin: 0.35rem 0 0;
+  }
+  /* Plná velikost: skryj pás i popisek/text → fotka dostane celé okno. */
   dialog.lb-full .lb-strip,
-  dialog.lb-full .lb-caption {
+  dialog.lb-full .lb-meta {
     display: none;
   }
 
