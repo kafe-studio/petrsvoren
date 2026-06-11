@@ -3,7 +3,7 @@
 // filmový pás), nic nepřesahuje a nejsou tam žádné posuvníky. Funkce:
 //   • listování ←/→ a bočními šipkami (dokola), počítadlo X / N
 //   • plná velikost (klik na fotku / lupa → třída lb-full): fotka přes celé okno,
-//     vycentrovaná, nic ji nepřekrývá (lišta i šipky skryté); stav se drží při listování
+//     vycentrovaná; lišta skrytá, zůstanou jen decentní šipky pro listování; stav se drží
 //   • ve full view zaměřovací křížek + lupa: podržení myši pomalu zvětší místo pod
 //     kurzorem tak, že fotka naroste přes okraje okna (min. 3×, u vysokého rozlišení
 //     až na nativní pixely); při pohybu křížkem obraz plynule jede za ním
@@ -464,12 +464,16 @@ const items = await Promise.all(
     cursor: crosshair;
     padding-block: 4vh;
   }
-  /* Ve full view nesmí fotku nic překrývat: skryj horní lištu i boční šipky.
-     Lišta je mimo tok (display:none), takže fotka se centruje přes celé okno
-     — stejně daleko od horního i spodního okraje. */
-  dialog.lb-full .lb-bar,
-  dialog.lb-full [data-nav] {
+  /* Ve full view skryj jen horní lištu (fotka se centruje přes celé okno).
+     Šipky pro listování zůstanou, ale decentní — nízké krytí, na hover plné. */
+  dialog.lb-full .lb-bar {
     display: none;
+  }
+  dialog.lb-full [data-nav] {
+    opacity: 0.3;
+  }
+  dialog.lb-full [data-nav]:hover {
+    opacity: 1;
   }
 
   /* Popisek + delší text pod fotkou. Strop výšky je pojistka proti přetečení —

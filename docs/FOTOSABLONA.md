@@ -171,9 +171,8 @@ Funkce:
   (`transform-origin` sleduje bod pod křížkem). Po puštění se pomalu vrátí.
   CSS `transform: scale` + `transition`; rychlost i strop lze ladit ve funkcích
   `magnifyStart` / `setMagOrigin` / `magnifyEnd`.
-- **Plná velikost = čistá fotka** — ve full view se skryje horní lišta i boční šipky,
-  aby fotku nic nepřekrývalo (`dialog.lb-full .lb-bar, dialog.lb-full [data-nav] { display: none }`).
-  Listuje se klávesami ←/→.
+- **Plná velikost** — ve full view se skryje horní lišta (`dialog.lb-full .lb-bar { display: none }`);
+  zůstanou jen **decentní šipky** pro listování (nízké krytí, na hover plné) a listuje se i klávesami ←/→.
 - **Posuvník pozadí** — nastaví pozadí náhledu proporcionálně od černé (0) po bílou (100).
   V náhledu je v horní liště, **ve full view svisle v pravém dolním rohu** (`.lb-vslider`).
   Ovládá se **jen myší** (`tabindex="-1"`), aby klávesy ←/→ vždy sloužily listování.
