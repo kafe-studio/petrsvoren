@@ -364,32 +364,37 @@ const items = await Promise.all(
     outline-color: var(--lb-fg, #fff);
   }
 
-  /* Posuvník pozadí — track má gradient černá→bílá, takže je samovysvětlující. */
+  /* Posuvník pozadí — velmi decentní: tenká linka s krátkou svislou čárkou (jezdcem). */
   .lb-range {
     -webkit-appearance: none;
     appearance: none;
-    height: 6px;
-    border-radius: 9999px;
-    background: linear-gradient(to right, #000, #fff);
-    border: 1px solid color-mix(in srgb, var(--lb-fg, #888) 35%, transparent);
+    height: 14px;
+    background: transparent;
     cursor: pointer;
+  }
+  .lb-range::-webkit-slider-runnable-track {
+    height: 1px;
+    background: color-mix(in srgb, var(--lb-fg, #888) 30%, transparent);
+  }
+  .lb-range::-moz-range-track {
+    height: 1px;
+    background: color-mix(in srgb, var(--lb-fg, #888) 30%, transparent);
   }
   .lb-range::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
-    width: 16px;
-    height: 16px;
-    border-radius: 9999px;
+    width: 2px;
+    height: 12px;
+    margin-top: -5.5px; /* vycentruj čárku na 1px lince */
+    border: 0;
+    border-radius: 0;
     background: var(--lb-fg, #fff);
-    border: 2px solid color-mix(in srgb, var(--lb-bg, #000) 55%, var(--lb-fg, #fff));
-    box-shadow: 0 1px 3px rgb(0 0 0 / 0.5);
   }
   .lb-range::-moz-range-thumb {
-    width: 16px;
-    height: 16px;
-    border-radius: 9999px;
+    width: 2px;
+    height: 12px;
+    border: 0;
+    border-radius: 0;
     background: var(--lb-fg, #fff);
-    border: 2px solid color-mix(in srgb, var(--lb-bg, #000) 55%, var(--lb-fg, #fff));
-    box-shadow: 0 1px 3px rgb(0 0 0 / 0.5);
   }
 </style>
