@@ -1,5 +1,5 @@
 ---
-import { Image, getImage } from "astro:assets";
+import { Image } from "astro:assets";
 import { render } from "astro:content";
 import type { CollectionEntry } from "astro:content";
 
@@ -13,14 +13,11 @@ const { photos } = Astro.props;
 const items = await Promise.all(
   photos.map(async (photo, index) => {
     const { Content } = await render(photo);
-    // Plná velikost = originál ve své přirozené šířce (otevře se v nové záložce).
-    const full = await getImage({ src: photo.data.cover, width: photo.data.cover.width });
     return {
       photo,
       Content,
       hasText: Boolean(photo.body?.trim()),
       dialogId: `photo-${index}`,
-      fullSrc: full.src,
     };
   }),
 );
@@ -28,7 +25,7 @@ const items = await Promise.all(
 
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
   {
-    items.map(({ photo, Content, hasText, dialogId, fullSrc }, index) => (
+    items.map(({ photo, Content, hasText, dialogId }, index) => (
       <figure class="reveal">
         <button
           type="button"
@@ -58,18 +55,17 @@ const items = await Promise.all(
           <div class="sticky top-0 z-20 flex items-center justify-between gap-3 bg-background/90 px-3 py-2 backdrop-blur">
             <span class="text-xs text-muted-foreground tabular-nums">{index + 1} / {items.length}</span>
             <div class="flex items-center gap-1">
-              <a
-                href={fullSrc}
-                target="_blank"
-                rel="noopener noreferrer"
+              <button
+                type="button"
+                data-zoom
                 class="rounded-full p-2 text-muted-foreground transition-colors hover:text-foreground"
-                aria-label="Zobrazit v plné velikosti"
+                aria-label="Přepnout plnou velikost"
                 title="Plná velikost"
               >
                 <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 9V5a1 1 0 011-1h4M20 9V5a1 1 0 00-1-1h-4M4 15v4a1 1 0 001 1h4M20 15v4a1 1 0 01-1 1h-4" />
                 </svg>
-              </a>
+              </button>
               <form method="dialog" class="contents">
                 <button
                   type="submit"
@@ -84,44 +80,36 @@ const items = await Promise.all(
             </div>
           </div>
           <div class="px-6 pb-10">
-            <div class="relative mx-auto w-fit">
-              <a
-                href={fullSrc}
-                target="_blank"
-                rel="noopener noreferrer"
-                class="block cursor-zoom-in"
-                aria-label="Zobrazit v plné velikosti"
-              >
-                <Image
-                  src={photo.data.cover}
-                  alt={photo.data.coverAlt ?? photo.data.caption}
-                  widths={[800, 1600]}
-                  sizes="(min-width: 1024px) 80vw, 100vw"
-                  loading="lazy"
-                  class="max-h-[70vh] w-auto h-auto object-contain"
-                />
-              </a>
-              <button
-                type="button"
-                data-nav="prev"
-                class="absolute left-2 top-1/2 z-10 -translate-y-1/2 rounded-full bg-black/20 p-2 text-white/70 backdrop-blur-sm transition hover:bg-black/40 hover:text-white"
-                aria-label="Předchozí fotka"
-              >
-                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
-              <button
-                type="button"
-                data-nav="next"
-                class="absolute right-2 top-1/2 z-10 -translate-y-1/2 rounded-full bg-black/20 p-2 text-white/70 backdrop-blur-sm transition hover:bg-black/40 hover:text-white"
-                aria-label="Další fotka"
-              >
-                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-            </div>
+            <button type="button" data-zoom class="block w-full" aria-label="Přepnout plnou velikost">
+              <Image
+                src={photo.data.cover}
+                alt={photo.data.coverAlt ?? photo.data.caption}
+                widths={[800, 1600]}
+                sizes="(min-width: 1024px) 80vw, 100vw"
+                loading="lazy"
+                class="lb-img mx-auto block h-auto w-auto object-contain"
+              />
+            </button>
+            <button
+              type="button"
+              data-nav="prev"
+              class="fixed left-2 top-1/2 z-30 -translate-y-1/2 rounded-full bg-black/30 p-2 text-white/70 backdrop-blur-sm transition hover:bg-black/50 hover:text-white sm:left-4"
+              aria-label="Předchozí fotka"
+            >
+              <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              data-nav="next"
+              class="fixed right-2 top-1/2 z-30 -translate-y-1/2 rounded-full bg-black/30 p-2 text-white/70 backdrop-blur-sm transition hover:bg-black/50 hover:text-white sm:right-4"
+              aria-label="Další fotka"
+            >
+              <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
             <p class="mt-6 text-base font-medium">{photo.data.caption}</p>
             {hasText && (
               <div class="prose prose-neutral dark:prose-invert mt-4 max-w-2xl">
@@ -140,6 +128,12 @@ const items = await Promise.all(
     document.documentElement.style.overflow = on ? "hidden" : "";
   }
 
+  // Plná velikost = roztažení náhledu přes celou obrazovku (zůstává v okně, ne nová záložka).
+  function setZoom(dlg: HTMLDialogElement, on: boolean) {
+    dlg.classList.toggle("lb-full", on);
+    if (!on) dlg.scrollTop = 0;
+  }
+
   // Otevře lightbox dané fotky a zavře případný jiný otevřený.
   function openLightbox(index: number) {
     const dlg = document.getElementById(`photo-${index}`) as HTMLDialogElement | null;
@@ -150,6 +144,7 @@ const items = await Promise.all(
         if (d !== dlg) d.close();
       });
     if (!dlg.open) dlg.showModal();
+    setZoom(dlg, false); // nová fotka vždy nejdřív v náhledu, ne v plné velikosti
     lockScroll(true);
   }
 
@@ -175,6 +170,15 @@ const items = await Promise.all(
       if (btn.dataset.bound) return;
       btn.dataset.bound = "1";
       btn.addEventListener("click", () => step(btn.dataset.nav === "next" ? 1 : -1));
+    });
+
+    document.querySelectorAll<HTMLElement>("[data-zoom]").forEach((btn) => {
+      if (btn.dataset.bound) return;
+      btn.dataset.bound = "1";
+      btn.addEventListener("click", () => {
+        const dlg = btn.closest("dialog") as HTMLDialogElement | null;
+        if (dlg) setZoom(dlg, !dlg.classList.contains("lb-full"));
+      });
     });
 
     document.querySelectorAll<HTMLDialogElement>("dialog[data-lightbox]").forEach((dlg) => {
@@ -205,3 +209,23 @@ const items = await Promise.all(
 
   document.addEventListener("astro:page-load", setupLightbox);
 </script>
+
+<style>
+  /* Náhled: fotka se vejde do okna. Klik / lupa přepne na plnou velikost. */
+  .lb-img {
+    max-height: 78vh;
+    max-width: 100%;
+    cursor: zoom-in;
+  }
+  /* Plná velikost: dialog přes celou obrazovku, fotka co největší (bez vodorovného scrollu). */
+  dialog.lb-full {
+    width: 100vw;
+    max-width: 100vw;
+    height: 100dvh;
+    max-height: 100dvh;
+  }
+  dialog.lb-full .lb-img {
+    max-height: 86vh;
+    cursor: zoom-out;
+  }
+</style>
