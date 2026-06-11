@@ -10,7 +10,7 @@ const isHome = Astro.url.pathname === "/";
     {isHome ? (
       <span aria-hidden="true"></span>
     ) : (
-      <a href="/" class="text-sm font-bold tracking-tight text-foreground transition-opacity hover:opacity-80" aria-label={`${siteConfig.name} — domů`}>
+      <a href="/" class="text-sm font-bold tracking-tight text-foreground transition-opacity hover:opacity-80" aria-label={`${siteConfig.name}, domů`}>
         {siteConfig.name}
       </a>
     )}
