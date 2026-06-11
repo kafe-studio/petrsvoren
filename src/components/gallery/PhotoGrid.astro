@@ -162,7 +162,8 @@ const items = await Promise.all(
   }
 
   // Otevře lightbox dané fotky a zavře případný jiný otevřený.
-  function openLightbox(index: number) {
+  // full = true zobrazí fotku rovnou v plné velikosti (využije se při listování).
+  function openLightbox(index: number, full = false) {
     const dlg = document.getElementById(`photo-${index}`) as HTMLDialogElement | null;
     if (!dlg) return;
     document
@@ -171,17 +172,20 @@ const items = await Promise.all(
         if (d !== dlg) d.close();
       });
     if (!dlg.open) dlg.showModal();
-    setZoom(dlg, false); // nová fotka vždy nejdřív v náhledu, ne v plné velikosti
+    setZoom(dlg, full);
+    dlg.scrollTop = 0;
     lockScroll(true);
   }
 
   // Posun na předchozí/další fotku (wrap-around) podle aktuálně otevřeného.
+  // Když je aktuální fotka v plné velikosti, další se zobrazí rovnou taky v plné velikosti.
   function step(delta: number) {
     const open = document.querySelector<HTMLDialogElement>("dialog[data-lightbox][open]");
     if (!open) return;
+    const wasFull = open.classList.contains("lb-full");
     const total = document.querySelectorAll("dialog[data-lightbox]").length;
     const idx = Number(open.dataset.index);
-    openLightbox((idx + delta + total) % total);
+    openLightbox((idx + delta + total) % total, wasFull);
   }
 
   function setupLightbox() {

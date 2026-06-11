@@ -153,7 +153,8 @@ Veškerá logika náhledu je v jednom souboru. Funkce:
 
 - **Listování** — boční šipky + klávesy ←/→, dokola; počítadlo „X / N".
 - **Plná velikost** — klik na fotku nebo ikona lupy roztáhne náhled přes celou obrazovku
-  (CSS třída `lb-full`); opětovný klik vrátí do náhledu.
+  (CSS třída `lb-full`); opětovný klik vrátí do náhledu. Listuje-li se v plné velikosti,
+  každá další fotka se zobrazí rovnou taky v plné velikosti.
 - **Posuvník pozadí** — táhlo v horní liště nastaví pozadí náhledu proporcionálně
   od černé (0) po bílou (100). Hodnota se ukládá do `localStorage` (klíč `lb-bg`)
   a platí pro všechny fotky. Pozadí řídí proměnné `--lb-bg` / `--lb-fg` na `<html>`;
