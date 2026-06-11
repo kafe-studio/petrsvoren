@@ -31,7 +31,13 @@ const finalIgnoreTitleTemplate = metadata?.ignoreTitleTemplate || false;
   </head>
   <body class="bg-background text-foreground antialiased tracking-tight">
     <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 z-50 rounded-md bg-primary px-4 py-2 text-white">Přeskočit</a>
-    <div class="relative flex min-h-screen flex-col overflow-x-hidden">
+    <div
+      class="pointer-events-none fixed inset-0 z-0 bg-cover bg-center bg-no-repeat opacity-10"
+      style="background-image: url('/bg.jpg');"
+      aria-hidden="true"
+    >
+    </div>
+    <div class="relative z-10 flex min-h-screen flex-col overflow-x-hidden">
       <Navbar />
       <main id="main-content" class="relative grow"><slot /></main>
       <Footer />
