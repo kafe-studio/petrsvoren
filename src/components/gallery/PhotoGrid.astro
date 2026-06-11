@@ -13,7 +13,8 @@
 //     klik = přepne fotku; roztažený na šířku okna, aktuální zvýrazněná
 //   • posuvník pozadí černá→bílá (jen myší; --lb-bg/--lb-fg na <html>, localStorage);
 //     vždy svisle v pravém dolním rohu (náhled i full view)
-//   • zavření × (náhled) / Esc; Esc ve full view → zpět na náhled
+//   • zavření do galerie: × (v náhledu v liště, ve full view vpravo nahoře) / Esc;
+//     Esc ve full view nejdřív zpět na náhled
 // Podrobnosti a možnosti úprav: docs/FOTOSABLONA.md (sekce „Velký náhled").
 import { Image } from "astro:assets";
 import { render } from "astro:content";
@@ -176,6 +177,14 @@ const items = await Promise.all(
           >
             {siteConfig.name}
           </a>
+
+          <form method="dialog" class="lb-close">
+            <button type="submit" aria-label="Zpět do galerie" title="Zpět do galerie">
+              <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </form>
 
           <label class="lb-vslider" title="Pozadí: tmavé → světlé">
             <span class="sr-only">Pozadí náhledu od černé po bílou</span>
@@ -577,6 +586,29 @@ const items = await Promise.all(
   }
   dialog.lb-full .lb-logo {
     display: block;
+  }
+
+  /* Tlačítko zpět do galerie (×) vpravo nahoře — jen ve full view (v náhledu je × v liště). */
+  .lb-close {
+    display: none;
+    position: fixed;
+    right: 0.7rem;
+    top: 0.55rem;
+    z-index: 40;
+  }
+  dialog.lb-full .lb-close {
+    display: block;
+  }
+  .lb-close button {
+    border-radius: 9999px;
+    padding: 0.4rem;
+    color: var(--lb-fg, #ededed);
+    opacity: 0.7;
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+  }
+  .lb-close button:hover {
+    opacity: 1;
   }
 
   /* Svislý posuvník pozadí — vždy v pravém dolním rohu (náhled i full view). */
