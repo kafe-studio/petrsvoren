@@ -165,9 +165,10 @@ Funkce:
   všech fotek sekce. Výchozí krytí je 5 % (`opacity: 0.05`) — pás je sotva znatelný,
   po najetí myší se fotka rozsvítí naplno, kliknutím se zobrazí. Aktuální je zvýrazněná rámečkem.
 - **Lupa ve full view** — v plné velikosti je kurzor zaměřovací křížek; podržením
-  myši se místo pod kurzorem pomalu zvětší až k nativnímu rozlišení fotky, po puštění
-  se pomalu vrátí (CSS `transform: scale` + `transition`; rychlost lze ladit ve funkcích
-  `magnifyStart` / `magnifyEnd`).
+  myši se místo pod kurzorem pomalu zvětší tak, že **fotka naroste přes okraje okna**
+  (strop měřítka je `Math.max(nativeScale, 3)` — aspoň 3×, u fotek s vysokým rozlišením
+  až na nativní pixely), po puštění se pomalu vrátí. CSS `transform: scale` + `transition`;
+  rychlost i strop lze ladit ve funkcích `magnifyStart` / `magnifyEnd`.
 - **Posuvník pozadí** — táhlo v horní liště nastaví pozadí náhledu proporcionálně
   od černé (0) po bílou (100). Ovládá se **jen myší** (`tabindex="-1"`), aby klávesy
   ←/→ vždy sloužily listování. Hodnota se ukládá do `localStorage` (klíč `lb-bg`)

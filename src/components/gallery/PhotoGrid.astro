@@ -4,8 +4,9 @@
 //   • listování ←/→ a bočními šipkami (dokola), počítadlo X / N
 //   • plná velikost (klik na fotku / lupa → třída lb-full: skryje pás i popisek,
 //     fotka dostane celé okno, vycentrovaná); stav se drží i při listování
-//   • ve full view zaměřovací křížek + lupa: podržení myši pomalu zvětší místo
-//     pod kurzorem až k nativnímu rozlišení, puštění vrátí (CSS transform/transition)
+//   • ve full view zaměřovací křížek + lupa: podržení myši pomalu zvětší místo pod
+//     kurzorem tak, že fotka naroste přes okraje okna (min. 3×, u vysokého rozlišení
+//     až na nativní pixely); puštění vrátí (CSS transform/transition)
 //   • popisek + delší text pod fotkou (strop výšky 30vh → vše se vejde bez posuvníku)
 //   • pás náhledů sekce pod fotkou (jen v náhledu): krytí 5 %, hover plný jas,
 //     klik = přepne fotku; roztažený na šířku okna, aktuální zvýrazněná
@@ -204,7 +205,9 @@ const items = await Promise.all(
     if (!rect.width || !rect.height) return;
     const cx = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
     const cy = Math.max(0, Math.min(100, ((e.clientY - rect.top) / rect.height) * 100));
-    const maxScale = img.naturalWidth ? Math.max(1, img.naturalWidth / rect.width) : 2.5;
+    // Aspoň 3× → fotka naroste přes okraje okna; u fotek s vysokým rozlišením až na nativní pixely.
+    const nativeScale = img.naturalWidth ? img.naturalWidth / rect.width : 1;
+    const maxScale = Math.max(nativeScale, 3);
     stage.setPointerCapture?.(e.pointerId);
     img.style.transformOrigin = `${cx}% ${cy}%`;
     img.style.transition = "transform 3.5s cubic-bezier(0.22, 1, 0.36, 1)";
