@@ -607,11 +607,11 @@ const items = await Promise.all(
     display: block;
   }
 
-  /* Svislý posuvník pozadí — vždy v pravém dolním rohu (náhled i full view). */
+  /* Svislý posuvník pozadí — vždy vpravo dole; zvednutý nad pás náhledů, ať do něj nezasahuje. */
   .lb-vslider {
     position: fixed;
     right: 0.85rem;
-    bottom: 0.85rem;
+    bottom: 5.5rem;
     z-index: 40;
   }
   .lb-vrange {
