@@ -1,5 +1,5 @@
 ---
-# placeholder fotka (volná licence, Picsum/Unsplash) — nahradit Petrovým originálem
+# placeholder fotka (volná licence, Picsum/Unsplash), nahradit Petrovým originálem
 section: street
 caption: "Silueta"
 cover: "./street-silueta.jpg"

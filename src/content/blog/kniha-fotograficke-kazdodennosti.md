@@ -2,12 +2,12 @@
 title: "Vyšla kniha Fotografické každodennosti"
 description: "Symbolicky 365 fotek, jedna za každý den v roce. Můj fotografický deník vyšel v nakladatelství Nová vlna."
 pubDate: 2026-05-28
-author: "Petr Svoren"
+author: "Petr Svoreň"
 tags: ["kniha", "každodennosti", "street"]
 category: "Novinky"
 ---
 
-V nakladatelství **Nová vlna** vyšla kniha **Fotografické každodennosti** — symbolicky
+V nakladatelství **Nová vlna** vyšla kniha **Fotografické každodennosti**, symbolicky
 365 fotografií, jedna za každý den v roce. Je to fotografický deník psaný obrazem,
 ne slovy: obyčejný život kolem nás, ulice, lidé a drobné okamžiky, které jinak
 zmizí bez povšimnutí.

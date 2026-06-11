@@ -1,5 +1,5 @@
 ---
-# placeholder fotka (volná licence) — nahradit Petrovým originálem
+# placeholder fotka (volná licence), nahradit Petrovým originálem
 section: krajina
 caption: "Než přijdou lidé"
 cover: "./krajina-rano.jpg"

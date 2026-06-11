@@ -1,5 +1,5 @@
 ---
-# placeholder fotka (volná licence, Picsum/Unsplash) — nahradit Petrovým originálem
+# placeholder fotka (volná licence, Picsum/Unsplash), nahradit Petrovým originálem
 section: lide
 caption: "U moře"
 cover: "./lide-u-more.jpg"

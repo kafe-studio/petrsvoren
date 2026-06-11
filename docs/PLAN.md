@@ -4,7 +4,7 @@
 **Aktualizováno:** 2026-06-02 (Sprint 002 hotový — projekt kompletní)
 
 ## Cíl
-Klidná fotoprezentace Petra Svorena: homepage s úvodní fotkou, fotky rozdělené do ~5
+Klidná fotoprezentace Petra Svoreně: homepage s úvodní fotkou, fotky rozdělené do ~5
 sekcí v mřížce, krátký popisek u fotky s možností rozkliknutí na delší text, blok tipů
 a kontakt přes FB + e-mail. Vše statické na content collections, nasazené na Cloudflare.
 
