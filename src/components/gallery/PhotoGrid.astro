@@ -424,9 +424,11 @@ const items = await Promise.all(
     -webkit-user-drag: none;
     will-change: transform;
   }
-  /* Ve full view zaměřovací křížek — podržením myši se místo pod kurzorem pomalu zvětší. */
+  /* Ve full view zaměřovací křížek — podržením myši se místo pod kurzorem pomalu zvětší.
+     padding-block = okraj fotky od horní i dolní hrany okna (lupa pak roste přes okraje). */
   dialog.lb-full .lb-stage {
     cursor: crosshair;
+    padding-block: 4vh;
   }
   /* Ve full view nesmí fotku nic překrývat: skryj horní lištu i boční šipky.
      Lišta je mimo tok (display:none), takže fotka se centruje přes celé okno
