@@ -182,6 +182,14 @@ const items = await Promise.all(
             </svg>
           </button>
 
+          <a
+            href="/"
+            class="lb-logo"
+            aria-label={`${siteConfig.name} — domů`}
+          >
+            {siteConfig.name}
+          </a>
+
           <label class="lb-vslider" title="Pozadí: tmavé → světlé">
             <span class="sr-only">Pozadí náhledu od černé po bílou</span>
             <input
@@ -561,6 +569,27 @@ const items = await Promise.all(
     border: 0;
     border-radius: 0;
     background: var(--lb-fg, #fff);
+  }
+
+  /* Malé logo vlevo nahoře — jen ve full view (v náhledu je logo v liště). */
+  .lb-logo {
+    display: none;
+    position: fixed;
+    left: 0.85rem;
+    top: 0.7rem;
+    z-index: 40;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--lb-fg, #ededed);
+    opacity: 0.7;
+    transition: opacity 0.15s ease;
+  }
+  .lb-logo:hover {
+    opacity: 1;
+  }
+  dialog.lb-full .lb-logo {
+    display: block;
   }
 
   /* Svislý posuvník pozadí v pravém dolním rohu — jen ve full view. */

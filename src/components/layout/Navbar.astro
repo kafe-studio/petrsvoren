@@ -1,12 +1,19 @@
 ---
 import { siteConfig, navLinks } from "../../config/site";
+
+// Na homepage logo nezobrazujeme (velké jméno je v heru); jinde malé logo vlevo.
+const isHome = Astro.url.pathname === "/";
 ---
 
 <nav class="fixed top-0 z-50 w-full bg-background/70 backdrop-blur-xl border-b border-border" aria-label="Hlavni navigace">
   <div class="mx-auto max-w-7xl flex items-center justify-between px-6 py-4 lg:px-8">
-    <a href="/" class="text-sm font-bold tracking-tight text-foreground transition-opacity hover:opacity-80" aria-label={`${siteConfig.name} — domů`}>
-      {siteConfig.name}
-    </a>
+    {isHome ? (
+      <span aria-hidden="true"></span>
+    ) : (
+      <a href="/" class="text-sm font-bold tracking-tight text-foreground transition-opacity hover:opacity-80" aria-label={`${siteConfig.name} — domů`}>
+        {siteConfig.name}
+      </a>
+    )}
     <div class="hidden md:flex items-center gap-8">
       {navLinks.map((link) => (
         <a href={link.href} class="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">{link.text}</a>
