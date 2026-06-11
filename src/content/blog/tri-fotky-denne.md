@@ -2,7 +2,7 @@
 title: "Tři fotky denně"
 description: "Proč nečekám na výjimečný okamžik a co mě naučilo fotit každý všední den."
 pubDate: 2026-05-20
-author: "Petr Svoreň"
+author: "Petr Svoren"
 tags: ["street", "každodennost", "úvaha"]
 category: "Zápisky"
 ---

@@ -23,12 +23,12 @@ export const navLinks = [
 ];
 
 export const siteConfig = {
-  name: "Petr Svoreň",
-  description: "Fotografie Petra Svoreně — klidná, černobílá i barevná prezentace.",
+  name: "Petr Svoren",
+  description: "Fotografie Petra Svorena — klidná, černobílá i barevná prezentace.",
   url: "https://petrsvoren.kafe.studio/",
   lang: "cs",
   locale: "cs_CZ",
-  author: "Petr Svoreň",
+  author: "Petr Svoren",
   ogImage: "/og-image.png",
   email: "petr@example.com",
   socialLinks: {

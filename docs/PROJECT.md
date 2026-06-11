@@ -1,7 +1,7 @@
-# petrsvoren — Petr Svoreň
+# petrsvoren — Petr Svoren
 
 ## Záměr
-Klidná, seriózní prezentace fotografií Petra Svoreně. Fotky rozdělené do ~5 sekcí
+Klidná, seriózní prezentace fotografií Petra Svorena. Fotky rozdělené do ~5 sekcí
 (např. street, lidé, samota, …), zobrazené v mřížce (linky a řádky). Každá fotka má
 krátký popisek, volitelně delší text, který se dá rozkliknout. Homepage má úvodní
 fotku (hero) a blok „tipů" (fotka měsíce, nová kniha, výstava). Kontakt přes Facebook
