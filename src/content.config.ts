@@ -30,6 +30,21 @@ const photos = defineCollection({
     }),
 });
 
+// Měsíční výběr. Časové galerie — jedna fotka = jeden .md v src/content/monthly/<RRRR-MM>/
+// s co-located obrázkem. month = "RRRR-MM", podle něj se fotky seskupují do galerie měsíce
+// a řadí na časové ose. Stejný tvar jako photos (jen section→month), takže sdílí PhotoGrid.
+const monthly = defineCollection({
+  loader: glob({ pattern: "**/*.{md,mdx}", base: "./src/content/monthly" }),
+  schema: ({ image }) =>
+    z.object({
+      month: z.string().regex(/^\d{4}-\d{2}$/, "Formát měsíce musí být RRRR-MM"),
+      caption: z.string(),
+      cover: image(),
+      coverAlt: z.string().optional(),
+      order: z.number().default(0),
+    }),
+});
+
 // Tipy / aktuality na homepage (fotka měsíce, nová kniha, výstava…).
 // title + tělo = text upoutávky, volitelný obrázek a odkaz. active vypne tip bez mazání.
 const tips = defineCollection({
@@ -44,4 +59,4 @@ const tips = defineCollection({
     }),
 });
 
-export const collections = { blog, photos, tips };
+export const collections = { blog, photos, monthly, tips };

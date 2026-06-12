@@ -1,0 +1,48 @@
+---
+export const prerender = true;
+import { getCollection } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import PhotoGrid from "../../components/gallery/PhotoGrid.astro";
+import { monthLabel, sortMonthsDesc } from "../../config/monthly";
+
+// Jedna stránka na měsíc. Fotky se seskupují podle data.month ("RRRR-MM"),
+// uvnitř měsíce řadí podle order. Galerii vykreslí sdílená PhotoGrid.
+export async function getStaticPaths() {
+  const all = await getCollection("monthly");
+  const months = sortMonthsDesc(all.map((p) => p.data.month));
+  return months.map((month) => ({
+    params: { month },
+    props: {
+      month,
+      photos: all
+        .filter((photo) => photo.data.month === month)
+        .sort((a, b) => a.data.order - b.data.order),
+    },
+  }));
+}
+
+const { month, photos } = Astro.props;
+const label = monthLabel(month);
+const metadata = { title: label, description: `Fotografie: ${label}` };
+---
+
+<BaseLayout {metadata}>
+  <section class="pt-28 pb-24 px-6">
+    <div class="mx-auto max-w-7xl">
+      <a
+        href="/mesic/"
+        class="reveal mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
+      >
+        &larr; Po měsících
+      </a>
+      <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight mb-10 reveal">{label}</h1>
+      {
+        photos.length === 0 ? (
+          <p class="text-muted-foreground reveal">Tento měsíc zatím nemá žádné fotografie.</p>
+        ) : (
+          <PhotoGrid photos={photos} />
+        )
+      }
+    </div>
+  </section>
+</BaseLayout>

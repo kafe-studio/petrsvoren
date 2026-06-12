@@ -1,0 +1,65 @@
+---
+export const prerender = true;
+import { getCollection } from "astro:content";
+import { Image } from "astro:assets";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { monthLabel, sortMonthsDesc } from "../../config/monthly";
+
+// Časová osa měsíčních výběrů: dlaždice měsíců (nejnovější první), každá vede
+// na /mesic/<RRRR-MM>/. Vedoucí fotka měsíce = nejnižší order jako výřez.
+const all = await getCollection("monthly");
+const months = sortMonthsDesc(all.map((p) => p.data.month));
+const groups = months.map((month) => {
+  const photos = all
+    .filter((p) => p.data.month === month)
+    .sort((a, b) => a.data.order - b.data.order);
+  return {
+    month,
+    label: monthLabel(month),
+    cover: photos[0]?.data.cover,
+  };
+});
+const metadata = {
+  title: "Po měsících",
+  description: "Měsíční výběr fotografií Petra Svoreně na časové ose.",
+};
+---
+
+<BaseLayout {metadata}>
+  <section class="pt-28 pb-24 px-6">
+    <div class="mx-auto max-w-5xl">
+      <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight mb-10 reveal">Po měsících</h1>
+      {
+        groups.length === 0 ? (
+          <p class="text-muted-foreground reveal">Zatím tu nejsou žádné měsíční výběry.</p>
+        ) : (
+          <nav class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 reveal" aria-label="Měsíční výběry">
+            {groups.map((g) => (
+              <a
+                href={`/mesic/${g.month}/`}
+                class="group relative flex items-end overflow-hidden rounded-sm bg-neutral-900 aspect-[4/3]"
+              >
+                {g.cover && (
+                  <Image
+                    src={g.cover}
+                    alt={`Výběr ${g.label}`}
+                    widths={[400, 800]}
+                    sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                    loading="lazy"
+                    class="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                )}
+                <span class="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent" aria-hidden="true" />
+                <span class="absolute inset-0 bg-white/0 transition-colors duration-300 group-hover:bg-white/15" aria-hidden="true" />
+                <span class="relative z-10 flex w-full items-center justify-between px-5 py-4">
+                  <span class="text-xl font-semibold tracking-tight text-white">{g.label}</span>
+                  <span class="text-white/70 transition-transform group-hover:translate-x-1">&rarr;</span>
+                </span>
+              </a>
+            ))}
+          </nav>
+        )
+      }
+    </div>
+  </section>
+</BaseLayout>
