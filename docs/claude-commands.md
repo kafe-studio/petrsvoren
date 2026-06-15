@@ -41,7 +41,7 @@ Plugin obsahuje skilly pro konkrétní technologie. Claude je použije automatic
 | `svelte5` | Svelte 5 komponenty — runes ($state, $derived, $effect) |
 | `effect-ts` | Effect TS — services, error handling, layers, schémata |
 | `cloudflare-workers` | Workers, D1, R2, KV, Vectorize, Workers AI |
-| `daisyui` | daisyUI 5 komponenty a témata |
+| `tailwind` | Tailwind CSS 4 — utility, responsivita, theme tokens |
 
 Každý skill vynucuje ověřování proti MCP dokumentaci a blokuje zastaralé vzory.
 

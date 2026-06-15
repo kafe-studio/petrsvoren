@@ -1,20 +1,27 @@
 # Project rules
 
-## MCP docs — mandatory
+## Docs verification — mandatory (D1-direct)
 
-NEVER write framework code from memory. Before writing ANY code that uses Effect TS, Svelte 5, Astro 6, daisyUI 5, or Cloudflare Workers APIs, you MUST search MCP docs first:
+NEVER write framework code from memory. Before writing ANY code that uses a framework, library, SDK, or CLI API (Svelte, Astro, Tailwind, Drizzle, Effect, Hono, Cloudflare Workers APIs, …), verify it against current docs.
 
-- `mcp__worker-mcp__ask_docs` — preferred: AI-powered answer with citations (~300 tokens vs ~5000 for search). Use for "how do I…" questions.
-- `mcp__worker-mcp__search_docs` — raw doc search. Use `max_results=3` and `snippet_length=200` to save tokens. Full output only when you need raw content.
-- `mcp__cloudflare-api__search` — Cloudflare OpenAPI spec
-- `mcp__cloudflare-api__execute` — Cloudflare API access
+**Primary = direct D1 docs-DB query** (`cloudflare-bindings` MCP, account 5 Kafe). Raw chunks + citations, **no AI synthesis**. `ask_docs` is **not** used — it's the AI layer that can hallucinate.
 
-MCP search strategy (pick the cheapest that works):
+- DB `worker-mcp-docs`, `database_id` `a686d183-efab-472e-b43a-9a32fc692584` (account 5 Kafe `b945870b3bb5d6a40266336cb1e88693`)
+- `docs(id, library, path, title, content, heading_chain, commit_sha, updated_at)` + FTS5 `docs_fts`
+- Query (`mcp__plugin_cloudflare_cloudflare-bindings__d1_database_query`):
 
-1. `ask_docs` (~300 tokens) — "how does X work?" → AI answer with code + citations
-2. `search_docs(max_results=3, snippet_length=200)` (~500 tokens) — verify a pattern exists, see headings
-3. `search_docs(max_results=1)` (~500 tokens) — confirm exact API/syntax
-4. `get_doc_page` — only when you need full page content
+```sql
+SELECT d.path, d.heading_chain, d.content
+FROM docs_fts f JOIN docs d ON d.id = f.rowid
+WHERE docs_fts MATCH ?1 AND d.library = ?2
+ORDER BY f.rank LIMIT 8;
+```
+
+- `library` enum (`SELECT DISTINCT library FROM docs`). Effect v4 beta → `library='effect-v4'`. FTS5 nestemuje (`binding`≠`bindings`); `:`, `$` a `-` jsou operátory → kvotovat (`"cloudflare:workers"`, `"$state"`, `"bge-m3"`).
+
+**Fallback** (D1 prázdno/slabě): `mcp__worker-mcp__search_docs(library=<lib>, max_results=5, snippet_length=600)` — server-side hybrid (FTS5 + vektor), raw chunks. Eskalace = 0 řádků NEBO řádky se vrátí ale po přečtení neodpovídají. Libs mimo D1 enum → `mcp__context7__query-docs`.
+
+**Cloudflare API/platform:** `mcp__plugin_cloudflare_cloudflare-docs__search_cloudflare_documentation` (docs) + `cloudflare-bindings`/`-builds`/`-observability` (live ops). NEVER deprecated `mcp__cloudflare-api__*`.
 
 ## Tech stack
 
@@ -22,7 +29,7 @@ MCP search strategy (pick the cheapest that works):
 - **Svelte 5** — runes only ($state, $derived, $effect, $props). No Svelte 4 patterns.
 - **Effect TS** — generators, TaggedError, Context.Tag, Layers. No async/await, no throw.
 - **Cloudflare Workers** — D1, R2, KV, Vectorize, Workers AI
-- **daisyUI 5** + Tailwind CSS 4
+- **Tailwind CSS 4** + `@tailwindcss/typography` (vlastní design tokens v `src/styles/global.css`, žádný daisyUI)
 - **Bindings** via `import { env } from 'cloudflare:workers'`, not `Astro.locals.runtime`
 
 ## Forbidden patterns
