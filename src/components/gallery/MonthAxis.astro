@@ -1,0 +1,204 @@
+---
+import { getCollection } from "astro:content";
+import {
+  monthLabel,
+  monthShort,
+  monthOrdinal,
+  monthsRange,
+  currentMonth,
+} from "../../config/monthly";
+
+// Osa měsíců v albu — bez náhledů, jen popisky. Přepíná mezi měsíci (album měsíce
+// = odkaz, prázdný měsíc = tlumený placeholder). Aktuální měsíc je zvýrazněný a po
+// načtení vycentrovaný. Souvislá osa 2023 → aktuální měsíc, posouvá se tažením.
+interface Props {
+  current: string;
+}
+const { current } = Astro.props;
+const START = "2023-01";
+
+const all = await getCollection("monthly");
+const albumMonths = new Set(all.map((p) => p.data.month));
+const cm = currentMonth();
+const latest = [...albumMonths].sort(
+  (a, b) => monthOrdinal(b) - monthOrdinal(a),
+)[0];
+const end = latest && monthOrdinal(latest) > monthOrdinal(cm) ? latest : cm;
+
+const stops = monthsRange(START, end).map((m) => ({
+  month: m,
+  short: monthShort(m),
+  year: m.slice(0, 4),
+  label: monthLabel(m),
+  hasAlbum: albumMonths.has(m),
+}));
+---
+
+<nav
+  class="ma-axis reveal"
+  data-month-axis
+  data-active={current}
+  aria-label="Přepínač měsíců"
+>
+  <span class="ma-line" aria-hidden="true"></span>
+  {
+    stops.map((s) =>
+      s.hasAlbum ? (
+        <a
+          href={`/mesic/${s.month}/`}
+          class:list={["ma-tick", { "is-active": s.month === current }]}
+          data-tick={s.month}
+          aria-current={s.month === current ? "page" : undefined}
+        >
+          <span class="ma-dot" aria-hidden="true" />
+          <span class="ma-label">
+            {s.short} <span class="ma-year">{s.year}</span>
+          </span>
+        </a>
+      ) : (
+        <span class="ma-tick is-empty" data-tick={s.month} aria-hidden="true">
+          <span class="ma-dot" />
+          <span class="ma-label">
+            {s.short} <span class="ma-year">{s.year}</span>
+          </span>
+        </span>
+      ),
+    )
+  }
+</nav>
+
+<script>
+  // Osa v albu: tažení posouvá, aktivní měsíc se po načtení vycentruje.
+  function setupMonthAxis(root: HTMLElement) {
+    if (root.dataset.bound) return;
+    root.dataset.bound = "1";
+    const active = root.dataset.active ?? "";
+    const ticks = Array.from(root.querySelectorAll<HTMLElement>("[data-tick]"));
+
+    function center(el: HTMLElement, behavior: ScrollBehavior) {
+      const target = el.offsetLeft - (root.clientWidth - el.offsetWidth) / 2;
+      root.scrollTo({ left: target, behavior });
+    }
+
+    // Tažení myší.
+    let down = false;
+    let startX = 0;
+    let startScroll = 0;
+    let moved = false;
+    root.addEventListener("pointerdown", (e) => {
+      down = true;
+      moved = false;
+      startX = e.clientX;
+      startScroll = root.scrollLeft;
+    });
+    root.addEventListener("pointermove", (e) => {
+      if (!down) return;
+      const dx = e.clientX - startX;
+      if (Math.abs(dx) > 4) moved = true;
+      root.scrollLeft = startScroll - dx;
+    });
+    const end = () => {
+      down = false;
+    };
+    root.addEventListener("pointerup", end);
+    root.addEventListener("pointercancel", end);
+    root.addEventListener("pointerleave", end);
+    // Po tažení potlač klik na odkaz.
+    root.addEventListener(
+      "click",
+      (e) => {
+        if (moved) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      },
+      true,
+    );
+
+    const init = ticks.find((t) => t.dataset.tick === active);
+    if (init) center(init, "auto");
+  }
+
+  document.addEventListener("astro:page-load", () => {
+    document
+      .querySelectorAll<HTMLElement>("[data-month-axis]")
+      .forEach(setupMonthAxis);
+  });
+</script>
+
+<style>
+  .ma-axis {
+    position: relative;
+    display: flex;
+    gap: 1.5rem;
+    overflow-x: auto;
+    padding: 0.75rem 0 1.25rem;
+    margin-bottom: 1.5rem;
+    cursor: grab;
+    scrollbar-width: none;
+    touch-action: pan-x;
+  }
+  .ma-axis::-webkit-scrollbar {
+    display: none;
+  }
+  .ma-axis:active {
+    cursor: grabbing;
+  }
+  .ma-line {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 1rem;
+    height: 1px;
+    background: color-mix(in srgb, currentColor 18%, transparent);
+    color: var(--muted-foreground, #888);
+  }
+  .ma-tick {
+    position: relative;
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    color: var(--muted-foreground, #888);
+  }
+  .ma-tick.is-empty {
+    opacity: 0.4;
+  }
+  .ma-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 9999px;
+    background: color-mix(in srgb, currentColor 45%, transparent);
+    transition:
+      transform 0.2s ease,
+      background-color 0.2s ease;
+  }
+  .ma-tick:not(.is-empty):hover .ma-dot {
+    background: currentColor;
+  }
+  .ma-tick.is-active .ma-dot {
+    background: var(--foreground, #111);
+    transform: scale(1.5);
+  }
+  .ma-label {
+    font-size: 0.7rem;
+    line-height: 1;
+    white-space: nowrap;
+    opacity: 0.75;
+  }
+  .ma-tick.is-active .ma-label {
+    opacity: 1;
+    color: var(--foreground, #111);
+    font-weight: 600;
+  }
+  .ma-year {
+    opacity: 0.6;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ma-dot {
+      transition: none;
+    }
+  }
+</style>

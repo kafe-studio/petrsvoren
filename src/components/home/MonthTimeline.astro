@@ -1,0 +1,412 @@
+---
+import { Image } from "astro:assets";
+import { getCollection } from "astro:content";
+import {
+  monthLabel,
+  monthShort,
+  monthOrdinal,
+  monthsRange,
+  currentMonth,
+} from "../../config/monthly";
+
+// Výběr měsíce na homepage. Souvislá osa všech měsíců od 2023 do aktuálního
+// (roste s časem). Měsíce s albem mají náhled a jsou klikatelné; prázdné jsou
+// tlumené placeholdery. Velký náhled ukazuje aktivní (album) měsíc; klik na něj
+// otevře galerii. V pásu je vidět ~5 měsíců, posouvá se tažením / scrollem.
+const START = "2023-01";
+
+const all = await getCollection("monthly");
+const albumMonths = [...new Set(all.map((p) => p.data.month))];
+
+// Konec osy = pozdější z (aktuální měsíc, nejnovější album) — kdyby přibyl měsíc dopředu.
+const cm = currentMonth();
+const latestAlbum = [...albumMonths].sort(
+  (a, b) => monthOrdinal(b) - monthOrdinal(a),
+)[0];
+const end =
+  latestAlbum && monthOrdinal(latestAlbum) > monthOrdinal(cm)
+    ? latestAlbum
+    : cm;
+
+const albumData = new Map(
+  albumMonths.map((m) => {
+    const ps = all
+      .filter((p) => p.data.month === m)
+      .sort((a, b) => a.data.order - b.data.order);
+    return [m, { cover: ps[0]?.data.cover, count: ps.length }];
+  }),
+);
+
+const stops = monthsRange(START, end).map((m) => {
+  const a = albumData.get(m);
+  return {
+    month: m,
+    label: monthLabel(m),
+    short: monthShort(m),
+    year: m.slice(0, 4),
+    hasAlbum: !!a,
+    cover: a?.cover,
+    count: a?.count ?? 0,
+  };
+});
+const albumStops = stops.filter((s) => s.hasAlbum);
+// Výchozí aktivní = nejnovější album (vpravo na ose).
+const activeMonth = albumStops.length
+  ? albumStops[albumStops.length - 1].month
+  : "";
+
+const fotky = (n: number) =>
+  n === 1 ? "fotka" : n >= 2 && n <= 4 ? "fotky" : "fotek";
+---
+
+{
+  albumStops.length > 0 && (
+    <section class="py-16 px-6" aria-label="Výběr měsíce">
+      <div class="mx-auto max-w-5xl">
+        <h2 class="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-8 reveal">
+          Výběr měsíce
+        </h2>
+
+        <div class="reveal" data-month-timeline data-active={activeMonth}>
+          {/* Velký náhled aktivního měsíce — překryté karty album měsíců. */}
+          <div class="mtl-stage">
+            {albumStops.map((s) => (
+              <a
+                href={`/mesic/${s.month}/`}
+                class:list={[
+                  "mtl-card",
+                  { "is-active": s.month === activeMonth },
+                ]}
+                data-card={s.month}
+                aria-hidden={s.month === activeMonth ? undefined : "true"}
+                tabindex={s.month === activeMonth ? undefined : -1}
+              >
+                {s.cover && (
+                  <Image
+                    src={s.cover}
+                    alt={`Výběr ${s.label}`}
+                    widths={[640, 1280]}
+                    sizes="(min-width: 1024px) 64rem, 100vw"
+                    loading="lazy"
+                    class="mtl-card-img"
+                  />
+                )}
+                <span class="mtl-card-grad" aria-hidden="true" />
+                <span class="mtl-card-meta">
+                  <span class="mtl-card-label">{s.label}</span>
+                  <span class="mtl-card-sub">
+                    {s.count} {fotky(s.count)} · Otevřít galerii &rarr;
+                  </span>
+                </span>
+              </a>
+            ))}
+          </div>
+
+          {/* Pás měsíců — ~5 viditelných, tažení / scroll. Prázdné = placeholder. */}
+          <div class="mtl-strip" data-strip aria-label="Měsíce">
+            {stops.map((s) => (
+              <button
+                type="button"
+                class:list={[
+                  "mtl-slot",
+                  {
+                    "is-active": s.month === activeMonth,
+                    "is-empty": !s.hasAlbum,
+                  },
+                ]}
+                data-slot={s.month}
+                data-has={s.hasAlbum ? "1" : ""}
+                disabled={!s.hasAlbum}
+                aria-label={s.label}
+                aria-current={s.month === activeMonth ? "true" : undefined}
+              >
+                <span class="mtl-thumb">
+                  {s.cover ? (
+                    <Image
+                      src={s.cover}
+                      alt=""
+                      widths={[160, 320]}
+                      sizes="20vw"
+                      loading="lazy"
+                      class="mtl-thumb-img"
+                    />
+                  ) : (
+                    <span class="mtl-thumb-empty" aria-hidden="true" />
+                  )}
+                </span>
+                <span class="mtl-slot-label">
+                  {s.short} <span class="mtl-slot-year">{s.year}</span>
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+<script>
+  // Výběr měsíce: pás se posouvá tažením, klik na album měsíc ho zvětší do náhledu,
+  // klik na aktivní měsíc otevře galerii. Vanilla JS (obrázky předrenderované Astrem).
+  function setupMonthTimeline(root: HTMLElement) {
+    if (root.dataset.bound) return;
+    root.dataset.bound = "1";
+
+    const strip = root.querySelector<HTMLElement>("[data-strip]");
+    const slots = Array.from(root.querySelectorAll<HTMLElement>("[data-slot]"));
+    const cards = Array.from(root.querySelectorAll<HTMLElement>("[data-card]"));
+    if (!strip || slots.length === 0) return;
+
+    let active = root.dataset.active ?? "";
+
+    function centerSlot(slot: HTMLElement, behavior: ScrollBehavior) {
+      const target =
+        slot.offsetLeft - (strip!.clientWidth - slot.offsetWidth) / 2;
+      strip!.scrollTo({ left: target, behavior });
+    }
+
+    function setActive(month: string) {
+      active = month;
+      cards.forEach((c) => {
+        const on = c.dataset.card === month;
+        c.classList.toggle("is-active", on);
+        if (on) {
+          c.removeAttribute("aria-hidden");
+          c.removeAttribute("tabindex");
+        } else {
+          c.setAttribute("aria-hidden", "true");
+          c.setAttribute("tabindex", "-1");
+        }
+      });
+      slots.forEach((s) => {
+        const on = s.dataset.slot === month;
+        s.classList.toggle("is-active", on);
+        if (on) s.setAttribute("aria-current", "true");
+        else s.removeAttribute("aria-current");
+      });
+      const slot = slots.find((s) => s.dataset.slot === month);
+      if (slot) centerSlot(slot, "smooth");
+    }
+
+    slots.forEach((s) => {
+      s.addEventListener("click", () => {
+        if (!s.dataset.has) return; // prázdný měsíc
+        const month = s.dataset.slot ?? "";
+        if (month === active) {
+          location.href = `/mesic/${month}/`;
+          return;
+        }
+        setActive(month);
+      });
+    });
+
+    // Tažení myší posouvá pás.
+    let down = false;
+    let startX = 0;
+    let startScroll = 0;
+    let moved = false;
+    strip.addEventListener("pointerdown", (e) => {
+      down = true;
+      moved = false;
+      startX = e.clientX;
+      startScroll = strip.scrollLeft;
+    });
+    strip.addEventListener("pointermove", (e) => {
+      if (!down) return;
+      const dx = e.clientX - startX;
+      if (Math.abs(dx) > 4) moved = true;
+      strip.scrollLeft = startScroll - dx;
+    });
+    const endDrag = () => {
+      down = false;
+    };
+    strip.addEventListener("pointerup", endDrag);
+    strip.addEventListener("pointercancel", endDrag);
+    strip.addEventListener("pointerleave", endDrag);
+    // Po tažení potlač klik (ať se omylem neaktivuje měsíc).
+    strip.addEventListener(
+      "click",
+      (e) => {
+        if (moved) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      },
+      true,
+    );
+
+    // Po načtení vycentruj aktivní měsíc (bez animace, jen v pásu).
+    const init = slots.find((s) => s.dataset.slot === active);
+    if (init) centerSlot(init, "auto");
+  }
+
+  document.addEventListener("astro:page-load", () => {
+    document
+      .querySelectorAll<HTMLElement>("[data-month-timeline]")
+      .forEach(setupMonthTimeline);
+  });
+</script>
+
+<style>
+  /* Velký náhled aktivního měsíce — karty se překrývají, přepíná se krytí. */
+  .mtl-stage {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border-radius: 0.125rem;
+    background: rgb(23 23 23);
+  }
+  .mtl-card {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: flex-end;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+  }
+  .mtl-card.is-active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .mtl-card-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.6s ease;
+  }
+  .mtl-card.is-active:hover .mtl-card-img {
+    transform: scale(1.04);
+  }
+  .mtl-card-grad {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to top,
+      rgb(0 0 0 / 0.78),
+      rgb(0 0 0 / 0.25) 45%,
+      transparent
+    );
+  }
+  .mtl-card-meta {
+    position: relative;
+    z-index: 1;
+    padding: 1.25rem 1.5rem;
+    color: #fff;
+  }
+  .mtl-card-label {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.1;
+  }
+  .mtl-card-sub {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.8rem;
+    color: rgb(255 255 255 / 0.75);
+  }
+
+  /* Pás měsíců. 5 viditelných: flex-basis = (100% − 4 mezery) / 5. */
+  .mtl-strip {
+    position: relative;
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1.25rem;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    cursor: grab;
+    scrollbar-width: none;
+    touch-action: pan-x;
+  }
+  .mtl-strip::-webkit-scrollbar {
+    display: none;
+  }
+  .mtl-strip:active {
+    cursor: grabbing;
+  }
+  .mtl-slot {
+    flex: 0 0 calc((100% - 3rem) / 5);
+    scroll-snap-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    padding: 0;
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: var(--muted-foreground, #888);
+  }
+  .mtl-slot.is-empty {
+    cursor: default;
+  }
+  .mtl-thumb {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1;
+    overflow: hidden;
+    border-radius: 0.125rem;
+    background: rgb(38 38 38);
+    transition:
+      transform 0.25s ease,
+      box-shadow 0.25s ease;
+  }
+  .mtl-thumb-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.6;
+    transition: opacity 0.25s ease;
+  }
+  .mtl-slot:not(.is-empty):hover .mtl-thumb-img {
+    opacity: 0.85;
+  }
+  .mtl-slot.is-active .mtl-thumb-img {
+    opacity: 1;
+  }
+  .mtl-slot.is-active .mtl-thumb {
+    transform: scale(1.06);
+    box-shadow: 0 0 0 2px var(--foreground, #111);
+  }
+  .mtl-thumb-empty {
+    position: absolute;
+    inset: 0;
+    background:
+      repeating-linear-gradient(
+        45deg,
+        rgb(255 255 255 / 0.03),
+        rgb(255 255 255 / 0.03) 6px,
+        transparent 6px,
+        transparent 12px
+      ),
+      rgb(38 38 38);
+  }
+  .mtl-slot-label {
+    font-size: 0.7rem;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    opacity: 0.7;
+  }
+  .mtl-slot.is-active .mtl-slot-label {
+    opacity: 1;
+    color: var(--foreground, #111);
+    font-weight: 600;
+  }
+  .mtl-slot-year {
+    opacity: 0.6;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .mtl-card,
+    .mtl-card-img,
+    .mtl-thumb {
+      transition: none;
+    }
+  }
+</style>

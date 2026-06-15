@@ -60,3 +60,21 @@ export function monthShort(month: string): string {
   if (!match) return month;
   return MONTH_SHORT_CS[Number(match[2]) - 1] ?? month;
 }
+
+/** Aktuální měsíc "RRRR-MM" podle data buildu (osa „do nekonečna" roste s časem). */
+export function currentMonth(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
+/** Souvislý seznam měsíců "RRRR-MM" od start do end (včetně), vzestupně. Prázdný při neplatném vstupu nebo end < start. */
+export function monthsRange(start: string, end: string): string[] {
+  const s = monthOrdinal(start);
+  const e = monthOrdinal(end);
+  if (Number.isNaN(s) || Number.isNaN(e) || e < s) return [];
+  const out: string[] = [];
+  for (let o = s; o <= e; o++) {
+    out.push(`${Math.floor(o / 12)}-${String((o % 12) + 1).padStart(2, "0")}`);
+  }
+  return out;
+}

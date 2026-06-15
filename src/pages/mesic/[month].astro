@@ -3,6 +3,7 @@ export const prerender = true;
 import { getCollection } from "astro:content";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import PhotoGrid from "../../components/gallery/PhotoGrid.astro";
+import MonthAxis from "../../components/gallery/MonthAxis.astro";
 import { monthLabel, sortMonthsDesc } from "../../config/monthly";
 
 // Jedna stránka na měsíc. Fotky se seskupují podle data.month ("RRRR-MM"),
@@ -35,10 +36,17 @@ const metadata = { title: label, description: `Fotografie: ${label}` };
       >
         &larr; Po měsících
       </a>
-      <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight mb-10 reveal">{label}</h1>
+      <h1
+        class="text-3xl md:text-4xl font-extrabold tracking-tight mb-6 reveal"
+      >
+        {label}
+      </h1>
+      <MonthAxis current={month} />
       {
         photos.length === 0 ? (
-          <p class="text-muted-foreground reveal">Tento měsíc zatím nemá žádné fotografie.</p>
+          <p class="text-muted-foreground reveal">
+            Tento měsíc zatím nemá žádné fotografie.
+          </p>
         ) : (
           <PhotoGrid photos={photos} />
         )
