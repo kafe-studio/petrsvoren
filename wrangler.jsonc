@@ -7,6 +7,13 @@
   "observability": {
     "enabled": true
   },
+  "vars": {
+    "CF_ACCESS_TEAM_DOMAIN": "https://kafestudio.cloudflareaccess.com",
+    "CF_ACCESS_AUD": "e852b2b0ba0d84ee7e4d7fd5077275a70809cb5f44d84d731418c9fa762879f9",
+    // Allowlist administrátorů (čárkou oddělené e-maily) — Petr Svoreň + superadmin.
+    // Prázdné = pustí každého, koho propustil Cloudflare Access. Vyplň oba e-maily.
+    "ADMIN_EMAILS": ""
+  },
   "d1_databases": [
     {
       "binding": "DB",
