@@ -10,7 +10,7 @@ export const prerender = false;
 // nahradit veřejným R2 bucketem / custom doménou.
 export const GET: APIRoute = async ({ params }) => {
   const id = params.id ?? "";
-  const db = getDb();
+  const db = await getDb();
   const row = await db
     .select({ key: schema.photos.r2Key })
     .from(schema.photos)

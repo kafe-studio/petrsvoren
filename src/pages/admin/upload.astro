@@ -47,6 +47,42 @@ const metadata = { title: "Nahrát fotky", description: "Nahrání fotografií."
 </BaseLayout>
 
 <script>
+  // Vytáhne čitelnou podmnožinu EXIF (fotoaparát, objektiv, expozice…) z fotky.
+  // exifr se načítá dynamicky (jen v prohlížeči při výběru fotky) — nezasahuje do SSR.
+  async function readExif(file: File): Promise<Record<string, string> | null> {
+    try {
+      const { default: exifr } = await import("exifr");
+      const x = await exifr.parse(file, [
+        "Make",
+        "Model",
+        "LensModel",
+        "FocalLength",
+        "FNumber",
+        "ExposureTime",
+        "ISO",
+        "DateTimeOriginal",
+      ]);
+      if (!x) return null;
+      const out: Record<string, string> = {};
+      const cam = [x.Make, x.Model].filter(Boolean).join(" ").trim();
+      if (cam) out["Fotoaparát"] = cam;
+      if (x.LensModel) out["Objektiv"] = String(x.LensModel);
+      if (x.FocalLength) out["Ohnisko"] = `${Math.round(x.FocalLength)} mm`;
+      if (x.FNumber) out["Clona"] = `f/${x.FNumber}`;
+      if (x.ExposureTime)
+        out["Expozice"] =
+          x.ExposureTime < 1
+            ? `1/${Math.round(1 / x.ExposureTime)} s`
+            : `${x.ExposureTime} s`;
+      if (x.ISO) out["ISO"] = String(x.ISO);
+      if (x.DateTimeOriginal)
+        out["Datum"] = new Date(x.DateTimeOriginal).toLocaleDateString("cs-CZ");
+      return Object.keys(out).length > 0 ? out : null;
+    } catch {
+      return null;
+    }
+  }
+
   function setupUpload() {
     const input = document.getElementById("file-input") as HTMLInputElement | null;
     const zone = document.getElementById("dropzone");
@@ -95,6 +131,8 @@ const metadata = { title: "Nahrát fotky", description: "Nahrání fotografií."
         fd.append("file", file);
         fd.append("width", String(w));
         fd.append("height", String(h));
+        const ex = await readExif(file);
+        if (ex) fd.append("exifJson", JSON.stringify(ex));
         const res = await fetch("/api/admin/upload/", {
           method: "POST",
           body: fd,

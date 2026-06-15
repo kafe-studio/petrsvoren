@@ -9,7 +9,7 @@ let galleriesCount = 0;
 let photosCount = 0;
 let dbError = "";
 try {
-  const db = getDb();
+  const db = await getDb();
   galleriesCount = (await db.select().from(schema.galleries)).length;
   photosCount = (await db.select().from(schema.photos)).length;
 } catch (e) {
@@ -65,16 +65,30 @@ const metadata = {
           </span>
           <span class="text-muted-foreground">&rarr;</span>
         </a>
-        <span
-          class="flex items-center justify-between rounded-lg border border-border bg-card px-5 py-4 opacity-60"
+        <a
+          href="/admin/photos/"
+          class="flex items-center justify-between rounded-lg border border-border bg-card px-5 py-4 transition-colors hover:border-primary"
         >
           <span>
-            <span class="block font-medium">Fotky a galerie</span>
+            <span class="block font-medium">Fotky</span>
             <span class="block text-sm text-muted-foreground"
-              >Zařazení, hlavní fotka, texty, EXIF · připravuje se (Etapa 3)</span
+              >Zařazení do galerií, hlavní fotka, texty, EXIF</span
             >
           </span>
-        </span>
+          <span class="text-muted-foreground">&rarr;</span>
+        </a>
+        <a
+          href="/admin/galleries/"
+          class="flex items-center justify-between rounded-lg border border-border bg-card px-5 py-4 transition-colors hover:border-primary"
+        >
+          <span>
+            <span class="block font-medium">Galerie</span>
+            <span class="block text-sm text-muted-foreground"
+              >Vytvořit a upravit galerie (sekce)</span
+            >
+          </span>
+          <span class="text-muted-foreground">&rarr;</span>
+        </a>
         <span
           class="flex items-center justify-between rounded-lg border border-border bg-card px-5 py-4 opacity-60"
         >

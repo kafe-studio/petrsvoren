@@ -1,0 +1,232 @@
+---
+export const prerender = false;
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import { getDb, schema } from "../../../db";
+import { eq } from "drizzle-orm";
+
+const { id } = Astro.params;
+const db = await getDb();
+const photo = await db
+  .select()
+  .from(schema.photos)
+  .where(eq(schema.photos.id, id ?? ""))
+  .get();
+
+if (!photo) Astro.response.status = 404;
+
+const galleries = photo
+  ? await db.select().from(schema.galleries).orderBy(schema.galleries.sortOrder)
+  : [];
+const assigned = photo
+  ? await db
+      .select()
+      .from(schema.photoGalleries)
+      .where(eq(schema.photoGalleries.photoId, photo.id))
+  : [];
+const assignedMap = new Map(assigned.map((a) => [a.galleryId, a.isCover]));
+
+let exif: Record<string, unknown> = {};
+try {
+  if (photo?.exifJson) exif = JSON.parse(photo.exifJson);
+} catch {
+  /* poškozený exif JSON — ignoruj */
+}
+const exifEntries = Object.entries(exif);
+
+const inputClass =
+  "w-full rounded-lg border border-border bg-card px-3 py-2 text-foreground text-sm outline-none focus:border-primary transition-colors";
+const metadata = { title: "Úprava fotky", description: "Detail fotky." };
+---
+
+<BaseLayout {metadata}>
+  <section class="pt-28 pb-24 px-6">
+    <div class="mx-auto max-w-3xl">
+      <a
+        href="/admin/photos/"
+        class="mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
+        >&larr; Fotky</a
+      >
+
+      {
+        !photo ? (
+          <div>
+            <h1 class="text-2xl font-bold mb-2">Fotka nenalezena</h1>
+            <p class="text-muted-foreground">Zkontroluj odkaz.</p>
+          </div>
+        ) : (
+          <form id="editor" data-id={photo.id} class="space-y-6">
+            <img
+              src={`/img/${photo.id}/`}
+              alt={photo.alt ?? photo.caption}
+              class="w-full max-h-[50vh] object-contain rounded-lg bg-neutral-900"
+            />
+
+            <div>
+              <label class="block text-sm font-medium mb-1.5" for="caption">
+                Popisek
+              </label>
+              <input id="caption" name="caption" type="text" class={inputClass} value={photo.caption} />
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium mb-1.5" for="alt">
+                Alt text (pro přístupnost)
+              </label>
+              <input id="alt" name="alt" type="text" class={inputClass} value={photo.alt ?? ""} />
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium mb-1.5" for="bodyText">
+                Delší text (na rozklik)
+              </label>
+              <textarea id="bodyText" name="bodyText" rows="4" class={inputClass}>{photo.bodyText ?? ""}</textarea>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium mb-1.5" for="month">
+                Měsíc výběru (RRRR-MM, volitelné)
+              </label>
+              <input id="month" name="month" type="text" placeholder="2026-06" class={inputClass} value={photo.month ?? ""} />
+            </div>
+
+            <fieldset class="rounded-xl border border-border bg-card p-4">
+              <legend class="px-1 text-sm font-semibold">Galerie</legend>
+              <p class="text-xs text-muted-foreground mb-3">
+                Zařaď fotku do galerií (i více najednou). „Hlavní" = krycí fotka galerie.
+              </p>
+              <div class="space-y-2">
+                {galleries.map((g) => {
+                  const isAssigned = assignedMap.has(g.id);
+                  const isCover = assignedMap.get(g.id) === true;
+                  return (
+                    <div class="flex items-center gap-3" data-gallery={g.id}>
+                      <label class="flex items-center gap-2 flex-1 cursor-pointer">
+                        <input type="checkbox" class="g-assign" checked={isAssigned} />
+                        <span>{g.title}</span>
+                      </label>
+                      <label class="flex items-center gap-1.5 text-sm text-muted-foreground cursor-pointer">
+                        <input type="checkbox" class="g-cover" checked={isCover} disabled={!isAssigned} />
+                        hlavní
+                      </label>
+                    </div>
+                  );
+                })}
+                {galleries.length === 0 && (
+                  <p class="text-sm text-muted-foreground">
+                    Žádné galerie. <a href="/admin/galleries/" class="underline">Vytvoř galerii</a>.
+                  </p>
+                )}
+              </div>
+            </fieldset>
+
+            <fieldset class="rounded-xl border border-border bg-card p-4">
+              <legend class="px-1 text-sm font-semibold">EXIF</legend>
+              <label class="flex items-center gap-2 cursor-pointer mb-3">
+                <input id="showExif" type="checkbox" checked={photo.showExif} />
+                <span class="text-sm">Zobrazit EXIF u fotky na webu</span>
+              </label>
+              {exifEntries.length > 0 ? (
+                <dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
+                  {exifEntries.map(([k, v]) => (
+                    <>
+                      <dt class="text-muted-foreground">{k}</dt>
+                      <dd>{String(v)}</dd>
+                    </>
+                  ))}
+                </dl>
+              ) : (
+                <p class="text-xs text-muted-foreground">
+                  Žádná EXIF data (fotka byla nahrána bez nich).
+                </p>
+              )}
+            </fieldset>
+
+            <p id="ed-msg" class="hidden text-sm" />
+            <div class="flex items-center justify-between gap-3">
+              <button type="submit" class="btn-primary">Uložit</button>
+              <button type="button" id="ed-delete" class="text-sm text-red-500 hover:underline">
+                Smazat fotku
+              </button>
+            </div>
+          </form>
+        )
+      }
+    </div>
+  </section>
+</BaseLayout>
+
+<script>
+  function setupEditor() {
+    const form = document.getElementById("editor") as HTMLFormElement | null;
+    if (!form) return;
+    const id = form.dataset.id;
+    const msg = document.getElementById("ed-msg");
+
+    // „Hlavní" jde zapnout jen u zařazené galerie.
+    form.querySelectorAll<HTMLElement>("[data-gallery]").forEach((row) => {
+      const assign = row.querySelector<HTMLInputElement>(".g-assign");
+      const cover = row.querySelector<HTMLInputElement>(".g-cover");
+      assign?.addEventListener("change", () => {
+        if (!cover) return;
+        cover.disabled = !assign.checked;
+        if (!assign.checked) cover.checked = false;
+      });
+    });
+
+    function showMsg(text: string, ok: boolean) {
+      if (!msg) return;
+      msg.textContent = text;
+      msg.className = ok ? "text-sm text-green-600" : "text-sm text-red-500";
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const galleries = Array.from(
+        form.querySelectorAll<HTMLElement>("[data-gallery]"),
+      )
+        .map((row) => {
+          const assign = row.querySelector<HTMLInputElement>(".g-assign");
+          const cover = row.querySelector<HTMLInputElement>(".g-cover");
+          return assign?.checked
+            ? { galleryId: row.dataset.gallery, isCover: !!cover?.checked }
+            : null;
+        })
+        .filter(Boolean);
+
+      const payload = {
+        caption: (form.querySelector("#caption") as HTMLInputElement).value,
+        alt: (form.querySelector("#alt") as HTMLInputElement).value,
+        bodyText: (form.querySelector("#bodyText") as HTMLTextAreaElement).value,
+        month: (form.querySelector("#month") as HTMLInputElement).value,
+        showExif: (form.querySelector("#showExif") as HTMLInputElement).checked,
+        galleries,
+      };
+      try {
+        const res = await fetch(`/api/admin/photos/${id}/`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+          const j = (await res.json().catch(() => ({}))) as { error?: string };
+          throw new Error(j.error ?? "Uložení selhalo.");
+        }
+        showMsg("Uloženo ✓", true);
+      } catch (err) {
+        showMsg(err instanceof Error ? err.message : "Chyba", false);
+      }
+    });
+
+    document.getElementById("ed-delete")?.addEventListener("click", async () => {
+      if (!confirm("Opravdu smazat fotku? Nelze vrátit.")) return;
+      try {
+        const res = await fetch(`/api/admin/photos/${id}/`, { method: "DELETE" });
+        if (!res.ok) throw new Error("Smazání selhalo.");
+        location.href = "/admin/photos/";
+      } catch (err) {
+        showMsg(err instanceof Error ? err.message : "Chyba", false);
+      }
+    });
+  }
+  document.addEventListener("astro:page-load", setupEditor);
+</script>

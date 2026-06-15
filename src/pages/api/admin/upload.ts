@@ -25,6 +25,9 @@ export const POST: APIRoute = async ({ request }) => {
     file.name.replace(/\.[^.]+$/, "");
   const width = Number(form.get("width")) || null;
   const height = Number(form.get("height")) || null;
+  const rawExif = form.get("exifJson");
+  const exifJson =
+    typeof rawExif === "string" && rawExif.trim() ? rawExif : null;
   const ext = (file.name.match(/\.([a-zA-Z0-9]+)$/)?.[1] ?? "jpg").toLowerCase();
 
   const id = crypto.randomUUID();
@@ -34,10 +37,10 @@ export const POST: APIRoute = async ({ request }) => {
     await env.PHOTOS.put(key, await file.arrayBuffer(), {
       httpMetadata: { contentType: file.type },
     });
-    const db = getDb();
+    const db = await getDb();
     await db
       .insert(schema.photos)
-      .values({ id, r2Key: key, caption, width, height });
+      .values({ id, r2Key: key, caption, width, height, exifJson });
     return Response.json({ id, key, caption }, { status: 201 });
   } catch (e) {
     return Response.json(

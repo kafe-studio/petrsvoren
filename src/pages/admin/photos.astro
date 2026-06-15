@@ -1,0 +1,69 @@
+---
+export const prerender = false;
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { getDb, schema } from "../../db";
+import { desc } from "drizzle-orm";
+
+let photos: (typeof schema.photos.$inferSelect)[] = [];
+let dbError = "";
+try {
+  const db = await getDb();
+  photos = await db
+    .select()
+    .from(schema.photos)
+    .orderBy(desc(schema.photos.createdAt));
+} catch (e) {
+  dbError = e instanceof Error ? e.message : String(e);
+}
+
+const metadata = { title: "Fotky", description: "Správa fotografií." };
+---
+
+<BaseLayout {metadata}>
+  <section class="pt-28 pb-24 px-6">
+    <div class="mx-auto max-w-5xl">
+      <a
+        href="/admin/"
+        class="mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
+        >&larr; Administrace</a
+      >
+      <div class="mb-8 flex items-center justify-between gap-4">
+        <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight">
+          Fotky <span class="text-muted-foreground text-2xl">({photos.length})</span>
+        </h1>
+        <a href="/admin/upload/" class="btn-primary">Nahrát fotky</a>
+      </div>
+
+      {dbError && <p class="text-sm text-red-500 mb-6">{dbError}</p>}
+
+      {
+        photos.length === 0 ? (
+          <p class="text-muted-foreground">
+            Zatím žádné fotky. <a href="/admin/upload/" class="underline">Nahraj první</a>.
+          </p>
+        ) : (
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            {photos.map((p) => (
+              <a
+                href={`/admin/photos/${p.id}/`}
+                class="group relative block overflow-hidden rounded-sm bg-neutral-900 aspect-square"
+              >
+                <img
+                  src={`/img/${p.id}/`}
+                  alt={p.alt ?? p.caption}
+                  loading="lazy"
+                  class="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                />
+                <span class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent px-2 py-1.5">
+                  <span class="block truncate text-xs text-white">
+                    {p.caption || "Bez názvu"}
+                  </span>
+                </span>
+              </a>
+            ))}
+          </div>
+        )
+      }
+    </div>
+  </section>
+</BaseLayout>

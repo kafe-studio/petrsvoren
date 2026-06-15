@@ -1,0 +1,156 @@
+---
+export const prerender = false;
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { getDb, schema } from "../../db";
+
+let galleries: (typeof schema.galleries.$inferSelect)[] = [];
+let dbError = "";
+try {
+  const db = await getDb();
+  galleries = await db
+    .select()
+    .from(schema.galleries)
+    .orderBy(schema.galleries.sortOrder);
+} catch (e) {
+  dbError = e instanceof Error ? e.message : String(e);
+}
+
+const inputClass =
+  "w-full rounded-lg border border-border bg-card px-3 py-2 text-foreground text-sm outline-none focus:border-primary transition-colors";
+const metadata = { title: "Galerie", description: "Správa galerií." };
+---
+
+<BaseLayout {metadata}>
+  <section class="pt-28 pb-24 px-6">
+    <div class="mx-auto max-w-3xl">
+      <a
+        href="/admin/"
+        class="mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
+        >&larr; Administrace</a
+      >
+      <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight mb-8">
+        Galerie
+      </h1>
+
+      {dbError && <p class="text-sm text-red-500 mb-6">{dbError}</p>}
+
+      <ul class="space-y-3 mb-10">
+        {
+          galleries.map((g) => (
+            <li
+              class="rounded-xl border border-border bg-card p-4 space-y-3"
+              data-gallery={g.id}
+            >
+              <div class="flex items-center justify-between gap-3">
+                <span class="text-xs font-mono text-muted-foreground">
+                  /{g.slug}/
+                </span>
+                <button
+                  type="button"
+                  class="g-del text-sm text-red-500 hover:underline"
+                >
+                  Smazat
+                </button>
+              </div>
+              <input class={`${inputClass} g-title`} value={g.title} />
+              <textarea
+                class={`${inputClass} g-desc`}
+                rows="2"
+                placeholder="Popis (volitelné)"
+              >
+                {g.description ?? ""}
+              </textarea>
+              <button type="button" class="g-save btn-outline text-sm py-1.5 px-4">
+                Uložit
+              </button>
+              <span class="g-msg hidden text-sm" />
+            </li>
+          ))
+        }
+      </ul>
+
+      <form
+        id="new-gallery"
+        class="rounded-xl border border-border bg-card p-4 space-y-3"
+      >
+        <h2 class="font-semibold">Nová galerie</h2>
+        <input id="ng-title" class={inputClass} placeholder="Název (např. Portréty)" />
+        <input id="ng-slug" class={inputClass} placeholder="slug (volitelné, jinak z názvu)" />
+        <textarea id="ng-desc" class={inputClass} rows="2" placeholder="Popis (volitelné)"></textarea>
+        <p id="ng-msg" class="hidden text-sm"></p>
+        <button type="submit" class="btn-primary">Vytvořit</button>
+      </form>
+    </div>
+  </section>
+</BaseLayout>
+
+<script>
+  function setupGalleries() {
+    const root = document.querySelector("section");
+    if (!root || !document.getElementById("new-gallery")) return;
+
+    // Úprava / smazání existujících.
+    root.querySelectorAll<HTMLElement>("[data-gallery]").forEach((li) => {
+      const id = li.dataset.gallery;
+      const msg = li.querySelector<HTMLElement>(".g-msg");
+      const setMsg = (t: string, ok: boolean) => {
+        if (!msg) return;
+        msg.textContent = t;
+        msg.className = ok ? "g-msg text-sm text-green-600" : "g-msg text-sm text-red-500";
+      };
+      li.querySelector(".g-save")?.addEventListener("click", async () => {
+        const title = (li.querySelector(".g-title") as HTMLInputElement).value;
+        const description = (li.querySelector(".g-desc") as HTMLTextAreaElement).value;
+        try {
+          const res = await fetch(`/api/admin/galleries/${id}/`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ title, description }),
+          });
+          if (!res.ok) throw new Error("Uložení selhalo.");
+          setMsg("Uloženo ✓", true);
+        } catch (e) {
+          setMsg(e instanceof Error ? e.message : "Chyba", false);
+        }
+      });
+      li.querySelector(".g-del")?.addEventListener("click", async () => {
+        if (!confirm("Smazat galerii? Fotky zůstanou, jen se z ní odeberou.")) return;
+        try {
+          const res = await fetch(`/api/admin/galleries/${id}/`, { method: "DELETE" });
+          if (!res.ok) throw new Error("Smazání selhalo.");
+          li.remove();
+        } catch (e) {
+          setMsg(e instanceof Error ? e.message : "Chyba", false);
+        }
+      });
+    });
+
+    // Vytvoření nové.
+    const form = document.getElementById("new-gallery") as HTMLFormElement;
+    const ngMsg = document.getElementById("ng-msg");
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const title = (document.getElementById("ng-title") as HTMLInputElement).value;
+      const slug = (document.getElementById("ng-slug") as HTMLInputElement).value;
+      const description = (document.getElementById("ng-desc") as HTMLTextAreaElement).value;
+      try {
+        const res = await fetch("/api/admin/galleries/", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ title, slug, description }),
+        });
+        if (!res.ok) {
+          const j = (await res.json().catch(() => ({}))) as { error?: string };
+          throw new Error(j.error ?? "Vytvoření selhalo.");
+        }
+        location.reload();
+      } catch (err) {
+        if (ngMsg) {
+          ngMsg.textContent = err instanceof Error ? err.message : "Chyba";
+          ngMsg.className = "text-sm text-red-500";
+        }
+      }
+    });
+  }
+  document.addEventListener("astro:page-load", setupGalleries);
+</script>
