@@ -70,13 +70,14 @@ const nav = [
         </nav>
         <div class="mt-auto pt-6 text-xs text-muted-foreground">
           {adminEmail && <p class="mb-2 truncate px-3" title={adminEmail}>{adminEmail}</p>}
-          <a
-            href="/cdn-cgi/access/logout"
-            class="flex items-center gap-2 rounded-lg px-3 py-2 transition-colors hover:bg-muted hover:text-foreground"
+          <button
+            type="button"
+            id="admin-logout"
+            class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left transition-colors hover:bg-muted hover:text-foreground"
           >
             <Icon name="lucide:log-out" class="size-4" />
             Odhlásit
-          </a>
+          </button>
           <a
             href="/"
             class="mt-1 flex items-center gap-2 rounded-lg px-3 py-2 transition-colors hover:bg-muted hover:text-foreground"
@@ -120,5 +121,17 @@ const nav = [
       </div>
     </div>
     <Toaster />
+
+    <script>
+      // Odhlášení — smaže session cookie přes API a vrátí na login.
+      // Delegace na `document`, protože bundlovaný script běží jen jednou,
+      // ale tlačítko se s navigací překresluje.
+      document.addEventListener("click", async (e) => {
+        const btn = (e.target as HTMLElement | null)?.closest("#admin-logout");
+        if (!btn) return;
+        await fetch("/api/auth/logout/", { method: "POST" }).catch(() => {});
+        window.location.href = "/admin/login";
+      });
+    </script>
   </body>
 </html>
