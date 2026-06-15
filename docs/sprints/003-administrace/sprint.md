@@ -109,24 +109,32 @@ Doplnit v tomto sprintu:
   hromadné akce, výběr měsíce. Carry-over: fix textarea bug + úklid neaktuální
   „Auth: Cloudflare Access" sekce (auth je teď in-app login).
 
-- [ ] **Run 009 — Blog do D1 + rich text** (additive → pak destructive)
+- [ ] **Run 009 — Import fotek z markdownu do D1/R2** (data migration)
+  → docs/sprints/003-administrace/run-009-import-fotek.md
+  Skript: parsovat `src/content/photos/<sekce>/*.md` + `monthly/<RRRR-MM>/*.md`
+  (frontmatter caption/section/order/month + tělo = dlouhý text), co-located
+  obrázky nahrát do R2, vložit řádky `photos` + `photo_galleries` (zařazení do
+  sekce-galerie, `sortOrder`, `month`). Idempotentní (re-run nepřidá duplicity).
+  Cíl: nic se neztratí — stávající fotky + popisky přejdou do DB beze změny.
+
+- [ ] **Run 010 — Blog do D1 + rich text** (additive → pak destructive)
   Schema `blog_posts` + migrace; rich-text editor (ProseKit: JSON + HTML);
   cover přes `ImagePicker`/R2; admin `/admin/blog` (+ `[id]`), API přes CRUD
   factory; draft/publish. Seed: import stávajících `src/content/blog/*.md`.
 
-- [ ] **Run 010 — Tipy + texty webu** (additive)
+- [ ] **Run 011 — Tipy + texty webu** (additive)
   Schema `tips` + migrace, `site_texts` UI (skupinová editace jako zahrada
   `texty/[group]`). Admin `/admin/tipy`, `/admin/texty`. Seed ze stávající
   kolekce `tips`.
 
-- [ ] **Run 011 — Veřejný web čte z D1 + náhledy** (destructive)
+- [ ] **Run 012 — Veřejný web čte z D1 + náhledy** (destructive)
   Helpery pro dotazy (fotky dle sekce, výběr měsíce, blog, tipy, texty); přepis
   `[section].astro`, `index.astro`, `Tips.astro`, `PhotoGrid.astro`,
   `Schema.astro`, `/mesic/`, `/blog/`. **Cloudflare Images / Image Resizing**
   pro náhledy. **KV cache** + invalidace. Odstranit kolekce `photos`, `monthly`,
-  `tips`, `blog` z `content.config.ts` a `src/content/` (blog až po Run 009 seedu).
+  `tips`, `blog` z `content.config.ts` a `src/content/` (po importech Run 009/010).
 
-- [ ] **Run 012 — Doladění & deploy** (ops)
+- [ ] **Run 013 — Doladění & deploy** (ops)
   Remote D1/R2 (přes CF plugin / wrangler), apply migrací `--remote`; nastavit
   Cloudflare Images binding; observability; review, finální deploy a ověření.
 
