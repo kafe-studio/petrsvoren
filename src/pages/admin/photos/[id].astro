@@ -1,6 +1,6 @@
 ---
 export const prerender = false;
-import BaseLayout from "../../../layouts/BaseLayout.astro";
+import AdminLayout from "../../../layouts/AdminLayout.astro";
 import { getDb, schema } from "../../../db";
 import { eq } from "drizzle-orm";
 
@@ -38,8 +38,8 @@ const inputClass =
 const metadata = { title: "Úprava fotky", description: "Detail fotky." };
 ---
 
-<BaseLayout {metadata}>
-  <section class="pt-28 pb-24 px-6">
+<AdminLayout {metadata}>
+  <section>
     <div class="mx-auto max-w-3xl">
       <a
         href="/admin/photos/"
@@ -153,7 +153,7 @@ const metadata = { title: "Úprava fotky", description: "Detail fotky." };
       }
     </div>
   </section>
-</BaseLayout>
+</AdminLayout>
 
 <script>
   function setupEditor() {

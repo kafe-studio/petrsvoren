@@ -1,6 +1,6 @@
 ---
 export const prerender = false;
-import BaseLayout from "../../layouts/BaseLayout.astro";
+import AdminLayout from "../../layouts/AdminLayout.astro";
 import { getDb, schema } from "../../db";
 import { desc } from "drizzle-orm";
 
@@ -19,14 +19,9 @@ try {
 const metadata = { title: "Fotky", description: "Správa fotografií." };
 ---
 
-<BaseLayout {metadata}>
-  <section class="pt-28 pb-24 px-6">
+<AdminLayout {metadata}>
+  <section>
     <div class="mx-auto max-w-5xl">
-      <a
-        href="/admin/"
-        class="mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
-        >&larr; Administrace</a
-      >
       <div class="mb-8 flex items-center justify-between gap-4">
         <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight">
           Fotky <span class="text-muted-foreground text-2xl">({photos.length})</span>
@@ -66,4 +61,4 @@ const metadata = { title: "Fotky", description: "Správa fotografií." };
       }
     </div>
   </section>
-</BaseLayout>
+</AdminLayout>

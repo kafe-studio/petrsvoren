@@ -1,10 +1,10 @@
 ---
 export const prerender = false;
-import BaseLayout from "../../layouts/BaseLayout.astro";
+import AdminLayout from "../../layouts/AdminLayout.astro";
 import { getDb, schema } from "../../db";
 
-// Administrace. Přístup chrání Cloudflare Access na hraně (/admin/*) — sem se
-// dostane jen ověřený uživatel. Etapa 1: základ + přehled. Upload a editace = další etapy.
+// Administrace. Přístup chrání Cloudflare Access na hraně + middleware (JWT). Sem
+// se dostane jen ověřený admin. Shell (sidebar, nav) řeší AdminLayout.
 let galleriesCount = 0;
 let photosCount = 0;
 let dbError = "";
@@ -22,8 +22,8 @@ const metadata = {
 };
 ---
 
-<BaseLayout {metadata}>
-  <section class="pt-28 pb-24 px-6">
+<AdminLayout {metadata}>
+  <section>
     <div class="mx-auto max-w-3xl">
       <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight mb-2">
         Administrace
@@ -102,4 +102,4 @@ const metadata = {
       </nav>
     </div>
   </section>
-</BaseLayout>
+</AdminLayout>

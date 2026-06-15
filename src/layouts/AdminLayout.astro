@@ -1,0 +1,122 @@
+---
+// Admin shell — vlastní plocha se sidebarem na design tokenech webu (žádný
+// veřejný Navbar/Footer). Přístup chrání Cloudflare Access + middleware
+// (src/middleware.ts), takže sem se dostane jen ověřený admin.
+import { Font } from "astro:assets";
+import { ClientRouter } from "astro:transitions";
+import { Icon } from "astro-icon/components";
+import "../styles/global.css";
+
+interface Props {
+  title?: string;
+  metadata?: { title?: string; description?: string };
+}
+
+const { title, metadata } = Astro.props;
+const pageTitle = metadata?.title ?? title ?? "Administrace";
+const adminEmail = Astro.locals.adminEmail;
+
+const here = Astro.url.pathname;
+const isActive = (href: string) =>
+  href === "/admin/" ? here === "/admin/" : here.startsWith(href);
+
+const nav = [
+  { href: "/admin/", label: "Přehled", icon: "lucide:layout-dashboard" },
+  { href: "/admin/upload/", label: "Nahrát fotky", icon: "lucide:upload" },
+  { href: "/admin/photos/", label: "Fotky", icon: "lucide:image" },
+  { href: "/admin/galleries/", label: "Galerie", icon: "lucide:folder" },
+];
+---
+
+<!doctype html>
+<html lang="cs" data-theme="light" class="scroll-smooth">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>{pageTitle} · Administrace</title>
+    <Font cssVariable="--font-inter" preload />
+    <ClientRouter />
+    <slot name="head" />
+  </head>
+  <body class="bg-background text-foreground antialiased tracking-tight">
+    <div class="flex min-h-screen">
+      <!-- Sidebar -->
+      <aside
+        class="hidden md:flex w-60 shrink-0 flex-col border-r border-border bg-card/40 px-4 py-6"
+      >
+        <a href="/admin/" class="mb-8 px-2 text-lg font-extrabold tracking-tight">
+          Petr Svoreň <span class="text-muted-foreground font-normal">admin</span>
+        </a>
+        <nav class="flex flex-col gap-1" aria-label="Administrace">
+          {
+            nav.map((item) => (
+              <a
+                href={item.href}
+                aria-current={isActive(item.href) ? "page" : undefined}
+                class:list={[
+                  "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
+                  isActive(item.href)
+                    ? "bg-primary/10 text-primary font-medium"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                ]}
+              >
+                <Icon name={item.icon} class="size-4" />
+                {item.label}
+              </a>
+            ))
+          }
+        </nav>
+        <div class="mt-auto pt-6 text-xs text-muted-foreground">
+          {adminEmail && <p class="mb-2 truncate px-3" title={adminEmail}>{adminEmail}</p>}
+          <a
+            href="/cdn-cgi/access/logout"
+            class="flex items-center gap-2 rounded-lg px-3 py-2 transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <Icon name="lucide:log-out" class="size-4" />
+            Odhlásit
+          </a>
+          <a
+            href="/"
+            class="mt-1 flex items-center gap-2 rounded-lg px-3 py-2 transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <Icon name="lucide:external-link" class="size-4" />
+            Zobrazit web
+          </a>
+        </div>
+      </aside>
+
+      <!-- Mobilní horní lišta -->
+      <div class="flex min-w-0 flex-1 flex-col">
+        <header
+          class="md:hidden flex items-center justify-between border-b border-border px-4 py-3"
+        >
+          <a href="/admin/" class="font-extrabold tracking-tight">Admin</a>
+          <nav class="flex items-center gap-1" aria-label="Administrace">
+            {
+              nav.map((item) => (
+                <a
+                  href={item.href}
+                  aria-current={isActive(item.href) ? "page" : undefined}
+                  aria-label={item.label}
+                  class:list={[
+                    "rounded-lg p-2 transition-colors",
+                    isActive(item.href)
+                      ? "text-primary"
+                      : "text-muted-foreground hover:text-foreground",
+                  ]}
+                >
+                  <Icon name={item.icon} class="size-5" />
+                </a>
+              ))
+            }
+          </nav>
+        </header>
+
+        <main class="min-w-0 flex-1 px-5 py-8 md:px-10 md:py-10">
+          <slot />
+        </main>
+      </div>
+    </div>
+  </body>
+</html>
