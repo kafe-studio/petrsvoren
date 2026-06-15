@@ -331,7 +331,8 @@ const fotky = (n: number) =>
     cursor: grabbing;
   }
   .mtl-slot {
-    flex: 0 0 calc((100% - 3rem) / 5);
+    /* Mobil: 3 viditelné měsíce (2 mezery po 0.75rem). */
+    flex: 0 0 calc((100% - 1.5rem) / 3);
     scroll-snap-align: center;
     display: flex;
     flex-direction: column;
@@ -341,6 +342,12 @@ const fotky = (n: number) =>
     background: none;
     cursor: pointer;
     color: var(--muted-foreground, #888);
+  }
+  /* Od tabletu výš: 5 viditelných měsíců (4 mezery po 0.75rem). */
+  @media (min-width: 640px) {
+    .mtl-slot {
+      flex-basis: calc((100% - 3rem) / 5);
+    }
   }
   .mtl-slot.is-empty {
     cursor: default;
