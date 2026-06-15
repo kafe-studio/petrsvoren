@@ -103,10 +103,11 @@ Doplnit v tomto sprintu:
   jméno+heslo (PBKDF2 + session cookie) — viz done.md. Nasazeno.
 
 - [ ] **Run 008 — Galerie & fotky: intuitivní správa** (refactor)
-  Upload i editaci přepsat na Svelte 5 islands (props ze serveru). `ImagePicker`,
-  drag-drop **řazení** fotek v galerii (`sortOrder` přes `db.batch`), nastavení
-  `isCover`, hromadné akce, UI pro **výběr měsíce** (`month`). Cíl: spravovat
-  galerie bez přemýšlení.
+  → docs/sprints/003-administrace/run-008-galerie-fotky-sprava.md
+  Integrace Svelte 5 (zatím není v projektu), upload + editaci přepsat na islands,
+  drag-drop **řazení** (`sortOrder` přes `db.batch`), `ImagePicker`, `isCover`,
+  hromadné akce, výběr měsíce. Carry-over: fix textarea bug + úklid neaktuální
+  „Auth: Cloudflare Access" sekce (auth je teď in-app login).
 
 - [ ] **Run 009 — Blog do D1 + rich text** (additive → pak destructive)
   Schema `blog_posts` + migrace; rich-text editor (ProseKit: JSON + HTML);
