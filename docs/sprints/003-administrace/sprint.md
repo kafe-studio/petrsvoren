@@ -95,13 +95,12 @@ Doplnit v tomto sprintu:
 
 ## Runy
 
-- [ ] **Run 007 — Access JWT middleware, admin shell & deploy** (additive)
-  `src/middleware.ts`: validace `Cf-Access-Jwt-Assertion` proti JWKS team domény
-  + kontrola `aud` (AUD jako wrangler var/secret); dev fallback (cookie/bypass).
-  `AdminLayout.astro` se sidebarem na design tokenech webu + přesun admin stránek
-  z `BaseLayout`; `Toaster`/`admin-toast.ts`, `ConfirmModal`, `DeleteButton`;
-  `admin-helpers.ts` (CRUD factory). **Commit + deploy** (smaže Sveltii z prod).
-  `better-auth` PONECHAT (cílová auth přes vlastní doménu, CF Access je dočasný).
+- [x] **Run 007 — Admin auth, shell & deploy** (additive)
+  → docs/sprints/003-administrace/run-007-access-shell.done.md
+  AdminLayout se sidebarem + přesun 5 admin stránek z `BaseLayout`; toast
+  (`admin-toast.ts`+`Toaster.astro`) + `DeleteButton.astro` (vanilla); `admin-helpers.ts`
+  (sdílené CRUD helpery). **Auth pivot:** CF Access JWT nahrazeno in-app loginem
+  jméno+heslo (PBKDF2 + session cookie) — viz done.md. Nasazeno.
 
 - [ ] **Run 008 — Galerie & fotky: intuitivní správa** (refactor)
   Upload i editaci přepsat na Svelte 5 islands (props ze serveru). `ImagePicker`,
