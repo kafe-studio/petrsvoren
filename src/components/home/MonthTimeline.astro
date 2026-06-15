@@ -74,9 +74,17 @@ const fotky = (n: number) =>
   albumStops.length > 0 && (
     <section class="py-16 px-6" aria-label="Výběr měsíce">
       <div class="mx-auto max-w-5xl">
-        <h2 class="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-8 reveal">
-          Výběr měsíce
-        </h2>
+        <div class="mb-8 flex items-baseline justify-between gap-4 reveal">
+          <h2 class="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+            Výběr měsíce
+          </h2>
+          <a
+            href="/mesic/"
+            class="shrink-0 text-sm text-muted-foreground transition-colors hover:text-foreground"
+          >
+            Všechny &rarr;
+          </a>
+        </div>
 
         <div class="reveal" data-month-timeline data-active={activeMonth}>
           {/* Velký náhled aktivního měsíce — překryté karty album měsíců. */}
