@@ -16,10 +16,10 @@ export const sectionSlugs = sections.map((s) => s.slug) as [
   ...SectionSlug[],
 ];
 
-// Odkazy v hlavní navigaci a v patičce, odvozené ze sekcí + Po měsících + Články + Kontakt.
+// Odkazy v hlavní navigaci a v patičce, odvozené ze sekcí + Články + Kontakt.
+// (Výběr měsíce je na homepage; samostatná stránka „Po měsících" zrušena.)
 export const navLinks = [
   ...sections.map((s) => ({ text: s.title, href: `/${s.slug}/` })),
-  { text: "Po měsících", href: "/mesic/" },
   { text: "Články", href: "/blog/" },
   { text: "Kontakt", href: "/kontakt/" },
 ];
