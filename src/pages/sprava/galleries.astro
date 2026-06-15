@@ -43,7 +43,7 @@ const metadata = { title: "Galerie", description: "Správa galerií." };
                   /{g.slug}/
                 </span>
                 <DeleteButton
-                  endpoint={`/api/admin/galleries/${g.id}/`}
+                  endpoint={`/api/sprava/galleries/${g.id}/`}
                   confirmText="Smazat galerii? Fotky zůstanou, jen se z ní odeberou."
                 />
               </div>
@@ -91,7 +91,7 @@ const metadata = { title: "Galerie", description: "Správa galerií." };
         const title = (li.querySelector(".g-title") as HTMLInputElement).value;
         const description = (li.querySelector(".g-desc") as HTMLTextAreaElement).value;
         try {
-          const res = await fetch(`/api/admin/galleries/${id}/`, {
+          const res = await fetch(`/api/sprava/galleries/${id}/`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ title, description }),
@@ -112,7 +112,7 @@ const metadata = { title: "Galerie", description: "Správa galerií." };
       const slug = (document.getElementById("ng-slug") as HTMLInputElement).value;
       const description = (document.getElementById("ng-desc") as HTMLTextAreaElement).value;
       try {
-        const res = await fetch("/api/admin/galleries/", {
+        const res = await fetch("/api/sprava/galleries/", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ title, slug, description }),

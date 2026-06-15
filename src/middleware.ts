@@ -1,11 +1,11 @@
 import type { MiddlewareHandler } from "astro";
 import { readSession, SESSION_COOKIE } from "./lib/auth";
 
-// Chrání administraci (`/admin`, `/api/admin`) přihlášením jménem + heslem.
+// Chrání administraci (`/sprava`, `/api/sprava`) přihlášením jménem + heslem.
 // Ověřuje podepsanou session cookie. Login stránka a /api/auth jsou veřejné,
 // jinak by se nešlo přihlásit.
-const PROTECTED = /^\/(admin|api\/admin)(\/|$)/;
-const PUBLIC = /^\/admin\/login\/?$/;
+const PROTECTED = /^\/(sprava|api\/sprava)(\/|$)/;
+const PUBLIC = /^\/sprava\/login\/?$/;
 
 export const onRequest: MiddlewareHandler = async (context, next) => {
   const path = context.url.pathname;
@@ -29,7 +29,7 @@ export const onRequest: MiddlewareHandler = async (context, next) => {
       return new Response("Nepřihlášeno.", { status: 401 });
     }
     return context.redirect(
-      `/admin/login?next=${encodeURIComponent(path)}`,
+      `/sprava/login?next=${encodeURIComponent(path)}`,
     );
   }
 

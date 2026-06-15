@@ -43,7 +43,7 @@ const metadata = { title: "Úprava fotky", description: "Detail fotky." };
   <section>
     <div class="mx-auto max-w-3xl">
       <a
-        href="/admin/photos/"
+        href="/sprava/photos/"
         class="mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
         >&larr; Fotky</a
       >
@@ -114,7 +114,7 @@ const metadata = { title: "Úprava fotky", description: "Detail fotky." };
                 })}
                 {galleries.length === 0 && (
                   <p class="text-sm text-muted-foreground">
-                    Žádné galerie. <a href="/admin/galleries/" class="underline">Vytvoř galerii</a>.
+                    Žádné galerie. <a href="/sprava/galleries/" class="underline">Vytvoř galerii</a>.
                   </p>
                 )}
               </div>
@@ -145,9 +145,9 @@ const metadata = { title: "Úprava fotky", description: "Detail fotky." };
             <div class="flex items-center justify-between gap-3">
               <button type="submit" class="btn-primary">Uložit</button>
               <DeleteButton
-                endpoint={`/api/admin/photos/${photo.id}/`}
+                endpoint={`/api/sprava/photos/${photo.id}/`}
                 confirmText="Opravdu smazat fotku? Nelze vrátit."
-                redirect="/admin/photos/"
+                redirect="/sprava/photos/"
                 label="Smazat fotku"
               />
             </div>
@@ -200,7 +200,7 @@ const metadata = { title: "Úprava fotky", description: "Detail fotky." };
         galleries,
       };
       try {
-        const res = await fetch(`/api/admin/photos/${id}/`, {
+        const res = await fetch(`/api/sprava/photos/${id}/`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),

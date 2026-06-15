@@ -3,7 +3,11 @@
 **Status:** TODO
 **Date:** 2026-06-15
 **Sprint:** 003-administrace
+**Dashboard Sprint:** 18
+**Dashboard Run:** 61
 **Typ:** refactor
+
+<!-- dashboard-tasks: {"Integrace Svelte 5 do projektu": 260, "Klientské image helpery do sdíleného modulu": 261, "Upload fotek přepsán na Svelte island": 262, "Editor fotky přepsán na Svelte island": 263, "Oprava předvyplnění popisu galerie + úklid dokumentace": 264} -->
 
 ## Kontext
 

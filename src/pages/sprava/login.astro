@@ -55,7 +55,7 @@ const inputClass =
           throw new Error(j.error ?? "Přihlášení selhalo.");
         }
         const params = new URLSearchParams(location.search);
-        location.href = params.get("next") || "/admin/";
+        location.href = params.get("next") || "/sprava/";
       } catch (e2) {
         if (err) {
           err.textContent = e2 instanceof Error ? e2.message : "Chyba";

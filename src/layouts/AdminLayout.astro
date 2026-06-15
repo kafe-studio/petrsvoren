@@ -19,13 +19,13 @@ const adminEmail = Astro.locals.adminEmail;
 
 const here = Astro.url.pathname;
 const isActive = (href: string) =>
-  href === "/admin/" ? here === "/admin/" : here.startsWith(href);
+  href === "/sprava/" ? here === "/sprava/" : here.startsWith(href);
 
 const nav = [
-  { href: "/admin/", label: "Přehled", icon: "lucide:layout-dashboard" },
-  { href: "/admin/upload/", label: "Nahrát fotky", icon: "lucide:upload" },
-  { href: "/admin/photos/", label: "Fotky", icon: "lucide:image" },
-  { href: "/admin/galleries/", label: "Galerie", icon: "lucide:folder" },
+  { href: "/sprava/", label: "Přehled", icon: "lucide:layout-dashboard" },
+  { href: "/sprava/upload/", label: "Nahrát fotky", icon: "lucide:upload" },
+  { href: "/sprava/photos/", label: "Fotky", icon: "lucide:image" },
+  { href: "/sprava/galleries/", label: "Galerie", icon: "lucide:folder" },
 ];
 ---
 
@@ -46,7 +46,7 @@ const nav = [
       <aside
         class="hidden md:flex w-60 shrink-0 flex-col border-r border-border bg-card/40 px-4 py-6"
       >
-        <a href="/admin/" class="mb-8 px-2 text-lg font-extrabold tracking-tight">
+        <a href="/sprava/" class="mb-8 px-2 text-lg font-extrabold tracking-tight">
           Petr Svoreň <span class="text-muted-foreground font-normal">admin</span>
         </a>
         <nav class="flex flex-col gap-1" aria-label="Administrace">
@@ -93,7 +93,7 @@ const nav = [
         <header
           class="md:hidden flex items-center justify-between border-b border-border px-4 py-3"
         >
-          <a href="/admin/" class="font-extrabold tracking-tight">Admin</a>
+          <a href="/sprava/" class="font-extrabold tracking-tight">Admin</a>
           <nav class="flex items-center gap-1" aria-label="Administrace">
             {
               nav.map((item) => (
@@ -130,7 +130,7 @@ const nav = [
         const btn = (e.target as HTMLElement | null)?.closest("#admin-logout");
         if (!btn) return;
         await fetch("/api/auth/logout/", { method: "POST" }).catch(() => {});
-        window.location.href = "/admin/login";
+        window.location.href = "/sprava/login";
       });
     </script>
   </body>

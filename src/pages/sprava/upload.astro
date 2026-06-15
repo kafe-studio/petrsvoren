@@ -35,7 +35,7 @@ const metadata = { title: "Nahrát fotky", description: "Nahrání fotografií."
       <ul id="upload-list" class="mt-6 space-y-2"></ul>
 
       <p id="upload-done" class="hidden mt-6 text-sm">
-        Hotovo. <a href="/admin/" class="underline">Zpět do administrace</a>.
+        Hotovo. <a href="/sprava/" class="underline">Zpět do administrace</a>.
       </p>
     </div>
   </section>
@@ -128,7 +128,7 @@ const metadata = { title: "Nahrát fotky", description: "Nahrání fotografií."
         fd.append("height", String(h));
         const ex = await readExif(file);
         if (ex) fd.append("exifJson", JSON.stringify(ex));
-        const res = await fetch("/api/admin/upload/", {
+        const res = await fetch("/api/sprava/upload/", {
           method: "POST",
           body: fd,
         });
