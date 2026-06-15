@@ -37,6 +37,17 @@ const albumData = new Map(
   }),
 );
 
+// Pravidlo: každý měsíční výběr musí mít aspoň 10 fotek. Upozorni při buildu, kdyby ne.
+const MIN_PHOTOS = 10;
+const underfilled = albumMonths.filter(
+  (m) => (albumData.get(m)?.count ?? 0) < MIN_PHOTOS,
+);
+if (underfilled.length > 0) {
+  console.warn(
+    `[výběr měsíce] Alba s méně než ${MIN_PHOTOS} fotkami: ${underfilled.join(", ")}`,
+  );
+}
+
 const stops = monthsRange(START, end).map((m) => {
   const a = albumData.get(m);
   return {
