@@ -1,0 +1,147 @@
+---
+export const prerender = false;
+import BaseLayout from "../../layouts/BaseLayout.astro";
+const metadata = { title: "Nahrát fotky", description: "Nahrání fotografií." };
+---
+
+<BaseLayout {metadata}>
+  <section class="pt-28 pb-24 px-6">
+    <div class="mx-auto max-w-3xl">
+      <a
+        href="/admin/"
+        class="mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
+        >&larr; Administrace</a
+      >
+      <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight mb-2">
+        Nahrát fotky
+      </h1>
+      <p class="text-muted-foreground mb-8">
+        Přetáhni fotky sem nebo vyber ze zařízení. Jednotlivě i dávkou. Zařazení
+        do galerií a texty nastavíš v dalším kroku.
+      </p>
+
+      <label
+        id="dropzone"
+        for="file-input"
+        class="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border bg-card px-6 py-14 text-center cursor-pointer transition-colors hover:border-primary"
+      >
+        <span class="text-4xl" aria-hidden="true">📷</span>
+        <span class="font-medium">Přetáhni fotky sem</span>
+        <span class="text-sm text-muted-foreground">nebo klikni a vyber</span>
+        <input
+          id="file-input"
+          type="file"
+          accept="image/*"
+          multiple
+          class="sr-only"
+        />
+      </label>
+
+      <ul id="upload-list" class="mt-6 space-y-2"></ul>
+
+      <p id="upload-done" class="hidden mt-6 text-sm">
+        Hotovo. <a href="/admin/" class="underline">Zpět do administrace</a>.
+      </p>
+    </div>
+  </section>
+</BaseLayout>
+
+<script>
+  function setupUpload() {
+    const input = document.getElementById("file-input") as HTMLInputElement | null;
+    const zone = document.getElementById("dropzone");
+    const list = document.getElementById("upload-list");
+    const done = document.getElementById("upload-done");
+    if (!input || !zone || !list) return;
+
+    // Rozměry fotky z klienta (naturalWidth/Height) — uloží se s fotkou.
+    function dimensions(file: File): Promise<{ w: number; h: number }> {
+      return new Promise((resolve) => {
+        const url = URL.createObjectURL(file);
+        const img = new Image();
+        img.onload = () => {
+          URL.revokeObjectURL(url);
+          resolve({ w: img.naturalWidth, h: img.naturalHeight });
+        };
+        img.onerror = () => {
+          URL.revokeObjectURL(url);
+          resolve({ w: 0, h: 0 });
+        };
+        img.src = url;
+      });
+    }
+
+    async function uploadOne(file: File) {
+      const li = document.createElement("li");
+      li.className =
+        "flex items-center gap-3 rounded-lg border border-border bg-card p-2 text-sm";
+      const thumb = document.createElement("img");
+      thumb.className = "h-12 w-12 shrink-0 rounded object-cover";
+      thumb.src = URL.createObjectURL(file);
+      const name = document.createElement("span");
+      name.className = "min-w-0 flex-1 truncate";
+      name.textContent = file.name;
+      const status = document.createElement("span");
+      status.className = "shrink-0 text-muted-foreground";
+      status.textContent = "Nahrávám…";
+      li.appendChild(thumb);
+      li.appendChild(name);
+      li.appendChild(status);
+      list!.appendChild(li);
+
+      try {
+        const { w, h } = await dimensions(file);
+        const fd = new FormData();
+        fd.append("file", file);
+        fd.append("width", String(w));
+        fd.append("height", String(h));
+        const res = await fetch("/api/admin/upload/", {
+          method: "POST",
+          body: fd,
+        });
+        if (!res.ok) {
+          const j = (await res.json().catch(() => ({}))) as { error?: string };
+          throw new Error(j.error ?? "Chyba");
+        }
+        status.textContent = "✓ Hotovo";
+        status.className = "shrink-0 text-green-600";
+      } catch (e) {
+        status.textContent =
+          "✗ " + (e instanceof Error ? e.message : "Chyba");
+        status.className = "shrink-0 text-red-500";
+      }
+    }
+
+    async function handleFiles(files: FileList | File[]) {
+      const arr = Array.from(files).filter((f) => f.type.startsWith("image/"));
+      if (arr.length === 0) return;
+      done?.classList.add("hidden");
+      // Sekvenčně — stabilní progress i u velké dávky.
+      for (const f of arr) await uploadOne(f);
+      done?.classList.remove("hidden");
+    }
+
+    input.addEventListener("change", () => {
+      if (input.files) handleFiles(input.files);
+    });
+
+    ["dragenter", "dragover"].forEach((ev) =>
+      zone.addEventListener(ev, (e) => {
+        e.preventDefault();
+        zone.classList.add("border-primary");
+      }),
+    );
+    ["dragleave", "drop"].forEach((ev) =>
+      zone.addEventListener(ev, (e) => {
+        e.preventDefault();
+        zone.classList.remove("border-primary");
+      }),
+    );
+    zone.addEventListener("drop", (e) => {
+      const dt = (e as DragEvent).dataTransfer;
+      if (dt?.files) handleFiles(dt.files);
+    });
+  }
+
+  document.addEventListener("astro:page-load", setupUpload);
+</script>

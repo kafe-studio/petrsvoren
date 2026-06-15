@@ -53,16 +53,18 @@ const metadata = {
       </div>
 
       <nav class="space-y-2" aria-label="Sekce administrace">
-        <span
-          class="flex items-center justify-between rounded-lg border border-border bg-card px-5 py-4 opacity-60"
+        <a
+          href="/admin/upload/"
+          class="flex items-center justify-between rounded-lg border border-border bg-card px-5 py-4 transition-colors hover:border-primary"
         >
           <span>
             <span class="block font-medium">Nahrát fotky</span>
             <span class="block text-sm text-muted-foreground"
-              >Jednotlivě i dávkou · připravuje se (Etapa 2)</span
+              >Jednotlivě i dávkou</span
             >
           </span>
-        </span>
+          <span class="text-muted-foreground">&rarr;</span>
+        </a>
         <span
           class="flex items-center justify-between rounded-lg border border-border bg-card px-5 py-4 opacity-60"
         >
