@@ -1,0 +1,89 @@
+---
+export const prerender = false;
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { getDb, schema } from "../../db";
+
+// Administrace. Přístup chrání Cloudflare Access na hraně (/admin/*) — sem se
+// dostane jen ověřený uživatel. Etapa 1: základ + přehled. Upload a editace = další etapy.
+let galleriesCount = 0;
+let photosCount = 0;
+let dbError = "";
+try {
+  const db = getDb();
+  galleriesCount = (await db.select().from(schema.galleries)).length;
+  photosCount = (await db.select().from(schema.photos)).length;
+} catch (e) {
+  dbError = e instanceof Error ? e.message : String(e);
+}
+
+const metadata = {
+  title: "Administrace",
+  description: "Správa fotografií a galerií.",
+};
+---
+
+<BaseLayout {metadata}>
+  <section class="pt-28 pb-24 px-6">
+    <div class="mx-auto max-w-3xl">
+      <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight mb-2">
+        Administrace
+      </h1>
+      <p class="text-muted-foreground mb-10">
+        Správa fotografií, galerií a textů. Přístup chrání Cloudflare Access.
+      </p>
+
+      {
+        dbError && (
+          <div class="mb-8 rounded-lg border border-red-500/40 bg-red-500/10 p-4 text-sm">
+            <p class="font-semibold text-red-500">Databáze není dostupná</p>
+            <p class="text-muted-foreground mt-1">{dbError}</p>
+          </div>
+        )
+      }
+
+      <div class="grid grid-cols-2 gap-3 mb-10">
+        <div class="rounded-xl border border-border bg-card p-5">
+          <p class="text-3xl font-bold">{photosCount}</p>
+          <p class="text-sm text-muted-foreground">fotek</p>
+        </div>
+        <div class="rounded-xl border border-border bg-card p-5">
+          <p class="text-3xl font-bold">{galleriesCount}</p>
+          <p class="text-sm text-muted-foreground">galerií</p>
+        </div>
+      </div>
+
+      <nav class="space-y-2" aria-label="Sekce administrace">
+        <span
+          class="flex items-center justify-between rounded-lg border border-border bg-card px-5 py-4 opacity-60"
+        >
+          <span>
+            <span class="block font-medium">Nahrát fotky</span>
+            <span class="block text-sm text-muted-foreground"
+              >Jednotlivě i dávkou · připravuje se (Etapa 2)</span
+            >
+          </span>
+        </span>
+        <span
+          class="flex items-center justify-between rounded-lg border border-border bg-card px-5 py-4 opacity-60"
+        >
+          <span>
+            <span class="block font-medium">Fotky a galerie</span>
+            <span class="block text-sm text-muted-foreground"
+              >Zařazení, hlavní fotka, texty, EXIF · připravuje se (Etapa 3)</span
+            >
+          </span>
+        </span>
+        <span
+          class="flex items-center justify-between rounded-lg border border-border bg-card px-5 py-4 opacity-60"
+        >
+          <span>
+            <span class="block font-medium">Texty webu</span>
+            <span class="block text-sm text-muted-foreground"
+              >Hero, popisky sekcí · připravuje se</span
+            >
+          </span>
+        </span>
+      </nav>
+    </div>
+  </section>
+</BaseLayout>

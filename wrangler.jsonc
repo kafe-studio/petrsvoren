@@ -7,6 +7,14 @@
   "observability": {
     "enabled": true
   },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "petrsvoren",
+      "database_id": "ece3f382-ef45-48d0-b0a9-4b236f4411e7",
+      "migrations_dir": "drizzle/migrations"
+    }
+  ],
   "workers_dev": true,
   "preview_urls": false
 }
