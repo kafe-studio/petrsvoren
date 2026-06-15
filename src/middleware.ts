@@ -1,55 +1,38 @@
 import type { MiddlewareHandler } from "astro";
-import { verifyAccessJwt } from "./lib/access";
+import { readSession, SESSION_COOKIE } from "./lib/auth";
 
-// Chrání admin plochu. Cloudflare Access drží login wall na hraně pro `/admin`
-// a `/api/admin`; tohle je druhá vrstva — validuje JWT z `Cf-Access-Jwt-Assertion`
-// proti JWKS team domény (defense-in-depth, doporučeno i Cloudflare).
+// Chrání administraci (`/admin`, `/api/admin`) přihlášením jménem + heslem.
+// Ověřuje podepsanou session cookie. Login stránka a /api/auth jsou veřejné,
+// jinak by se nešlo přihlásit.
 const PROTECTED = /^\/(admin|api\/admin)(\/|$)/;
+const PUBLIC = /^\/admin\/login\/?$/;
 
 export const onRequest: MiddlewareHandler = async (context, next) => {
-  if (!PROTECTED.test(context.url.pathname)) return next();
-
-  // Lokální dev nemá edge Access ani JWT hlavičku → bypass, aby šel admin
-  // testovat. V produkci (`import.meta.env.DEV === false`) se vždy validuje.
-  if (import.meta.env.DEV) {
-    context.locals.adminEmail = "dev@local";
-    return next();
-  }
+  const path = context.url.pathname;
+  if (!PROTECTED.test(path) || PUBLIC.test(path)) return next();
 
   const { env } = await import("cloudflare:workers");
-  const aud = env.CF_ACCESS_AUD;
-  const teamDomain = env.CF_ACCESS_TEAM_DOMAIN;
-  if (!aud || !teamDomain) {
+  // V dev fallback secret, ať jde admin testovat bez nastavení secretu.
+  const secret =
+    env.AUTH_SECRET ?? (import.meta.env.DEV ? "dev-insecure-secret" : "");
+  if (!secret) {
     return new Response(
-      "Admin není nakonfigurován (chybí CF Access proměnné).",
+      "Přihlášení není nakonfigurováno (chybí AUTH_SECRET).",
       { status: 500 },
     );
   }
 
-  const token = context.request.headers.get("cf-access-jwt-assertion");
-  if (!token) {
-    return new Response("Chybí Cloudflare Access JWT.", { status: 403 });
+  const token = context.cookies.get(SESSION_COOKIE)?.value;
+  const session = await readSession(token, secret);
+  if (!session) {
+    if (path.startsWith("/api/")) {
+      return new Response("Nepřihlášeno.", { status: 401 });
+    }
+    return context.redirect(
+      `/admin/login?next=${encodeURIComponent(path)}`,
+    );
   }
 
-  const identity = await verifyAccessJwt(token, aud, teamDomain);
-  if (!identity) {
-    return new Response("Neplatný Cloudflare Access token.", { status: 403 });
-  }
-
-  // Allowlist e-mailů — do administrace smí jen vyjmenovaní (Petr Svoreň + superadmin).
-  // Konfiguruje ADMIN_EMAILS (čárkou oddělené). Prázdná = pustí každého, koho
-  // propustil Cloudflare Access (pak je jedinou bránou CF Access policy).
-  const allow = (env.ADMIN_EMAILS ?? "")
-    .split(",")
-    .map((e) => e.trim().toLowerCase())
-    .filter(Boolean);
-  const email = (identity.email ?? "").toLowerCase();
-  if (allow.length > 0 && !allow.includes(email)) {
-    return new Response("Tento účet nemá přístup do administrace.", {
-      status: 403,
-    });
-  }
-
-  context.locals.adminEmail = identity.email ?? identity.sub ?? "unknown";
+  context.locals.adminEmail = session.username;
   return next();
 };

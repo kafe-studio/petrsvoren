@@ -1,6 +1,7 @@
 import type { APIRoute } from "astro";
 import { env } from "cloudflare:workers";
 import { getDb, schema } from "../../../db";
+import { jsonError } from "../../../lib/admin-helpers";
 
 export const prerender = false;
 
@@ -11,12 +12,12 @@ export const POST: APIRoute = async ({ request }) => {
   try {
     form = await request.formData();
   } catch {
-    return Response.json({ error: "Neplatný formulář." }, { status: 400 });
+    return jsonError("Neplatný formulář.");
   }
 
   const file = form.get("file");
   if (!(file instanceof File) || !file.type.startsWith("image/")) {
-    return Response.json({ error: "Nahraj obrázek." }, { status: 400 });
+    return jsonError("Nahraj obrázek.");
   }
 
   const rawCaption = form.get("caption");
@@ -43,9 +44,6 @@ export const POST: APIRoute = async ({ request }) => {
       .values({ id, r2Key: key, caption, width, height, exifJson });
     return Response.json({ id, key, caption }, { status: 201 });
   } catch (e) {
-    return Response.json(
-      { error: e instanceof Error ? e.message : "Upload selhal." },
-      { status: 500 },
-    );
+    return jsonError(e instanceof Error ? e.message : "Upload selhal.", 500);
   }
 };

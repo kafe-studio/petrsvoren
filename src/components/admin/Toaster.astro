@@ -1,0 +1,44 @@
+---
+// Kontejner toastů — mountuje se jednou v AdminLayout. Naslouchá custom eventu
+// z admin-toast.ts a vykresluje dočasné bubliny vpravo dole.
+---
+
+<div
+  id="admin-toaster"
+  class="pointer-events-none fixed bottom-4 right-4 z-50 flex flex-col gap-2"
+  aria-live="polite"
+  aria-atomic="false"
+>
+</div>
+
+<script>
+  import { ADMIN_TOAST_EVENT, type ToastDetail } from "../../lib/admin-toast";
+
+  // Listener na `document` stačí navázat jednou (modul se vyhodnotí jen jednou
+  // i s View Transitions); `#admin-toaster` hledáme až při toastu, protože
+  // AdminLayout se při navigaci překresluje.
+  const styles: Record<ToastDetail["kind"], string> = {
+    success: "border-green-500/40 bg-green-500/10 text-green-700",
+    error: "border-red-500/40 bg-red-500/10 text-red-600",
+    info: "border-border bg-card text-foreground",
+  };
+
+  document.addEventListener(ADMIN_TOAST_EVENT, (e) => {
+    const { message, kind } = (e as CustomEvent<ToastDetail>).detail;
+    const root = document.getElementById("admin-toaster");
+    if (!root) return;
+    const el = document.createElement("div");
+    el.role = "status";
+    el.className =
+      "pointer-events-auto max-w-xs rounded-lg border px-4 py-2.5 text-sm shadow-lg backdrop-blur transition-opacity duration-300 " +
+      styles[kind];
+    el.textContent = message;
+    root.appendChild(el);
+    setTimeout(() => {
+      el.classList.add("opacity-0");
+    }, 3000);
+    setTimeout(() => {
+      el.remove();
+    }, 3350);
+  });
+</script>

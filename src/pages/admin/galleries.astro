@@ -1,6 +1,7 @@
 ---
 export const prerender = false;
 import AdminLayout from "../../layouts/AdminLayout.astro";
+import DeleteButton from "../../components/admin/DeleteButton.astro";
 import { getDb, schema } from "../../db";
 
 let galleries: (typeof schema.galleries.$inferSelect)[] = [];
@@ -35,17 +36,16 @@ const metadata = { title: "Galerie", description: "Správa galerií." };
             <li
               class="rounded-xl border border-border bg-card p-4 space-y-3"
               data-gallery={g.id}
+              data-row
             >
               <div class="flex items-center justify-between gap-3">
                 <span class="text-xs font-mono text-muted-foreground">
                   /{g.slug}/
                 </span>
-                <button
-                  type="button"
-                  class="g-del text-sm text-red-500 hover:underline"
-                >
-                  Smazat
-                </button>
+                <DeleteButton
+                  endpoint={`/api/admin/galleries/${g.id}/`}
+                  confirmText="Smazat galerii? Fotky zůstanou, jen se z ní odeberou."
+                />
               </div>
               <input class={`${inputClass} g-title`} value={g.title} />
               <textarea
@@ -58,7 +58,6 @@ const metadata = { title: "Galerie", description: "Správa galerií." };
               <button type="button" class="g-save btn-outline text-sm py-1.5 px-4">
                 Uložit
               </button>
-              <span class="g-msg hidden text-sm" />
             </li>
           ))
         }
@@ -72,7 +71,6 @@ const metadata = { title: "Galerie", description: "Správa galerií." };
         <input id="ng-title" class={inputClass} placeholder="Název (např. Portréty)" />
         <input id="ng-slug" class={inputClass} placeholder="slug (volitelné, jinak z názvu)" />
         <textarea id="ng-desc" class={inputClass} rows="2" placeholder="Popis (volitelné)"></textarea>
-        <p id="ng-msg" class="hidden text-sm"></p>
         <button type="submit" class="btn-primary">Vytvořit</button>
       </form>
     </div>
@@ -80,19 +78,15 @@ const metadata = { title: "Galerie", description: "Správa galerií." };
 </AdminLayout>
 
 <script>
+  import { toast } from "../../lib/admin-toast";
+
   function setupGalleries() {
     const root = document.querySelector("section");
     if (!root || !document.getElementById("new-gallery")) return;
 
-    // Úprava / smazání existujících.
+    // Úprava existujících (mazání řeší DeleteButton komponenta).
     root.querySelectorAll<HTMLElement>("[data-gallery]").forEach((li) => {
       const id = li.dataset.gallery;
-      const msg = li.querySelector<HTMLElement>(".g-msg");
-      const setMsg = (t: string, ok: boolean) => {
-        if (!msg) return;
-        msg.textContent = t;
-        msg.className = ok ? "g-msg text-sm text-green-600" : "g-msg text-sm text-red-500";
-      };
       li.querySelector(".g-save")?.addEventListener("click", async () => {
         const title = (li.querySelector(".g-title") as HTMLInputElement).value;
         const description = (li.querySelector(".g-desc") as HTMLTextAreaElement).value;
@@ -103,26 +97,15 @@ const metadata = { title: "Galerie", description: "Správa galerií." };
             body: JSON.stringify({ title, description }),
           });
           if (!res.ok) throw new Error("Uložení selhalo.");
-          setMsg("Uloženo ✓", true);
+          toast("Uloženo.", "success");
         } catch (e) {
-          setMsg(e instanceof Error ? e.message : "Chyba", false);
-        }
-      });
-      li.querySelector(".g-del")?.addEventListener("click", async () => {
-        if (!confirm("Smazat galerii? Fotky zůstanou, jen se z ní odeberou.")) return;
-        try {
-          const res = await fetch(`/api/admin/galleries/${id}/`, { method: "DELETE" });
-          if (!res.ok) throw new Error("Smazání selhalo.");
-          li.remove();
-        } catch (e) {
-          setMsg(e instanceof Error ? e.message : "Chyba", false);
+          toast(e instanceof Error ? e.message : "Chyba", "error");
         }
       });
     });
 
     // Vytvoření nové.
     const form = document.getElementById("new-gallery") as HTMLFormElement;
-    const ngMsg = document.getElementById("ng-msg");
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       const title = (document.getElementById("ng-title") as HTMLInputElement).value;
@@ -140,10 +123,7 @@ const metadata = { title: "Galerie", description: "Správa galerií." };
         }
         location.reload();
       } catch (err) {
-        if (ngMsg) {
-          ngMsg.textContent = err instanceof Error ? err.message : "Chyba";
-          ngMsg.className = "text-sm text-red-500";
-        }
+        toast(err instanceof Error ? err.message : "Chyba", "error");
       }
     });
   }

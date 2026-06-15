@@ -2,7 +2,15 @@
 
 declare namespace App {
   interface Locals {
-    // E-mail ověřeného admina (z Cloudflare Access JWT, viz src/middleware.ts).
+    // Přihlašovací jméno ověřeného admina (z session cookie, viz src/middleware.ts).
     adminEmail?: string;
+  }
+}
+
+// AUTH_SECRET je Workers secret (wrangler secret put) — není v wrangler.jsonc,
+// proto ho doplníme do typu Env ručně.
+declare namespace Cloudflare {
+  interface Env {
+    AUTH_SECRET?: string;
   }
 }

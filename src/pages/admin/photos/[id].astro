@@ -1,6 +1,7 @@
 ---
 export const prerender = false;
 import AdminLayout from "../../../layouts/AdminLayout.astro";
+import DeleteButton from "../../../components/admin/DeleteButton.astro";
 import { getDb, schema } from "../../../db";
 import { eq } from "drizzle-orm";
 
@@ -141,12 +142,14 @@ const metadata = { title: "Úprava fotky", description: "Detail fotky." };
               )}
             </fieldset>
 
-            <p id="ed-msg" class="hidden text-sm" />
             <div class="flex items-center justify-between gap-3">
               <button type="submit" class="btn-primary">Uložit</button>
-              <button type="button" id="ed-delete" class="text-sm text-red-500 hover:underline">
-                Smazat fotku
-              </button>
+              <DeleteButton
+                endpoint={`/api/admin/photos/${photo.id}/`}
+                confirmText="Opravdu smazat fotku? Nelze vrátit."
+                redirect="/admin/photos/"
+                label="Smazat fotku"
+              />
             </div>
           </form>
         )
@@ -156,11 +159,12 @@ const metadata = { title: "Úprava fotky", description: "Detail fotky." };
 </AdminLayout>
 
 <script>
+  import { toast } from "../../../lib/admin-toast";
+
   function setupEditor() {
     const form = document.getElementById("editor") as HTMLFormElement | null;
     if (!form) return;
     const id = form.dataset.id;
-    const msg = document.getElementById("ed-msg");
 
     // „Hlavní" jde zapnout jen u zařazené galerie.
     form.querySelectorAll<HTMLElement>("[data-gallery]").forEach((row) => {
@@ -172,12 +176,6 @@ const metadata = { title: "Úprava fotky", description: "Detail fotky." };
         if (!assign.checked) cover.checked = false;
       });
     });
-
-    function showMsg(text: string, ok: boolean) {
-      if (!msg) return;
-      msg.textContent = text;
-      msg.className = ok ? "text-sm text-green-600" : "text-sm text-red-500";
-    }
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -211,20 +209,9 @@ const metadata = { title: "Úprava fotky", description: "Detail fotky." };
           const j = (await res.json().catch(() => ({}))) as { error?: string };
           throw new Error(j.error ?? "Uložení selhalo.");
         }
-        showMsg("Uloženo ✓", true);
+        toast("Uloženo.", "success");
       } catch (err) {
-        showMsg(err instanceof Error ? err.message : "Chyba", false);
-      }
-    });
-
-    document.getElementById("ed-delete")?.addEventListener("click", async () => {
-      if (!confirm("Opravdu smazat fotku? Nelze vrátit.")) return;
-      try {
-        const res = await fetch(`/api/admin/photos/${id}/`, { method: "DELETE" });
-        if (!res.ok) throw new Error("Smazání selhalo.");
-        location.href = "/admin/photos/";
-      } catch (err) {
-        showMsg(err instanceof Error ? err.message : "Chyba", false);
+        toast(err instanceof Error ? err.message : "Chyba", "error");
       }
     });
   }

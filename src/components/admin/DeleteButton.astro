@@ -1,0 +1,66 @@
+---
+// Znovupoužitelné mazací tlačítko — potvrzení + `fetch` DELETE + toast.
+// Po úspěchu buď přesměruje (`redirect`), nebo odstraní nejbližší `[data-row]`.
+// Logika je delegovaná na `document` (jeden listener pro všechna tlačítka),
+// protože Astro `<script>` se bundluje jednou, ne per instance.
+interface Props {
+  endpoint: string;
+  confirmText?: string;
+  redirect?: string;
+  label?: string;
+  class?: string;
+}
+
+const {
+  endpoint,
+  confirmText = "Opravdu smazat?",
+  redirect,
+  label = "Smazat",
+  class: cls,
+} = Astro.props;
+---
+
+<button
+  type="button"
+  data-delete-endpoint={endpoint}
+  data-delete-confirm={confirmText}
+  data-delete-redirect={redirect}
+  class:list={["text-sm text-red-500 transition-colors hover:underline", cls]}
+>
+  {label}
+</button>
+
+<script>
+  import { toast } from "../../lib/admin-toast";
+
+  document.addEventListener("click", async (e) => {
+    const btn = (e.target as HTMLElement | null)?.closest<HTMLButtonElement>(
+      "[data-delete-endpoint]",
+    );
+    if (!btn) return;
+
+    const endpoint = btn.dataset.deleteEndpoint;
+    if (!endpoint) return;
+    const confirmText = btn.dataset.deleteConfirm ?? "Opravdu smazat?";
+    const redirect = btn.dataset.deleteRedirect;
+    if (!window.confirm(confirmText)) return;
+
+    btn.disabled = true;
+    try {
+      const res = await fetch(endpoint, { method: "DELETE" });
+      if (!res.ok) {
+        const j = (await res.json().catch(() => ({}))) as { error?: string };
+        throw new Error(j.error ?? "Mazání selhalo.");
+      }
+      toast("Smazáno.", "success");
+      if (redirect) {
+        window.location.href = redirect;
+        return;
+      }
+      btn.closest<HTMLElement>("[data-row]")?.remove();
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Chyba při mazání.", "error");
+      btn.disabled = false;
+    }
+  });
+</script>

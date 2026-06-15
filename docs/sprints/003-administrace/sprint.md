@@ -30,9 +30,10 @@ Rozhodnuto a **živé na produkci**. Self-hosted Access aplikace scopovaná na c
 > defense-in-depth a doporučuje ji i Cloudflare). AUD ulož jako wrangler
 > var/secret, nehardcoduj natvrdo.
 
-> **Pozn.:** better-auth se **nepoužije** (zůstává v `package.json` jako nepoužitá
-> dependency — v rámci úklidu lze odinstalovat). Reference zahrada řeší přístup
-> také přes CF Access — auth pattern tedy přebíráme, stejně jako UI/CRUD.
+> **Pozn.:** **Cloudflare Access je dočasné řešení.** Cílově se přístup do adminu
+> přesune na **better-auth** (vlastní login na vlastní doméně, bez závislosti na
+> Zero Trust týmové doméně). `better-auth` proto **zůstává v `package.json`** —
+> NEodinstalovávat. Než se zprovozní, drží přístup CF Access + JWT middleware.
 
 ## Rozhodnutí (zadání)
 
@@ -100,7 +101,7 @@ Doplnit v tomto sprintu:
   `AdminLayout.astro` se sidebarem na design tokenech webu + přesun admin stránek
   z `BaseLayout`; `Toaster`/`admin-toast.ts`, `ConfirmModal`, `DeleteButton`;
   `admin-helpers.ts` (CRUD factory). **Commit + deploy** (smaže Sveltii z prod).
-  Volitelně odinstalovat nepoužitý `better-auth`.
+  `better-auth` PONECHAT (cílová auth přes vlastní doménu, CF Access je dočasný).
 
 - [ ] **Run 008 — Galerie & fotky: intuitivní správa** (refactor)
   Upload i editaci přepsat na Svelte 5 islands (props ze serveru). `ImagePicker`,

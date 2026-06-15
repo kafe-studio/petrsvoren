@@ -7,13 +7,8 @@
   "observability": {
     "enabled": true
   },
-  "vars": {
-    "CF_ACCESS_TEAM_DOMAIN": "https://kafestudio.cloudflareaccess.com",
-    "CF_ACCESS_AUD": "e852b2b0ba0d84ee7e4d7fd5077275a70809cb5f44d84d731418c9fa762879f9",
-    // Allowlist administrátorů (čárkou oddělené e-maily) — superadmin + Petr Svoreň.
-    // Petra doplnit, až dodá e-mail: "kacirek.jiri@gmail.com,petr@...".
-    "ADMIN_EMAILS": "kacirek.jiri@gmail.com"
-  },
+  // Přihlášení jménem + heslem (in-app). Tajný klíč pro podpis session cookie
+  // je Workers secret AUTH_SECRET (wrangler secret put AUTH_SECRET).
   "d1_databases": [
     {
       "binding": "DB",

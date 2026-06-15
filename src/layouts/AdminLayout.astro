@@ -5,6 +5,7 @@
 import { Font } from "astro:assets";
 import { ClientRouter } from "astro:transitions";
 import { Icon } from "astro-icon/components";
+import Toaster from "../components/admin/Toaster.astro";
 import "../styles/global.css";
 
 interface Props {
@@ -118,5 +119,6 @@ const nav = [
         </main>
       </div>
     </div>
+    <Toaster />
   </body>
 </html>

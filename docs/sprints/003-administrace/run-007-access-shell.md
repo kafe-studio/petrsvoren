@@ -21,7 +21,9 @@ sjednocené UX primitivy. Na konci commit + deploy.
    `DeleteButton.svelte` (Svelte 5 islands, potvrzení + fetch DELETE).
 4. **admin-helpers.ts** (bp) — sdílené CRUD helpery (JSON parse, error responses,
    method guard); zapojení do API rout galleries/photos.
-5. **Úklid** — odinstalovat nepoužitý `better-auth`.
+5. ~~Úklid — odinstalovat better-auth~~ **ZRUŠENO** — better-auth se ponechává,
+   je to cílová auth (vlastní login na vlastní doméně). CF Access + JWT middleware
+   je dočasný stopgap, než se better-auth zprovozní.
 
 ## Plánovaná struktura
 
@@ -39,5 +41,5 @@ sjednocené UX primitivy. Na konci commit + deploy.
 
 - Dashboard registrace runu selhala (Sprint 003 bez dashboard sprint ID) — WARNING,
   pokračováno bez registrace.
-- `better-auth` není nikde importován (`grep -rl better-auth src/` = none) → bezpečné
-  odinstalovat.
+- `better-auth` zatím není importován, ale ZŮSTÁVÁ v `package.json` — je to cílová
+  auth (vlastní doména). Neodinstalovávat.

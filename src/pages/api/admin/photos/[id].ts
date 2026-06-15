@@ -2,6 +2,7 @@ import type { APIRoute } from "astro";
 import { env } from "cloudflare:workers";
 import { eq } from "drizzle-orm";
 import { getDb, schema } from "../../../../db";
+import { jsonError, jsonOk, parseJsonBody } from "../../../../lib/admin-helpers";
 
 export const prerender = false;
 
@@ -21,12 +22,8 @@ interface Body {
 
 export const PATCH: APIRoute = async ({ request, params }) => {
   const id = params.id ?? "";
-  let body: Body;
-  try {
-    body = (await request.json()) as Body;
-  } catch {
-    return Response.json({ error: "Neplatný JSON." }, { status: 400 });
-  }
+  const body = await parseJsonBody<Body>(request);
+  if (!body) return jsonError("Neplatný JSON.");
   const db = await getDb();
 
   const photo = await db
@@ -34,7 +31,7 @@ export const PATCH: APIRoute = async ({ request, params }) => {
     .from(schema.photos)
     .where(eq(schema.photos.id, id))
     .get();
-  if (!photo) return Response.json({ error: "Fotka nenalezena." }, { status: 404 });
+  if (!photo) return jsonError("Fotka nenalezena.", 404);
 
   // Pole fotky (jen co přišlo).
   const set: Record<string, unknown> = {};
@@ -79,7 +76,7 @@ export const PATCH: APIRoute = async ({ request, params }) => {
     }
   }
 
-  return Response.json({ ok: true });
+  return jsonOk();
 };
 
 export const DELETE: APIRoute = async ({ params }) => {
@@ -90,7 +87,7 @@ export const DELETE: APIRoute = async ({ params }) => {
     .from(schema.photos)
     .where(eq(schema.photos.id, id))
     .get();
-  if (!photo) return Response.json({ error: "Fotka nenalezena." }, { status: 404 });
+  if (!photo) return jsonError("Fotka nenalezena.", 404);
 
   try {
     await env.PHOTOS.delete(photo.key);
@@ -98,5 +95,5 @@ export const DELETE: APIRoute = async ({ params }) => {
     /* R2 smazání selhalo — i tak smaž řádek (cascade smaže zařazení) */
   }
   await db.delete(schema.photos).where(eq(schema.photos.id, id));
-  return Response.json({ ok: true });
+  return jsonOk();
 };

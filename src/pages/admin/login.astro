@@ -1,0 +1,72 @@
+---
+export const prerender = false;
+import BaseLayout from "../../layouts/BaseLayout.astro";
+const metadata = { title: "Přihlášení", description: "Přihlášení do administrace." };
+const inputClass =
+  "w-full rounded-lg border border-border bg-card px-4 py-3 text-foreground outline-none focus:border-primary transition-colors";
+---
+
+<BaseLayout {metadata}>
+  <section class="pt-28 pb-24 px-6">
+    <div class="mx-auto max-w-sm">
+      <h1 class="text-2xl font-extrabold tracking-tight mb-6">Přihlášení</h1>
+      <form id="login-form" class="space-y-4">
+        <div>
+          <label for="username" class="block text-sm font-medium mb-1.5">Jméno</label>
+          <input id="username" name="username" type="text" autocomplete="username" required class={inputClass} />
+        </div>
+        <div>
+          <label for="password" class="block text-sm font-medium mb-1.5">Heslo</label>
+          <input id="password" name="password" type="password" autocomplete="current-password" required class={inputClass} />
+        </div>
+        <p id="login-error" class="hidden text-sm text-red-500"></p>
+        <button type="submit" id="login-btn" class="btn-primary w-full">Přihlásit se</button>
+      </form>
+    </div>
+  </section>
+</BaseLayout>
+
+<script>
+  function setupLogin() {
+    const form = document.getElementById("login-form") as HTMLFormElement | null;
+    if (!form) return;
+    const err = document.getElementById("login-error");
+    const btn = document.getElementById("login-btn") as HTMLButtonElement | null;
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      err?.classList.add("hidden");
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = "Přihlašuji…";
+      }
+      const data = new FormData(form);
+      try {
+        const res = await fetch("/api/auth/login/", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            username: data.get("username"),
+            password: data.get("password"),
+          }),
+        });
+        if (!res.ok) {
+          const j = (await res.json().catch(() => ({}))) as { error?: string };
+          throw new Error(j.error ?? "Přihlášení selhalo.");
+        }
+        const params = new URLSearchParams(location.search);
+        location.href = params.get("next") || "/admin/";
+      } catch (e2) {
+        if (err) {
+          err.textContent = e2 instanceof Error ? e2.message : "Chyba";
+          err.classList.remove("hidden");
+        }
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = "Přihlásit se";
+        }
+      }
+    });
+  }
+  document.addEventListener("astro:page-load", setupLogin);
+</script>

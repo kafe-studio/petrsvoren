@@ -65,6 +65,19 @@ export const siteTexts = sqliteTable("site_texts", {
   value: text("value").notNull().default(""),
 });
 
+// Administrátoři — přihlášení jménem + heslem (PBKDF2 hash + salt).
+export const adminUsers = sqliteTable("admin_users", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  username: text("username").notNull().unique(),
+  passwordHash: text("password_hash").notNull(),
+  passwordSalt: text("password_salt").notNull(),
+  createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(
+    () => new Date(),
+  ),
+});
+
 // ── Relations (pro db.query.* relational API) ─────────────────────────────────
 export const galleriesRelations = relations(galleries, ({ many }) => ({
   photos: many(photoGalleries),
