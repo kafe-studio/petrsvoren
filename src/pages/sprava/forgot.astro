@@ -1,0 +1,75 @@
+---
+export const prerender = false;
+import BaseLayout from "../../layouts/BaseLayout.astro";
+const metadata = {
+  title: "Obnova hesla",
+  description: "Obnova hesla do administrace.",
+};
+const inputClass =
+  "w-full rounded-lg border border-border bg-card px-4 py-3 text-foreground outline-none focus:border-primary transition-colors";
+---
+
+<BaseLayout {metadata}>
+  <section class="pt-28 pb-24 px-6">
+    <div class="mx-auto max-w-sm">
+      <h1 class="text-2xl font-extrabold tracking-tight mb-2">Obnova hesla</h1>
+      <p class="text-sm text-muted-foreground mb-6">
+        Zadej přihlašovací jméno nebo e-mail. Pošleme ti odkaz na nastavení
+        nového hesla.
+      </p>
+      <form id="forgot-form" class="space-y-4">
+        <input
+          id="identifier"
+          name="identifier"
+          type="text"
+          placeholder="Jméno nebo e-mail"
+          required
+          class={inputClass}
+        />
+        <button type="submit" id="forgot-btn" class="btn-primary w-full">
+          Poslat odkaz
+        </button>
+      </form>
+      <p id="forgot-msg" class="hidden mt-4 text-sm"></p>
+      <p class="mt-6 text-center text-sm">
+        <a href="/sprava/login/" class="text-muted-foreground hover:underline">
+          &larr; Zpět na přihlášení
+        </a>
+      </p>
+    </div>
+  </section>
+</BaseLayout>
+
+<script>
+  function setup() {
+    const form = document.getElementById("forgot-form") as HTMLFormElement | null;
+    if (!form || form.dataset.bound) return;
+    form.dataset.bound = "1";
+    const msg = document.getElementById("forgot-msg");
+    const btn = document.getElementById("forgot-btn") as HTMLButtonElement | null;
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = "Odesílám…";
+      }
+      const data = new FormData(form);
+      await fetch("/api/auth/forgot/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ identifier: data.get("identifier") }),
+      }).catch(() => {});
+      if (msg) {
+        msg.textContent =
+          "Pokud účet existuje, poslali jsme na e-mail odkaz pro obnovu hesla.";
+        msg.className = "mt-4 text-sm text-foreground";
+      }
+      form.reset();
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = "Poslat odkaz";
+      }
+    });
+  }
+  document.addEventListener("astro:page-load", setup);
+</script>

@@ -1,0 +1,51 @@
+---
+export const prerender = false;
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { eq } from "drizzle-orm";
+import { getDb, schema } from "../db";
+
+// Odhlášení z newsletteru přes token z e-mailu. Mutace na GET je tu záměrná
+// (odkaz v e-mailu); token je tajný a jednoúčelový.
+const token = Astro.url.searchParams.get("token") ?? "";
+let done = false;
+if (token) {
+  try {
+    const db = await getDb();
+    const row = await db
+      .select({ id: schema.subscribers.id })
+      .from(schema.subscribers)
+      .where(eq(schema.subscribers.unsubscribeToken, token))
+      .get();
+    if (row) {
+      await db.delete(schema.subscribers).where(eq(schema.subscribers.id, row.id));
+      done = true;
+    }
+  } catch {
+    /* ignoruj — zobrazí se obecná hláška */
+  }
+}
+const metadata = { title: "Odhlášení z newsletteru" };
+---
+
+<BaseLayout {metadata}>
+  <section class="pt-28 pb-24 px-6">
+    <div class="mx-auto max-w-md text-center">
+      <h1 class="text-2xl font-extrabold tracking-tight mb-4">Newsletter</h1>
+      {
+        done ? (
+          <p class="text-muted-foreground">
+            Byl(a) jsi odhlášen(a) z odběru novinek. Mrzí nás to — kdykoli se
+            můžeš přihlásit znovu.
+          </p>
+        ) : (
+          <p class="text-muted-foreground">
+            Odkaz pro odhlášení je neplatný nebo už byl použit.
+          </p>
+        )
+      }
+      <a href="/" class="btn-outline mt-8 inline-block py-2 px-6 text-sm">
+        Zpět na web
+      </a>
+    </div>
+  </section>
+</BaseLayout>

@@ -101,11 +101,31 @@ export const adminUsers = sqliteTable("admin_users", {
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
   username: text("username").notNull().unique(),
+  email: text("email"), // pro obnovu hesla
   passwordHash: text("password_hash").notNull(),
   passwordSalt: text("password_salt").notNull(),
   createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(
     () => new Date(),
   ),
+});
+
+// Tokeny pro obnovu hesla (jednorázové, s expirací).
+export const passwordResets = sqliteTable("password_resets", {
+  token: text("token").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => adminUsers.id, { onDelete: "cascade" }),
+  expiresAt: integer("expires_at", { mode: "timestamp" }).notNull(),
+  used: integer("used", { mode: "boolean" }).notNull().default(false),
+  createdAt: createdAt(),
+});
+
+// Odběratelé newsletteru. unsubscribeToken = odhlašovací odkaz v e-mailu.
+export const subscribers = sqliteTable("subscribers", {
+  id: id(),
+  email: text("email").notNull().unique(),
+  unsubscribeToken: text("unsubscribe_token").notNull(),
+  createdAt: createdAt(),
 });
 
 // ── Relations (pro db.query.* relational API) ─────────────────────────────────

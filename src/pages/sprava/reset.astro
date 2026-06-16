@@ -1,0 +1,88 @@
+---
+export const prerender = false;
+import BaseLayout from "../../layouts/BaseLayout.astro";
+const token = Astro.url.searchParams.get("token") ?? "";
+const metadata = { title: "Nové heslo", description: "Nastavení nového hesla." };
+const inputClass =
+  "w-full rounded-lg border border-border bg-card px-4 py-3 text-foreground outline-none focus:border-primary transition-colors";
+---
+
+<BaseLayout {metadata}>
+  <section class="pt-28 pb-24 px-6">
+    <div class="mx-auto max-w-sm">
+      <h1 class="text-2xl font-extrabold tracking-tight mb-6">Nové heslo</h1>
+      {
+        token ? (
+          <form id="reset-form" class="space-y-4" data-token={token}>
+            <div>
+              <label for="password" class="block text-sm font-medium mb-1.5">
+                Nové heslo (min. 8 znaků)
+              </label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                autocomplete="new-password"
+                minlength="8"
+                required
+                class={inputClass}
+              />
+            </div>
+            <p id="reset-error" class="hidden text-sm text-red-500" />
+            <button type="submit" id="reset-btn" class="btn-primary w-full">
+              Nastavit heslo
+            </button>
+          </form>
+        ) : (
+          <p class="text-sm text-red-500">
+            Chybí token. Otevři odkaz z e-mailu, nebo si vyžádej nový na{" "}
+            <a href="/sprava/forgot/" class="underline">
+              obnově hesla
+            </a>
+            .
+          </p>
+        )
+      }
+    </div>
+  </section>
+</BaseLayout>
+
+<script>
+  function setup() {
+    const form = document.getElementById("reset-form") as HTMLFormElement | null;
+    if (!form || form.dataset.bound) return;
+    form.dataset.bound = "1";
+    const err = document.getElementById("reset-error");
+    const btn = document.getElementById("reset-btn") as HTMLButtonElement | null;
+    const token = form.getAttribute("data-token");
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      err?.classList.add("hidden");
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = "Ukládám…";
+      }
+      const data = new FormData(form);
+      try {
+        const res = await fetch("/api/auth/reset/", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token, password: data.get("password") }),
+        });
+        const j = (await res.json().catch(() => ({}))) as { error?: string };
+        if (!res.ok) throw new Error(j.error ?? "Obnova selhala.");
+        location.href = "/sprava/login/";
+      } catch (e2) {
+        if (err) {
+          err.textContent = e2 instanceof Error ? e2.message : "Chyba";
+          err.classList.remove("hidden");
+        }
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = "Nastavit heslo";
+        }
+      }
+    });
+  }
+  document.addEventListener("astro:page-load", setup);
+</script>

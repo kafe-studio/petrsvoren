@@ -1,0 +1,101 @@
+---
+export const prerender = false;
+import AdminLayout from "../../layouts/AdminLayout.astro";
+import { desc } from "drizzle-orm";
+import { getDb, schema } from "../../db";
+
+const db = await getDb();
+const subs = await db
+  .select()
+  .from(schema.subscribers)
+  .orderBy(desc(schema.subscribers.createdAt));
+const metadata = { title: "Newsletter", description: "Rozesílání novinek." };
+const n = subs.length;
+const plural =
+  n === 1 ? "odběratel" : n >= 2 && n <= 4 ? "odběratelé" : "odběratelů";
+const inputCls =
+  "w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:border-primary focus:outline-none";
+---
+
+<AdminLayout {metadata}>
+  <div class="mx-auto max-w-2xl">
+    <h1 class="text-3xl font-extrabold tracking-tight mb-2">Newsletter</h1>
+    <p class="text-muted-foreground mb-8">
+      <strong>{subs.length}</strong> {plural}.
+      Odesílací adresu nastav v <a href="/sprava/texts/" class="underline">Texty webu</a>.
+    </p>
+
+    <form id="nl-form" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium mb-1">Předmět</label>
+        <input name="subject" type="text" class={inputCls} required />
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-1">Text (Markdown)</label>
+        <textarea name="body" rows="12" class={`${inputCls} font-mono`} required></textarea>
+      </div>
+      <div class="flex items-center gap-3">
+        <button type="submit" id="nl-btn" class="btn-primary" disabled={subs.length === 0}>
+          Rozeslat všem
+        </button>
+        <span id="nl-status" class="text-sm text-muted-foreground"></span>
+      </div>
+      <p class="text-xs text-muted-foreground">
+        Doporučení: nejdřív vyzkoušej odeslání na sebe (přidej se jako odběratel).
+      </p>
+    </form>
+
+    <details class="mt-10">
+      <summary class="cursor-pointer text-sm font-medium">Odběratelé ({subs.length})</summary>
+      <ul class="mt-3 space-y-1 text-sm text-muted-foreground">
+        {subs.map((s) => <li>{s.email}</li>)}
+        {subs.length === 0 && <li>Zatím nikdo.</li>}
+      </ul>
+    </details>
+  </div>
+
+  <script>
+    import { toast } from "../../lib/admin-toast";
+    function bind() {
+      const form = document.getElementById("nl-form") as HTMLFormElement | null;
+      if (!form || form.dataset.bound) return;
+      form.dataset.bound = "1";
+      const status = document.getElementById("nl-status");
+      const btn = document.getElementById("nl-btn") as HTMLButtonElement | null;
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        if (!confirm("Opravdu rozeslat newsletter všem odběratelům?")) return;
+        if (btn) btn.disabled = true;
+        if (status) status.textContent = "Odesílám…";
+        const fd = new FormData(form);
+        try {
+          const res = await fetch("/api/sprava/newsletter/send/", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              subject: fd.get("subject"),
+              body: fd.get("body"),
+            }),
+          });
+          const j = (await res.json().catch(() => ({}))) as {
+            error?: string;
+            sent?: number;
+            failed?: number;
+            firstError?: string;
+          };
+          if (!res.ok) throw new Error(j.error || "Odeslání selhalo.");
+          if (status)
+            status.textContent = `Odesláno ${j.sent}, chyb ${j.failed}.`;
+          if (j.failed && j.firstError) toast(j.firstError, "error");
+          else toast("Newsletter rozeslán.", "success");
+        } catch (err) {
+          if (status) status.textContent = "";
+          toast(err instanceof Error ? err.message : "Chyba.", "error");
+        } finally {
+          if (btn) btn.disabled = false;
+        }
+      });
+    }
+    document.addEventListener("astro:page-load", bind);
+  </script>
+</AdminLayout>

@@ -19,6 +19,12 @@ export const TEXT_FIELDS: readonly TextField[] = [
   { key: "contact_text", label: "Text kontaktu", type: "textarea" },
   { key: "contact_email", label: "Kontaktní e-mail", type: "text" },
   { key: "facebook_url", label: "Facebook URL", type: "text" },
+  {
+    key: "mail_from",
+    label: "Odesílací adresa e-mailů (Resend)",
+    type: "text",
+    hint: 'Např. "Petr Svoreň <noreply@tvojedomena.cz>". Doména musí být ověřená v Resendu.',
+  },
 ] as const;
 
 export const TEXT_KEYS: readonly string[] = TEXT_FIELDS.map((f) => f.key);

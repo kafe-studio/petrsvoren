@@ -5,7 +5,7 @@ import { readSession, SESSION_COOKIE } from "./lib/auth";
 // Ověřuje podepsanou session cookie. Login stránka a /api/auth jsou veřejné,
 // jinak by se nešlo přihlásit.
 const PROTECTED = /^\/(sprava|api\/sprava)(\/|$)/;
-const PUBLIC = /^\/sprava\/login\/?$/;
+const PUBLIC = /^\/sprava\/(login|forgot|reset)\/?$/;
 
 export const onRequest: MiddlewareHandler = async (context, next) => {
   const path = context.url.pathname;

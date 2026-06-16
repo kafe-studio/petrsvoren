@@ -55,8 +55,59 @@ try {
         </ul>
       </div>
     </div>
-    <div class="mt-12 border-t border-border pt-8 text-center text-xs text-muted-foreground">
-      &copy; {new Date().getFullYear()} {siteConfig.author}
+    <div class="mt-12 border-t border-border pt-8">
+      <form id="nl-subscribe" class="mx-auto mb-8 max-w-md text-center">
+        <label for="nl-email" class="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">
+          Odběr novinek
+        </label>
+        <div class="flex gap-2">
+          <input
+            id="nl-email"
+            name="email"
+            type="email"
+            required
+            placeholder="vas@email.cz"
+            class="flex-1 rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:border-primary"
+          />
+          <button type="submit" class="btn-primary shrink-0 px-4 py-2 text-sm">Přihlásit</button>
+        </div>
+        <p id="nl-msg" class="mt-2 hidden text-xs"></p>
+      </form>
+      <p class="text-center text-xs text-muted-foreground">
+        &copy; {new Date().getFullYear()} {name}
+      </p>
     </div>
   </div>
 </footer>
+
+<script>
+  function setupSubscribe() {
+    const form = document.getElementById("nl-subscribe") as HTMLFormElement | null;
+    if (!form || form.dataset.bound) return;
+    form.dataset.bound = "1";
+    const msg = document.getElementById("nl-msg");
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const data = new FormData(form);
+      const show = (text: string, ok: boolean) => {
+        if (!msg) return;
+        msg.textContent = text;
+        msg.className = `mt-2 text-xs ${ok ? "text-foreground" : "text-red-500"}`;
+      };
+      try {
+        const res = await fetch("/api/newsletter/subscribe/", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: data.get("email") }),
+        });
+        const j = (await res.json().catch(() => ({}))) as { error?: string };
+        if (!res.ok) throw new Error(j.error ?? "Přihlášení selhalo.");
+        show("Hotovo! Děkujeme za odběr.", true);
+        form.reset();
+      } catch (err) {
+        show(err instanceof Error ? err.message : "Chyba.", false);
+      }
+    });
+  }
+  document.addEventListener("astro:page-load", setupSubscribe);
+</script>
