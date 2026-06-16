@@ -249,6 +249,32 @@ export async function getHeroSettings(): Promise<HeroSettings> {
   }
 }
 
+// Podkladová fotka všech stránek (jemný podklad za obsahem). Stejný tvar nastavení.
+export const BG_DEFAULTS: HeroSettings = {
+  imageUrl: "/bg.jpg",
+  opacity: 10,
+  position: "center",
+  fit: "cover",
+  grayscale: 0,
+  sepia: 0,
+  brightness: 100,
+  contrast: 100,
+  saturate: 100,
+  hue: 0,
+};
+
+export async function getBgSettings(): Promise<HeroSettings> {
+  try {
+    const texts = await getTexts();
+    const raw = texts["bg_settings"];
+    if (!raw) return BG_DEFAULTS;
+    const parsed = JSON.parse(raw) as Partial<HeroSettings>;
+    return { ...BG_DEFAULTS, ...parsed };
+  } catch {
+    return BG_DEFAULTS;
+  }
+}
+
 // CSS filtr z nastavení tonality a barev.
 export function heroFilter(s: HeroSettings): string {
   return [

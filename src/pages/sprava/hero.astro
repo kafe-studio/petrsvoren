@@ -4,9 +4,10 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
 import HeroEditor from "../../components/admin/HeroEditor.svelte";
 import { desc } from "drizzle-orm";
 import { getDb, schema } from "../../db";
-import { getHeroSettings } from "../../lib/content";
+import { getHeroSettings, getBgSettings } from "../../lib/content";
 
-const settings = await getHeroSettings();
+const heroSettings = await getHeroSettings();
+const bgSettings = await getBgSettings();
 const db = await getDb();
 const photoRows = await db
   .select({ id: schema.photos.id, caption: schema.photos.caption })
@@ -16,18 +17,41 @@ const photos = photoRows.map((p) => ({
   id: p.id,
   caption: p.caption || "Bez názvu",
 }));
-const metadata = { title: "Pozadí webu", description: "Editor pozadí hlavní stránky." };
+const metadata = { title: "Pozadí webu", description: "Editor pozadí webu." };
 ---
 
 <AdminLayout {metadata}>
   <div class="mx-auto max-w-3xl">
-    <h1 class="text-3xl font-extrabold tracking-tight mb-2">
-      Pozadí hlavní stránky
-    </h1>
-    <p class="text-muted-foreground mb-8">
-      Vyber fotku na pozadí úvodu a nastav průhlednost, zarovnání, velikost,
-      tonalitu a barevné filtry. Náhled se mění živě.
-    </p>
-    <HeroEditor client:only="svelte" {settings} {photos} />
+    <h1 class="text-3xl font-extrabold tracking-tight mb-8">Pozadí webu</h1>
+
+    <section class="mb-14">
+      <h2 class="text-xl font-bold mb-1">Úvodní fotka (hero)</h2>
+      <p class="text-muted-foreground mb-5 text-sm">
+        Velká fotka v záhlaví hlavní stránky. Nastav fotku, průhlednost,
+        zarovnání, velikost, tonalitu a barevné filtry.
+      </p>
+      <HeroEditor
+        client:only="svelte"
+        variant="hero"
+        endpoint="/api/sprava/hero/"
+        settings={heroSettings}
+        {photos}
+      />
+    </section>
+
+    <section>
+      <h2 class="text-xl font-bold mb-1">Podklad všech stránek</h2>
+      <p class="text-muted-foreground mb-5 text-sm">
+        Jemná fotka prosvítající za obsahem na všech stránkách webu. Obvykle s
+        nízkou průhledností (cca 10 %).
+      </p>
+      <HeroEditor
+        client:only="svelte"
+        variant="bg"
+        endpoint="/api/sprava/bg/"
+        settings={bgSettings}
+        {photos}
+      />
+    </section>
   </div>
 </AdminLayout>

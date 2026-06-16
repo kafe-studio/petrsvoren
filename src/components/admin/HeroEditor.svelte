@@ -20,7 +20,14 @@
   let {
     settings,
     photos = [],
-  }: { settings: HeroSettings; photos?: PhotoOpt[] } = $props();
+    endpoint = "/api/sprava/hero/",
+    variant = "hero",
+  }: {
+    settings: HeroSettings;
+    photos?: PhotoOpt[];
+    endpoint?: string;
+    variant?: "hero" | "bg";
+  } = $props();
 
   let imageUrl = $state(settings.imageUrl);
   let opacity = $state(settings.opacity);
@@ -83,7 +90,7 @@
   }
 
   function reset() {
-    opacity = 100;
+    opacity = variant === "bg" ? 10 : 100;
     position = "center";
     fit = "cover";
     grayscale = 0;
@@ -97,7 +104,7 @@
   async function save() {
     saving = true;
     try {
-      const res = await fetch("/api/sprava/hero/", {
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -124,15 +131,32 @@
 </script>
 
 <div class="space-y-6">
-  <!-- Živý náhled (mimika hlavní stránky) -->
-  <div class="relative aspect-[16/7] w-full overflow-hidden rounded-lg bg-neutral-900">
-    <div class="absolute inset-0" style={imgStyle}></div>
-    <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
-    <div class="absolute bottom-0 p-5">
-      <p class="text-2xl font-extrabold text-white">Petr Svoreň</p>
-      <p class="text-white/80">Každodennosti</p>
+  <!-- Živý náhled -->
+  {#if variant === "bg"}
+    <div class="relative aspect-[16/7] w-full overflow-hidden rounded-lg border border-border bg-background">
+      <div class="absolute inset-0" style={imgStyle}></div>
+      <div class="relative p-5">
+        <p class="text-lg font-bold">Ukázka stránky</p>
+        <p class="mt-1 text-sm text-muted-foreground">
+          Takhle prosvítá podkladová fotka za obsahem webu.
+        </p>
+        <div class="mt-3 space-y-1.5">
+          <div class="h-2 w-3/4 rounded bg-foreground/15"></div>
+          <div class="h-2 w-2/3 rounded bg-foreground/15"></div>
+          <div class="h-2 w-1/2 rounded bg-foreground/15"></div>
+        </div>
+      </div>
     </div>
-  </div>
+  {:else}
+    <div class="relative aspect-[16/7] w-full overflow-hidden rounded-lg bg-neutral-900">
+      <div class="absolute inset-0" style={imgStyle}></div>
+      <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
+      <div class="absolute bottom-0 p-5">
+        <p class="text-2xl font-extrabold text-white">Petr Svoreň</p>
+        <p class="text-white/80">Každodennosti</p>
+      </div>
+    </div>
+  {/if}
 
   <!-- Výběr fotky -->
   <div class="flex flex-wrap items-center gap-2">

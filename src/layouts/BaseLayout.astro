@@ -11,7 +11,13 @@ import { ClientRouter } from "astro:transitions";
 import { Font } from "astro:assets";
 import "../styles/global.css";
 import { siteConfig } from "../config/site";
-import { getTexts, txt, getHeroSettings } from "../lib/content";
+import {
+  getTexts,
+  txt,
+  getHeroSettings,
+  BG_DEFAULTS,
+  heroFilter,
+} from "../lib/content";
 
 const { title, description, ogImage, canonical, metadata } = Astro.props;
 const finalTitle = metadata?.title || title;
@@ -20,11 +26,13 @@ const finalOgImage = metadata?.ogImage || ogImage;
 const finalCanonical = metadata?.canonical || canonical;
 const finalIgnoreTitleTemplate = metadata?.ignoreTitleTemplate || false;
 
-// Zámek webu — když je zapnutý, veřejné stránky ukážou jen úvodní fotku + text.
+// Zámek webu + podkladová fotka všech stránek (z jednoho čtení site_texts).
 let locked = false;
 let lockText = "";
 let lockName = siteConfig.name;
 let lockHeroStyle = "background-image:url('/hero.jpg');background-size:cover;background-position:center;";
+let bgStyle =
+  "background-image:url('/bg.jpg');background-size:cover;background-position:center;background-repeat:no-repeat;opacity:0.1;";
 try {
   const t = await getTexts();
   locked = txt(t, "site_locked", "") === "1";
@@ -34,8 +42,18 @@ try {
     const hero = await getHeroSettings();
     lockHeroStyle = `background-image:url('${hero.imageUrl}');background-size:${hero.fit};background-position:${hero.position};`;
   }
+  let bg = BG_DEFAULTS;
+  const rawBg = t["bg_settings"];
+  if (rawBg) {
+    try {
+      bg = { ...BG_DEFAULTS, ...JSON.parse(rawBg) };
+    } catch {
+      /* nevalidní JSON — fallback */
+    }
+  }
+  bgStyle = `background-image:url('${bg.imageUrl}');background-size:${bg.fit};background-position:${bg.position};background-repeat:no-repeat;opacity:${bg.opacity / 100};filter:${heroFilter(bg)};`;
 } catch {
-  /* D1 nedostupné (prerender) — web se nezamyká */
+  /* D1 nedostupné (prerender) — fallback styly zůstávají */
 }
 ---
 
@@ -68,8 +86,8 @@ try {
             Přeskočit
           </a>
           <div
-            class="pointer-events-none fixed inset-0 z-0 bg-cover bg-center bg-no-repeat opacity-10"
-            style="background-image: url('/bg.jpg');"
+            class="pointer-events-none fixed inset-0 z-0"
+            style={bgStyle}
             aria-hidden="true"
           />
           <div class="relative z-10 flex min-h-screen flex-col overflow-x-hidden">
