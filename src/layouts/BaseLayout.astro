@@ -192,6 +192,26 @@ try {
     </style>
 
     <script>
+      // Přepínač zobrazení hesla (ikona oka): tlačítko [data-toggle-pw="idPole"].
+      const wpw = window as unknown as { __pwToggle?: boolean };
+      if (!wpw.__pwToggle) {
+        wpw.__pwToggle = true;
+        document.addEventListener("click", (e) => {
+          const btn = (e.target as HTMLElement | null)?.closest<HTMLElement>(
+            "[data-toggle-pw]",
+          );
+          if (!btn) return;
+          const id = btn.getAttribute("data-toggle-pw") ?? "";
+          const inp = document.getElementById(id) as HTMLInputElement | null;
+          if (!inp) return;
+          const show = inp.type === "password";
+          inp.type = show ? "text" : "password";
+          btn.setAttribute("aria-pressed", show ? "true" : "false");
+        });
+      }
+    </script>
+
+    <script>
       // Decentní tlačítko „nahoru" — objeví se po odscrollování, plynule vyjede nahoru.
       function setupToTop() {
         const btn = document.getElementById("to-top");

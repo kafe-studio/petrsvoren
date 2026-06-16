@@ -46,11 +46,21 @@ const inputCls =
       </div>
       <div>
         <label class="block text-sm font-medium mb-1">Nové heslo (min. 8 znaků)</label>
-        <input name="password" type="password" minlength="8" autocomplete="new-password" class={inputCls} required />
+        <div class="relative">
+          <input id="pw1" name="password" type="password" minlength="8" autocomplete="new-password" class={`${inputCls} pr-11`} required />
+          <button type="button" data-toggle-pw="pw1" aria-label="Zobrazit/skrýt heslo" title="Zobrazit/skrýt heslo" class="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground hover:text-foreground">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" class="h-5 w-5"><path stroke-linecap="round" stroke-linejoin="round" d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
       </div>
       <div>
         <label class="block text-sm font-medium mb-1">Nové heslo znovu</label>
-        <input name="password2" type="password" minlength="8" autocomplete="new-password" class={inputCls} required />
+        <div class="relative">
+          <input id="pw2" name="password2" type="password" minlength="8" autocomplete="new-password" class={`${inputCls} pr-11`} required />
+          <button type="button" data-toggle-pw="pw2" aria-label="Zobrazit/skrýt heslo" title="Zobrazit/skrýt heslo" class="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground hover:text-foreground">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" class="h-5 w-5"><path stroke-linecap="round" stroke-linejoin="round" d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
       </div>
       <div class="flex items-center gap-3">
         <button type="submit" class="btn-primary">Uložit heslo</button>

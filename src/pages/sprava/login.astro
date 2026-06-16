@@ -19,7 +19,12 @@ const inputClass =
         </div>
         <div>
           <label for="password" class="block text-sm font-medium mb-1.5">Heslo</label>
-          <input id="password" name="password" type="password" autocomplete="current-password" required class={inputClass} />
+          <div class="relative">
+            <input id="password" name="password" type="password" autocomplete="current-password" required class={`${inputClass} pr-12`} />
+            <button type="button" data-toggle-pw="password" aria-label="Zobrazit/skrýt heslo" title="Zobrazit/skrýt heslo" class="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground hover:text-foreground">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" class="h-5 w-5"><path stroke-linecap="round" stroke-linejoin="round" d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
         </div>
         {sitekey && <div class="cf-turnstile" data-sitekey={sitekey} data-theme="auto"></div>}
         <p id="login-error" class="hidden text-sm text-red-500"></p>

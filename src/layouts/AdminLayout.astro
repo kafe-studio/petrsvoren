@@ -145,6 +145,18 @@ const nav = [
         }).catch(() => {});
         window.location.href = "/sprava/login";
       });
+
+      // Přepínač zobrazení hesla (ikona oka).
+      document.addEventListener("click", (e) => {
+        const t = (e.target as HTMLElement | null)?.closest<HTMLElement>(
+          "[data-toggle-pw]",
+        );
+        if (!t) return;
+        const inp = document.getElementById(
+          t.getAttribute("data-toggle-pw") ?? "",
+        ) as HTMLInputElement | null;
+        if (inp) inp.type = inp.type === "password" ? "text" : "password";
+      });
     </script>
   </body>
 </html>
