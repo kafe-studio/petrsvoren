@@ -59,14 +59,14 @@ export async function sendEmail(opts: {
       text: htmlToText(opts.html),
       ...(opts.replyTo ? { replyTo: opts.replyTo } : {}),
     });
+    console.log("[email] sent", { to: opts.to, subject: opts.subject });
     return { ok: true };
   } catch (e) {
     const err = e as { code?: string; message?: string };
-    return {
-      ok: false,
-      error: err.code
-        ? `${err.code}: ${err.message ?? ""}`.trim()
-        : err.message ?? "Odeslání selhalo.",
-    };
+    const error = err.code
+      ? `${err.code}: ${err.message ?? ""}`.trim()
+      : (err.message ?? "Odeslání selhalo.");
+    console.error("[email] failed", { to: opts.to, error });
+    return { ok: false, error };
   }
 }
