@@ -123,6 +123,8 @@ const inputCls =
           try {
             const res = await fetch(`/api/sprava/tips/${id}/`, {
               method: "DELETE",
+              headers: { "Content-Type": "application/json" },
+              body: "{}",
             });
             if (!res.ok) throw new Error("Smazání selhalo.");
             toast("Tip smazán.", "success");

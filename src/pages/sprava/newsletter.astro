@@ -20,10 +20,21 @@ const inputCls =
 <AdminLayout {metadata}>
   <div class="mx-auto max-w-2xl">
     <h1 class="text-3xl font-extrabold tracking-tight mb-2">Newsletter</h1>
-    <p class="text-muted-foreground mb-8">
+    <p class="text-muted-foreground mb-4">
       <strong>{subs.length}</strong> {plural}.
       Odesílací adresu nastav v <a href="/sprava/texts/" class="underline">Texty webu</a>.
     </p>
+
+    <form id="add-sub" class="mb-8 flex gap-2">
+      <input
+        name="email"
+        type="email"
+        required
+        placeholder="Přidat adresáta (e-mail)"
+        class={`${inputCls} flex-1`}
+      />
+      <button type="submit" class="btn-primary shrink-0">Přidat</button>
+    </form>
 
     <form id="nl-form" class="space-y-4">
       <div>
@@ -45,11 +56,22 @@ const inputCls =
       </p>
     </form>
 
-    <details class="mt-10">
+    <details class="mt-10" open={subs.length > 0}>
       <summary class="cursor-pointer text-sm font-medium">Odběratelé ({subs.length})</summary>
-      <ul class="mt-3 space-y-1 text-sm text-muted-foreground">
-        {subs.map((s) => <li>{s.email}</li>)}
-        {subs.length === 0 && <li>Zatím nikdo.</li>}
+      <ul class="mt-3 space-y-1 text-sm">
+        {subs.map((s) => (
+          <li class="flex items-center justify-between gap-3 border-b border-border/60 py-1">
+            <span class="truncate text-muted-foreground">{s.email}</span>
+            <button
+              type="button"
+              class="shrink-0 text-xs text-red-500 hover:underline"
+              data-del-sub={s.id}
+            >
+              Odebrat
+            </button>
+          </li>
+        ))}
+        {subs.length === 0 && <li class="text-muted-foreground">Zatím nikdo.</li>}
       </ul>
     </details>
   </div>
@@ -94,6 +116,46 @@ const inputCls =
         } finally {
           if (btn) btn.disabled = false;
         }
+      });
+
+      // Přidání adresáta.
+      const addForm = document.getElementById("add-sub") as HTMLFormElement | null;
+      addForm?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const email = new FormData(addForm).get("email");
+        try {
+          const res = await fetch("/api/sprava/newsletter/add/", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email }),
+          });
+          const j = (await res.json().catch(() => ({}))) as { error?: string };
+          if (!res.ok) throw new Error(j.error || "Přidání selhalo.");
+          toast("Adresát přidán.", "success");
+          setTimeout(() => location.reload(), 400);
+        } catch (err) {
+          toast(err instanceof Error ? err.message : "Chyba.", "error");
+        }
+      });
+
+      // Odebrání adresáta.
+      document.querySelectorAll<HTMLElement>("[data-del-sub]").forEach((b) => {
+        b.addEventListener("click", async () => {
+          const id = b.getAttribute("data-del-sub");
+          if (!confirm("Odebrat tohoto adresáta?")) return;
+          try {
+            const res = await fetch(`/api/sprava/newsletter/${id}/`, {
+              method: "DELETE",
+              headers: { "Content-Type": "application/json" },
+              body: "{}",
+            });
+            if (!res.ok) throw new Error("Odebrání selhalo.");
+            toast("Adresát odebrán.", "success");
+            setTimeout(() => location.reload(), 300);
+          } catch (err) {
+            toast(err instanceof Error ? err.message : "Chyba.", "error");
+          }
+        });
       });
     }
     document.addEventListener("astro:page-load", bind);

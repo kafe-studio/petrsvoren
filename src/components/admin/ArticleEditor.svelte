@@ -105,6 +105,8 @@
     if (!confirm("Opravdu smazat článek?")) return;
     const res = await fetch(`/api/sprava/articles/${article.id}/`, {
       method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: "{}",
     });
     if (res.ok) location.href = "/sprava/articles/";
     else toast("Smazání selhalo.", "error");
