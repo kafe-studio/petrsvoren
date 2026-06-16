@@ -43,6 +43,13 @@
       "when": 1781608178808,
       "tag": "0005_complete_princess_powerful",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1781613625193,
+      "tag": "0006_special_vertigo",
+      "breakpoints": true
     }
   ]
 }

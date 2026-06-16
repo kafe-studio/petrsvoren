@@ -1,6 +1,7 @@
 ---
 export const prerender = false;
 import AdminLayout from "../../layouts/AdminLayout.astro";
+import NewsletterComposer from "../../components/admin/NewsletterComposer.svelte";
 import { desc } from "drizzle-orm";
 import { getDb, schema } from "../../db";
 
@@ -9,10 +10,9 @@ const subs = await db
   .select()
   .from(schema.subscribers)
   .orderBy(desc(schema.subscribers.createdAt));
+const confirmedCount = subs.filter((s) => s.confirmed).length;
+const pendingCount = subs.length - confirmedCount;
 const metadata = { title: "Newsletter", description: "Rozesílání novinek." };
-const n = subs.length;
-const plural =
-  n === 1 ? "odběratel" : n >= 2 && n <= 4 ? "odběratelé" : "odběratelů";
 const inputCls =
   "w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:border-primary focus:outline-none";
 ---
@@ -21,8 +21,10 @@ const inputCls =
   <div class="mx-auto max-w-2xl">
     <h1 class="text-3xl font-extrabold tracking-tight mb-2">Newsletter</h1>
     <p class="text-muted-foreground mb-4">
-      <strong>{subs.length}</strong> {plural}.
-      Odesílací adresu nastav v <a href="/sprava/texts/" class="underline">Texty webu</a>.
+      <strong>{confirmedCount}</strong> potvrzených{
+        pendingCount > 0 ? `, ${pendingCount} nepotvrzených` : ""
+      }. Odesílací adresu nastav v
+      <a href="/sprava/texts/" class="underline">Texty webu</a>.
     </p>
 
     <form id="add-sub" class="mb-8 flex gap-2">
@@ -30,47 +32,40 @@ const inputCls =
         name="email"
         type="email"
         required
-        placeholder="Přidat adresáta (e-mail)"
+        placeholder="Přidat adresáta (e-mail) — rovnou potvrzený"
         class={`${inputCls} flex-1`}
       />
       <button type="submit" class="btn-primary shrink-0">Přidat</button>
     </form>
 
-    <form id="nl-form" class="space-y-4">
-      <div>
-        <label class="block text-sm font-medium mb-1">Předmět</label>
-        <input name="subject" type="text" class={inputCls} required />
-      </div>
-      <div>
-        <label class="block text-sm font-medium mb-1">Text (Markdown)</label>
-        <textarea name="body" rows="12" class={`${inputCls} font-mono`} required></textarea>
-      </div>
-      <div class="flex items-center gap-3">
-        <button type="submit" id="nl-btn" class="btn-primary" disabled={subs.length === 0}>
-          Rozeslat všem
-        </button>
-        <span id="nl-status" class="text-sm text-muted-foreground"></span>
-      </div>
-      <p class="text-xs text-muted-foreground">
-        Doporučení: nejdřív vyzkoušej odeslání na sebe (přidej se jako odběratel).
-      </p>
-    </form>
+    <NewsletterComposer client:only="svelte" {confirmedCount} />
 
     <details class="mt-10" open={subs.length > 0}>
-      <summary class="cursor-pointer text-sm font-medium">Odběratelé ({subs.length})</summary>
+      <summary class="cursor-pointer text-sm font-medium">
+        Odběratelé ({subs.length})
+      </summary>
       <ul class="mt-3 space-y-1 text-sm">
-        {subs.map((s) => (
-          <li class="flex items-center justify-between gap-3 border-b border-border/60 py-1">
-            <span class="truncate text-muted-foreground">{s.email}</span>
-            <button
-              type="button"
-              class="shrink-0 text-xs text-red-500 hover:underline"
-              data-del-sub={s.id}
-            >
-              Odebrat
-            </button>
-          </li>
-        ))}
+        {
+          subs.map((s) => (
+            <li class="flex items-center justify-between gap-3 border-b border-border/60 py-1">
+              <span class="min-w-0 truncate">
+                <span class="text-muted-foreground">{s.email}</span>
+                {!s.confirmed && (
+                  <span class="ml-2 rounded bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-medium text-amber-600">
+                    nepotvrzeno
+                  </span>
+                )}
+              </span>
+              <button
+                type="button"
+                class="shrink-0 text-xs text-red-500 hover:underline"
+                data-del-sub={s.id}
+              >
+                Odebrat
+              </button>
+            </li>
+          ))
+        }
         {subs.length === 0 && <li class="text-muted-foreground">Zatím nikdo.</li>}
       </ul>
     </details>
@@ -79,67 +74,31 @@ const inputCls =
   <script>
     import { toast } from "../../lib/admin-toast";
     function bind() {
-      const form = document.getElementById("nl-form") as HTMLFormElement | null;
-      if (!form || form.dataset.bound) return;
-      form.dataset.bound = "1";
-      const status = document.getElementById("nl-status");
-      const btn = document.getElementById("nl-btn") as HTMLButtonElement | null;
-      form.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        if (!confirm("Opravdu rozeslat newsletter všem odběratelům?")) return;
-        if (btn) btn.disabled = true;
-        if (status) status.textContent = "Odesílám…";
-        const fd = new FormData(form);
-        try {
-          const res = await fetch("/api/sprava/newsletter/send/", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              subject: fd.get("subject"),
-              body: fd.get("body"),
-            }),
-          });
-          const j = (await res.json().catch(() => ({}))) as {
-            error?: string;
-            sent?: number;
-            failed?: number;
-            firstError?: string;
-          };
-          if (!res.ok) throw new Error(j.error || "Odeslání selhalo.");
-          if (status)
-            status.textContent = `Odesláno ${j.sent}, chyb ${j.failed}.`;
-          if (j.failed && j.firstError) toast(j.firstError, "error");
-          else toast("Newsletter rozeslán.", "success");
-        } catch (err) {
-          if (status) status.textContent = "";
-          toast(err instanceof Error ? err.message : "Chyba.", "error");
-        } finally {
-          if (btn) btn.disabled = false;
-        }
-      });
-
-      // Přidání adresáta.
       const addForm = document.getElementById("add-sub") as HTMLFormElement | null;
-      addForm?.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const email = new FormData(addForm).get("email");
-        try {
-          const res = await fetch("/api/sprava/newsletter/add/", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email }),
-          });
-          const j = (await res.json().catch(() => ({}))) as { error?: string };
-          if (!res.ok) throw new Error(j.error || "Přidání selhalo.");
-          toast("Adresát přidán.", "success");
-          setTimeout(() => location.reload(), 400);
-        } catch (err) {
-          toast(err instanceof Error ? err.message : "Chyba.", "error");
-        }
-      });
+      if (addForm && !addForm.dataset.bound) {
+        addForm.dataset.bound = "1";
+        addForm.addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const email = new FormData(addForm).get("email");
+          try {
+            const res = await fetch("/api/sprava/newsletter/add/", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ email }),
+            });
+            const j = (await res.json().catch(() => ({}))) as { error?: string };
+            if (!res.ok) throw new Error(j.error || "Přidání selhalo.");
+            toast("Adresát přidán.", "success");
+            setTimeout(() => location.reload(), 400);
+          } catch (err) {
+            toast(err instanceof Error ? err.message : "Chyba.", "error");
+          }
+        });
+      }
 
-      // Odebrání adresáta.
       document.querySelectorAll<HTMLElement>("[data-del-sub]").forEach((b) => {
+        if (b.dataset.bound) return;
+        b.dataset.bound = "1";
         b.addEventListener("click", async () => {
           const id = b.getAttribute("data-del-sub");
           if (!confirm("Odebrat tohoto adresáta?")) return;

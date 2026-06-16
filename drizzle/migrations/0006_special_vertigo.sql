@@ -1,0 +1,1 @@
+ALTER TABLE `subscribers` ADD `confirmed` integer DEFAULT false NOT NULL;

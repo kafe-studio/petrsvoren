@@ -122,11 +122,13 @@ export const passwordResets = sqliteTable("password_resets", {
   createdAt: createdAt(),
 });
 
-// Odběratelé newsletteru. unsubscribeToken = odhlašovací odkaz v e-mailu.
+// Odběratelé newsletteru. unsubscribeToken = odhlašovací/potvrzovací odkaz.
+// confirmed = double opt-in (po kliknutí na potvrzovací odkaz v e-mailu).
 export const subscribers = sqliteTable("subscribers", {
   id: id(),
   email: text("email").notNull().unique(),
   unsubscribeToken: text("unsubscribe_token").notNull(),
+  confirmed: integer("confirmed", { mode: "boolean" }).notNull().default(false),
   createdAt: createdAt(),
 });
 

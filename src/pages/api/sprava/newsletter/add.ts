@@ -24,8 +24,9 @@ export const POST: APIRoute = async ({ request }) => {
 
   const unsubscribeToken =
     crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().replace(/-/g, "");
+  // Ručně přidaný adresát z adminu je rovnou potvrzený (bez double opt-inu).
   await db
     .insert(schema.subscribers)
-    .values({ id: crypto.randomUUID(), email, unsubscribeToken });
+    .values({ id: crypto.randomUUID(), email, unsubscribeToken, confirmed: true });
   return jsonOk({ email }, 201);
 };

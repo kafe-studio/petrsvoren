@@ -1,13 +1,13 @@
 import type { APIRoute } from "astro";
-import { marked } from "marked";
+import { eq } from "drizzle-orm";
 import { getDb, schema } from "../../../../db";
 import { jsonError, jsonOk } from "../../../../lib/admin-helpers";
 import { sendEmail, mailFrom } from "../../../../lib/email";
 
 export const prerender = false;
 
-// Rozeslání newsletteru všem odběratelům. Každý e-mail má vlastní odhlašovací
-// odkaz. Posílá se po jednom (malé seznamy); u velkých lze později dávkovat.
+// Rozeslání newsletteru potvrzeným odběratelům. Tělo je HTML (rich editor).
+// Každý e-mail má vlastní odhlašovací odkaz. Po dávkách kvůli subrequest limitu.
 export const POST: APIRoute = async ({ request, url }) => {
   let body: { subject?: unknown; body?: unknown };
   try {
@@ -16,16 +16,19 @@ export const POST: APIRoute = async ({ request, url }) => {
     return jsonError("Neplatná data.");
   }
   const subject = typeof body.subject === "string" ? body.subject.trim() : "";
-  const md = typeof body.body === "string" ? body.body : "";
+  const contentHtml = typeof body.body === "string" ? body.body : "";
   if (!subject) return jsonError("Předmět je povinný.");
-  if (!md.trim()) return jsonError("Text e-mailu je povinný.");
+  if (!contentHtml.trim()) return jsonError("Text e-mailu je povinný.");
 
   const db = await getDb();
-  const subs = await db.select().from(schema.subscribers);
-  if (subs.length === 0) return jsonError("Žádní odběratelé.", 400);
+  // Jen potvrzení odběratelé (double opt-in).
+  const subs = await db
+    .select()
+    .from(schema.subscribers)
+    .where(eq(schema.subscribers.confirmed, true));
+  if (subs.length === 0) return jsonError("Žádní potvrzení odběratelé.", 400);
 
   const from = await mailFrom();
-  const contentHtml = marked.parse(md, { async: false }) as string;
 
   let sent = 0;
   let failed = 0;

@@ -160,9 +160,17 @@ try {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email: data.get("email"), turnstileToken: token }),
         });
-        const j = (await res.json().catch(() => ({}))) as { error?: string };
+        const j = (await res.json().catch(() => ({}))) as {
+          error?: string;
+          status?: string;
+        };
         if (!res.ok) throw new Error(j.error ?? "Přihlášení selhalo.");
-        show("Hotovo! Děkujeme za odběr.", true);
+        show(
+          j.status === "already"
+            ? "Tento e-mail už odebíráš."
+            : "Hotovo! Zkontroluj e-mail a potvrď odběr.",
+          true,
+        );
         form.reset();
         if (sitekey && w.turnstile && widgetId !== null) w.turnstile.reset(widgetId);
       } catch (err) {
