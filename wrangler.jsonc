@@ -23,6 +23,12 @@
       "bucket_name": "petrsvoren-photos"
     }
   ],
+  // Vlastní doména (zóna petrsvoren.com v účtu 5 Kafe). Custom domain = CF
+  // automaticky spravuje DNS + TLS cert pro Worker.
+  "routes": [
+    { "pattern": "petrsvoren.com", "custom_domain": true },
+    { "pattern": "www.petrsvoren.com", "custom_domain": true }
+  ],
   "workers_dev": true,
   "preview_urls": false
 }

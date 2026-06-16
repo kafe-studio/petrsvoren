@@ -27,7 +27,7 @@ export const navLinks = [
 export const siteConfig = {
   name: "Petr Svoreň",
   description: "Fotografie Petra Svoreně, klidná, černobílá i barevná prezentace.",
-  url: "https://petrsvoren.kafe.studio/",
+  url: "https://petrsvoren.com/",
   lang: "cs",
   locale: "cs_CZ",
   author: "Petr Svoreň",
