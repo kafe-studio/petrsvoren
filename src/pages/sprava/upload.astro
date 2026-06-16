@@ -132,12 +132,14 @@ const metadata = { title: "Nahrát fotky", description: "Nahrání fotografií."
           method: "POST",
           body: fd,
         });
-        if (!res.ok) {
-          const j = (await res.json().catch(() => ({}))) as { error?: string };
-          throw new Error(j.error ?? "Chyba");
-        }
-        status.textContent = "✓ Hotovo";
-        status.className = "shrink-0 text-green-600";
+        const j = (await res.json().catch(() => ({}))) as {
+          id?: string;
+          error?: string;
+        };
+        if (!res.ok) throw new Error(j.error ?? "Chyba");
+        // Po nahrání nabídni rovnou zpracování (zařazení, texty, úpravy).
+        status.className = "shrink-0 flex items-center gap-2";
+        status.innerHTML = `<span class="text-green-600">✓</span> <a href="/sprava/photos/${j.id}/" class="font-medium text-primary hover:underline">Zpracovat →</a>`;
       } catch (e) {
         status.textContent =
           "✗ " + (e instanceof Error ? e.message : "Chyba");

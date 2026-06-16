@@ -5,6 +5,7 @@ import { getDb, schema } from "../../db";
 import { desc } from "drizzle-orm";
 
 let photos: (typeof schema.photos.$inferSelect)[] = [];
+let assigned = new Set<string>();
 let dbError = "";
 try {
   const db = await getDb();
@@ -12,9 +13,18 @@ try {
     .select()
     .from(schema.photos)
     .orderBy(desc(schema.photos.createdAt));
+  // Fotky zařazené aspoň do jedné galerie (kvůli štítku „nepřiřazeno").
+  const links = await db
+    .select({ photoId: schema.photoGalleries.photoId })
+    .from(schema.photoGalleries);
+  assigned = new Set(links.map((l) => l.photoId));
 } catch (e) {
   dbError = e instanceof Error ? e.message : String(e);
 }
+
+// Nepřiřazená = není v žádné galerii ani v žádném měsíci → nikde se nezobrazuje.
+const isUnassigned = (p: (typeof photos)[number]) =>
+  !assigned.has(p.id) && !p.month;
 
 const metadata = { title: "Fotky", description: "Správa fotografií." };
 ---
@@ -100,11 +110,18 @@ const metadata = { title: "Fotky", description: "Správa fotografií." };
                         { "opacity-40": p.hidden },
                       ]}
                     />
-                    {p.hidden && (
-                      <span class="absolute right-1.5 top-1.5 z-10 rounded bg-black/70 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-white">
-                        Skrytá
-                      </span>
-                    )}
+                    <span class="absolute right-1.5 top-1.5 z-10 flex flex-col items-end gap-1">
+                      {p.hidden && (
+                        <span class="rounded bg-black/70 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-white">
+                          Skrytá
+                        </span>
+                      )}
+                      {isUnassigned(p) && (
+                        <span class="rounded bg-amber-500/90 px-1.5 py-0.5 text-[10px] font-medium text-black">
+                          nepřiřazeno
+                        </span>
+                      )}
+                    </span>
                     <span class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent px-2 py-1.5">
                       <span class="block truncate text-xs text-white">
                         {p.caption || "Bez názvu"}
