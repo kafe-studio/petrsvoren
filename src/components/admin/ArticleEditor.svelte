@@ -15,7 +15,48 @@
     body: string; // HTML
     hasImage: boolean;
   }
-  let { article }: { article: Article } = $props();
+  interface PhotoOpt {
+    id: string;
+    caption: string;
+  }
+  interface PageOpt {
+    label: string;
+    href: string;
+  }
+  let {
+    article,
+    photos = [],
+    pages = [],
+  }: { article: Article; photos?: PhotoOpt[]; pages?: PageOpt[] } = $props();
+
+  let showPhotos = $state(false);
+  let showPages = $state(false);
+
+  // Vloží fotku z galerie do textu článku (obrázek se servíruje přes /img/<id>/).
+  function insertPhoto(pid: string) {
+    bodyEditor?.commands.insertImage({ src: `/img/${pid}/` });
+    showPhotos = false;
+  }
+
+  // Vloží odkaz na stránku webu. Když je vybraný text, označí ho odkazem;
+  // jinak vloží popisek stránky jako odkazovaný text.
+  function insertPageLink(href: string, label: string) {
+    const ed = bodyEditor;
+    if (!ed) return;
+    const view = ed.view;
+    const { state } = view;
+    if (state.selection.empty) {
+      const from = state.selection.from;
+      let tr = state.tr.insertText(label, from);
+      const linkMark = state.schema.marks.link?.create({ href });
+      if (linkMark) tr = tr.addMark(from, from + label.length, linkMark);
+      view.dispatch(tr);
+    } else {
+      ed.commands.toggleLink({ href });
+    }
+    view.focus();
+    showPages = false;
+  }
 
   let title = $state(article.title);
   let slug = $state(article.slug);
@@ -105,6 +146,74 @@
   </div>
   <div>
     <label class="block text-sm font-medium mb-1">Text článku</label>
+
+    <div class="mb-2 flex flex-wrap gap-2">
+      <button
+        type="button"
+        class="rounded-lg border border-border bg-card px-3 py-1.5 text-sm hover:bg-muted"
+        onclick={() => {
+          showPhotos = !showPhotos;
+          showPages = false;
+        }}
+      >
+        🖼 Vložit fotku z galerie
+      </button>
+      <button
+        type="button"
+        class="rounded-lg border border-border bg-card px-3 py-1.5 text-sm hover:bg-muted"
+        onclick={() => {
+          showPages = !showPages;
+          showPhotos = false;
+        }}
+      >
+        🔗 Odkaz na stránku
+      </button>
+    </div>
+
+    {#if showPhotos}
+      <div class="mb-3 max-h-64 overflow-y-auto rounded-lg border border-border bg-card p-3">
+        {#if photos.length === 0}
+          <p class="text-sm text-muted-foreground">Žádné fotky v galerii.</p>
+        {:else}
+          <div class="grid grid-cols-3 gap-2 sm:grid-cols-4">
+            {#each photos as p (p.id)}
+              <button
+                type="button"
+                class="group relative aspect-square overflow-hidden rounded-md bg-neutral-900"
+                title={p.caption}
+                onclick={() => insertPhoto(p.id)}
+              >
+                <img
+                  src={`/img/${p.id}/`}
+                  alt={p.caption}
+                  loading="lazy"
+                  class="h-full w-full object-cover transition-transform group-hover:scale-105"
+                />
+              </button>
+            {/each}
+          </div>
+        {/if}
+      </div>
+    {/if}
+
+    {#if showPages}
+      <div class="mb-3 max-h-64 overflow-y-auto rounded-lg border border-border bg-card p-2">
+        <p class="px-2 pb-1 text-xs text-muted-foreground">
+          Tip: nejdřív označ text, pak vyber stránku — odkaz se na něj navěsí.
+        </p>
+        {#each pages as pg (pg.href)}
+          <button
+            type="button"
+            class="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-sm hover:bg-muted"
+            onclick={() => insertPageLink(pg.href, pg.label)}
+          >
+            <span>{pg.label}</span>
+            <span class="text-xs text-muted-foreground">{pg.href}</span>
+          </button>
+        {/each}
+      </div>
+    {/if}
+
     <RichEditor value={article.body} bind:editor={bodyEditor} />
   </div>
   <div>
