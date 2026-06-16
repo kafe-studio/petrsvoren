@@ -1,0 +1,124 @@
+<script lang="ts">
+  import type { Editor } from "prosekit/core";
+  import RichEditor from "./RichEditor.svelte";
+  import { toast } from "../../lib/admin-toast";
+
+  interface Article {
+    id: string;
+    title: string;
+    slug: string;
+    description: string;
+    author: string;
+    pubDate: string; // YYYY-MM-DD
+    category: string;
+    tags: string; // čárkou oddělené
+    body: string; // HTML
+    hasImage: boolean;
+  }
+  let { article }: { article: Article } = $props();
+
+  let title = $state(article.title);
+  let slug = $state(article.slug);
+  let pubDate = $state(article.pubDate);
+  let description = $state(article.description);
+  let author = $state(article.author);
+  let category = $state(article.category);
+  let tags = $state(article.tags);
+  let bodyEditor = $state<Editor | undefined>();
+  let imageFiles = $state<FileList | undefined>();
+  let saving = $state(false);
+
+  const inputCls =
+    "w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:border-primary focus:outline-none";
+
+  async function save(e: SubmitEvent) {
+    e.preventDefault();
+    if (!bodyEditor) return;
+    saving = true;
+    const fd = new FormData();
+    fd.set("title", title);
+    fd.set("slug", slug);
+    fd.set("pubDate", pubDate);
+    fd.set("description", description);
+    fd.set("author", author);
+    fd.set("category", category);
+    fd.set("tags", tags);
+    fd.set("body", bodyEditor.getDocHTML());
+    if (imageFiles && imageFiles[0]) fd.set("image", imageFiles[0]);
+    try {
+      const res = await fetch(`/api/sprava/articles/${article.id}/`, {
+        method: "PATCH",
+        body: fd,
+      });
+      const j = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) throw new Error(j.error || "Uložení selhalo.");
+      toast("Článek uložen.", "success");
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Chyba.", "error");
+    } finally {
+      saving = false;
+    }
+  }
+
+  async function del() {
+    if (!confirm("Opravdu smazat článek?")) return;
+    const res = await fetch(`/api/sprava/articles/${article.id}/`, {
+      method: "DELETE",
+    });
+    if (res.ok) location.href = "/sprava/articles/";
+    else toast("Smazání selhalo.", "error");
+  }
+</script>
+
+<form onsubmit={save} class="space-y-4">
+  <div>
+    <label class="block text-sm font-medium mb-1">Název</label>
+    <input bind:value={title} type="text" class={inputCls} required />
+  </div>
+  <div class="grid grid-cols-2 gap-4">
+    <div>
+      <label class="block text-sm font-medium mb-1">Slug (URL)</label>
+      <input bind:value={slug} type="text" class={inputCls} />
+    </div>
+    <div>
+      <label class="block text-sm font-medium mb-1">Datum</label>
+      <input bind:value={pubDate} type="date" class={inputCls} />
+    </div>
+  </div>
+  <div>
+    <label class="block text-sm font-medium mb-1">Perex (popis)</label>
+    <textarea bind:value={description} rows="2" class={inputCls}></textarea>
+  </div>
+  <div class="grid grid-cols-2 gap-4">
+    <div>
+      <label class="block text-sm font-medium mb-1">Autor</label>
+      <input bind:value={author} type="text" class={inputCls} />
+    </div>
+    <div>
+      <label class="block text-sm font-medium mb-1">Rubrika</label>
+      <input bind:value={category} type="text" class={inputCls} />
+    </div>
+  </div>
+  <div>
+    <label class="block text-sm font-medium mb-1">Tagy (oddělené čárkou)</label>
+    <input bind:value={tags} type="text" class={inputCls} />
+  </div>
+  <div>
+    <label class="block text-sm font-medium mb-1">Text článku</label>
+    <RichEditor value={article.body} bind:editor={bodyEditor} />
+  </div>
+  <div>
+    <label class="block text-sm font-medium mb-1">Titulní obrázek</label>
+    {#if article.hasImage}
+      <img src={`/img/${article.id}/`} alt="" class="mb-2 h-32 rounded-lg object-cover" />
+    {/if}
+    <input bind:files={imageFiles} type="file" accept="image/*" class={inputCls} />
+  </div>
+  <div class="flex items-center gap-3 pt-2">
+    <button type="submit" class="btn-primary" disabled={saving}>
+      {saving ? "Ukládám…" : "Uložit článek"}
+    </button>
+    <a href={`/blog/${article.slug}/`} target="_blank" class="text-sm text-muted-foreground hover:underline">Zobrazit →</a>
+    <button type="button" onclick={del} class="ml-auto text-sm text-red-500 hover:underline">Smazat</button>
+  </div>
+</form>

@@ -1,6 +1,5 @@
 ---
 export const prerender = false;
-import { marked } from "marked";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import Schema from "../../components/seo/Schema.astro";
 import { getArticleBySlug } from "../../lib/content";
@@ -11,7 +10,8 @@ if (!post) return Astro.rewrite("/404");
 
 const { title, description, pubDate, author, imageId } = post;
 const image = imageId ? `/img/${imageId}/` : undefined;
-const html = marked.parse(post.body ?? "", { async: false }) as string;
+// Tělo článku je uložené jako HTML (ProseKit editor).
+const html = post.body ?? "";
 const metadata = { title, description };
 ---
 
