@@ -16,7 +16,9 @@ export const POST: APIRoute = async ({ request, url }) => {
     return jsonOk();
   }
   const ident =
-    typeof body.identifier === "string" ? body.identifier.trim() : "";
+    typeof body.identifier === "string"
+      ? body.identifier.trim().toLowerCase()
+      : "";
   if (!ident) return jsonOk();
 
   const db = await getDb();

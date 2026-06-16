@@ -16,7 +16,8 @@ export const POST: APIRoute = async ({ request, cookies }) => {
   } catch {
     return Response.json({ error: "Neplatný JSON." }, { status: 400 });
   }
-  const username = typeof body.username === "string" ? body.username.trim() : "";
+  const username =
+    typeof body.username === "string" ? body.username.trim().toLowerCase() : "";
   const password = typeof body.password === "string" ? body.password : "";
   if (!username || !password) {
     return Response.json({ error: "Vyplň jméno i heslo." }, { status: 400 });
