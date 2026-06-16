@@ -35,6 +35,7 @@ export const photos = sqliteTable("photos", {
   bodyText: text("body_text"), // delší text na rozklik
   alt: text("alt"),
   month: text("month"), // "RRRR-MM" pro výběr měsíce (volitelné)
+  hidden: integer("hidden", { mode: "boolean" }).notNull().default(false), // skrytá z webu
   showExif: integer("show_exif", { mode: "boolean" }).notNull().default(false),
   exifJson: text("exif_json"), // serializovaná EXIF data
   width: integer("width"),

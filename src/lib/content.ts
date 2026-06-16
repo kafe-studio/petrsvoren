@@ -1,6 +1,6 @@
 // Čtení veřejného obsahu z D1 (nahrazuje content collections). Stránky, které
 // to používají, musí být prerender=false (SSR), protože D1 je dostupné až za běhu.
-import { eq, asc, desc, isNotNull } from "drizzle-orm";
+import { eq, and, asc, desc, isNotNull } from "drizzle-orm";
 import { getDb, schema } from "../db";
 
 // Fotka pro mřížku/lightbox. URL originálu = /img/<id>/.
@@ -53,7 +53,9 @@ export async function getSectionPhotos(slug: string): Promise<GridPhoto[]> {
       schema.galleries,
       eq(schema.photoGalleries.galleryId, schema.galleries.id),
     )
-    .where(eq(schema.galleries.slug, slug))
+    .where(
+      and(eq(schema.galleries.slug, slug), eq(schema.photos.hidden, false)),
+    )
     .orderBy(asc(schema.photoGalleries.sortOrder));
   return rows;
 }
@@ -76,7 +78,9 @@ export async function getSectionCovers(): Promise<
       eq(schema.photoGalleries.galleryId, schema.galleries.id),
     )
     .innerJoin(schema.photos, eq(schema.photoGalleries.photoId, schema.photos.id))
-    .where(eq(schema.photoGalleries.isCover, true));
+    .where(
+      and(eq(schema.photoGalleries.isCover, true), eq(schema.photos.hidden, false)),
+    );
   const m = new Map<string, { id: string; alt: string }>();
   for (const r of rows) m.set(r.slug, { id: r.id, alt: r.alt ?? r.caption });
   return m;
@@ -98,7 +102,7 @@ export async function getAlbumMonths(): Promise<MonthAlbum[]> {
       sortOrder: schema.photos.sortOrder,
     })
     .from(schema.photos)
-    .where(isNotNull(schema.photos.month))
+    .where(and(isNotNull(schema.photos.month), eq(schema.photos.hidden, false)))
     .orderBy(asc(schema.photos.month), asc(schema.photos.sortOrder));
   const map = new Map<string, { coverId: string; count: number }>();
   for (const r of rows) {
@@ -119,7 +123,7 @@ export async function getMonthPhotos(month: string): Promise<GridPhoto[]> {
   const rows = await db
     .select(photoCols)
     .from(schema.photos)
-    .where(eq(schema.photos.month, month))
+    .where(and(eq(schema.photos.month, month), eq(schema.photos.hidden, false)))
     .orderBy(asc(schema.photos.sortOrder));
   return rows;
 }

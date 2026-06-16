@@ -29,6 +29,13 @@
       "when": 1781592671295,
       "tag": "0003_living_dark_beast",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1781600473207,
+      "tag": "0004_mean_shiver_man",
+      "breakpoints": true
     }
   ]
 }
