@@ -1,14 +1,31 @@
 ---
 import { Icon } from "astro-icon/components";
 import { siteConfig, navLinks } from "../../config/site";
+import { getTexts, txt } from "../../lib/content";
+
+// Editovatelné texty z D1. Na prerenderovaných stránkách (404) D1 není dostupné
+// → fallback na siteConfig, ať build/prerender nespadne.
+let email = siteConfig.email;
+let facebook = siteConfig.socialLinks.facebook;
+let name = siteConfig.name;
+let description = siteConfig.description;
+try {
+  const texts = await getTexts();
+  email = txt(texts, "contact_email", email);
+  facebook = txt(texts, "facebook_url", facebook);
+  name = txt(texts, "site_name", name);
+  description = txt(texts, "site_description", description);
+} catch {
+  /* D1 nedostupné (prerender) — ponech fallbacky */
+}
 ---
 
 <footer class="border-t border-border mt-32">
   <div class="mx-auto max-w-7xl px-6 py-12 md:py-16 lg:px-8">
     <div class="grid grid-cols-1 gap-10 md:grid-cols-3">
       <div class="md:col-span-1">
-        <p class="text-lg font-bold mb-4">{siteConfig.name}</p>
-        <p class="text-sm text-muted-foreground max-w-sm leading-relaxed">{siteConfig.description}</p>
+        <p class="text-lg font-bold mb-4">{name}</p>
+        <p class="text-sm text-muted-foreground max-w-sm leading-relaxed">{description}</p>
       </div>
       <nav aria-label="Navigace v paticce">
         <h3 class="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">Sekce</h3>
@@ -22,14 +39,14 @@ import { siteConfig, navLinks } from "../../config/site";
         <h3 class="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">Kontakt</h3>
         <ul class="space-y-3">
           <li>
-            <a href={`mailto:${siteConfig.email}`} class="inline-flex items-center gap-2 text-sm text-foreground/70 hover:text-primary transition-colors">
+            <a href={`mailto:${email}`} class="inline-flex items-center gap-2 text-sm text-foreground/70 hover:text-primary transition-colors">
               <Icon name="lucide:mail" class="h-4 w-4" />
-              {siteConfig.email}
+              {email}
             </a>
           </li>
-          {siteConfig.socialLinks.facebook && (
+          {facebook && (
             <li>
-              <a href={siteConfig.socialLinks.facebook} target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 text-sm text-foreground/70 hover:text-primary transition-colors">
+              <a href={facebook} target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 text-sm text-foreground/70 hover:text-primary transition-colors">
                 <Icon name="lucide:facebook" class="h-4 w-4" />
                 Facebook
               </a>

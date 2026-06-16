@@ -65,6 +65,36 @@ export const siteTexts = sqliteTable("site_texts", {
   value: text("value").notNull().default(""),
 });
 
+// Tipy / aktuality na homepage ("Aktuálně"). Obrázek volitelně v R2 (r2Key).
+export const tips = sqliteTable("tips", {
+  id: id(),
+  title: text("title").notNull().default(""),
+  bodyText: text("body_text"), // text upoutávky
+  r2Key: text("r2_key"), // obrázek v R2 (volitelný)
+  link: text("link"), // kam tip odkazuje (volitelné)
+  sortOrder: integer("sort_order").notNull().default(0),
+  active: integer("active", { mode: "boolean" }).notNull().default(true),
+  createdAt: createdAt(),
+});
+
+// Blog / články. Titulní obrázek volitelně v R2 (r2Key). body = markdown.
+export const articles = sqliteTable("articles", {
+  id: id(),
+  slug: text("slug").notNull().unique(),
+  title: text("title").notNull().default(""),
+  description: text("description").notNull().default(""),
+  pubDate: integer("pub_date", { mode: "timestamp" }).$defaultFn(
+    () => new Date(),
+  ),
+  author: text("author").notNull().default(""),
+  r2Key: text("r2_key"), // titulní obrázek (volitelný)
+  body: text("body").notNull().default(""), // markdown
+  tags: text("tags"), // JSON pole tagů
+  category: text("category"),
+  sortOrder: integer("sort_order").notNull().default(0),
+  createdAt: createdAt(),
+});
+
 // Administrátoři — přihlášení jménem + heslem (PBKDF2 hash + salt).
 export const adminUsers = sqliteTable("admin_users", {
   id: text("id")

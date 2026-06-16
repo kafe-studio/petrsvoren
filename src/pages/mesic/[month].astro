@@ -1,28 +1,16 @@
 ---
-export const prerender = true;
-import { getCollection } from "astro:content";
+export const prerender = false;
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import PhotoGrid from "../../components/gallery/PhotoGrid.astro";
 import MonthAxis from "../../components/gallery/MonthAxis.astro";
-import { monthLabel, sortMonthsDesc } from "../../config/monthly";
+import { monthLabel } from "../../config/monthly";
+import { getMonthPhotos } from "../../lib/content";
 
-// Jedna stránka na měsíc. Fotky se seskupují podle data.month ("RRRR-MM"),
-// uvnitř měsíce řadí podle order. Galerii vykreslí sdílená PhotoGrid.
-export async function getStaticPaths() {
-  const all = await getCollection("monthly");
-  const months = sortMonthsDesc(all.map((p) => p.data.month));
-  return months.map((month) => ({
-    params: { month },
-    props: {
-      month,
-      photos: all
-        .filter((photo) => photo.data.month === month)
-        .sort((a, b) => a.data.order - b.data.order),
-    },
-  }));
-}
+// Jedna stránka na měsíc. Fotky z D1 podle photos.month, řazené dle sort_order.
+const month = Astro.params.month ?? "";
+if (!/^\d{4}-\d{2}$/.test(month)) return Astro.rewrite("/404");
 
-const { month, photos } = Astro.props;
+const photos = await getMonthPhotos(month);
 const label = monthLabel(month);
 const metadata = { title: label, description: `Fotografie: ${label}` };
 ---

@@ -1,27 +1,22 @@
 ---
-export const prerender = true;
+export const prerender = false;
 import BaseLayout from "../layouts/BaseLayout.astro";
 import Tips from "../components/home/Tips.astro";
 import MonthTimeline from "../components/home/MonthTimeline.astro";
 import { siteConfig } from "../config/site";
-import { getCollection } from "astro:content";
-import { Image } from "astro:assets";
+import { getSectionCovers, getTexts, txt } from "../lib/content";
+
+const texts = await getTexts();
+const siteName = txt(texts, "site_name", siteConfig.name);
+const heroTagline = txt(texts, "hero_tagline", "Každodennosti");
 const metadata = {
-  title: siteConfig.name,
-  description: siteConfig.description,
+  title: siteName,
+  description: txt(texts, "site_description", siteConfig.description),
   ignoreTitleTemplate: true,
 };
 
-// Vedoucí fotka každé sekce (nejnižší order) jako výřez do dlaždice.
-const photos = await getCollection("photos");
-const sectionCover = new Map(
-  siteConfig.sections.map((s) => {
-    const lead = photos
-      .filter((p) => p.data.section === s.slug)
-      .sort((a, b) => a.data.order - b.data.order)[0];
-    return [s.slug, lead?.data.cover];
-  }),
-);
+// Vedoucí (cover) fotka každé sekce z D1 → výřez do dlaždice.
+const sectionCover = await getSectionCovers();
 // Úvodní fotka: nahraj soubor do public/hero.jpg. Než bude, zobrazí se tmavé pozadí.
 ---
 
@@ -42,10 +37,10 @@ const sectionCover = new Map(
       <h1
         class="text-4xl md:text-6xl font-extrabold tracking-tight text-white mb-4 reveal"
       >
-        {siteConfig.name}
+        {siteName}
       </h1>
       <p class="text-lg md:text-xl text-white/80 max-w-2xl reveal">
-        Každodennosti
+        {heroTagline}
       </p>
     </div>
   </section>
@@ -74,12 +69,11 @@ const sectionCover = new Map(
                 class="group relative flex items-end overflow-hidden rounded-sm bg-neutral-900 aspect-[4/3]"
               >
                 {cover && (
-                  <Image
-                    src={cover}
+                  <img
+                    src={`/img/${cover.id}/`}
                     alt={`Sekce ${section.title}`}
-                    widths={[400, 800]}
-                    sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
                     loading="lazy"
+                    decoding="async"
                     class="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                   />
                 )}

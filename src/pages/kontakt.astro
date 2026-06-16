@@ -1,11 +1,22 @@
 ---
-export const prerender = true;
+export const prerender = false;
 import { Icon } from "astro-icon/components";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { siteConfig } from "../config/site";
+import { getTexts, txt } from "../lib/content";
+
+const texts = await getTexts();
+const heading = txt(texts, "contact_heading", "Kontakt");
+const intro = txt(
+  texts,
+  "contact_text",
+  "Máte zájem o fotografii, výstavu nebo se jen chcete na něco zeptat? Napište mi e-mail nebo zprávu na Facebooku.",
+);
+const email = txt(texts, "contact_email", siteConfig.email);
+const facebook = txt(texts, "facebook_url", siteConfig.socialLinks.facebook);
 
 const metadata = {
-  title: "Kontakt",
+  title: heading,
   description: `Kontakt na ${siteConfig.author}, e-mail a Facebook.`,
 };
 ---
@@ -13,26 +24,27 @@ const metadata = {
 <BaseLayout {metadata}>
   <section class="pt-28 pb-24 px-6">
     <div class="mx-auto max-w-2xl">
-      <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight mb-6 reveal">Kontakt</h1>
+      <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight mb-6 reveal">
+        {heading}
+      </h1>
       <p class="text-muted-foreground leading-relaxed mb-10 reveal">
-        Máte zájem o fotografii, výstavu nebo se jen chcete na něco zeptat?
-        Napište mi e-mail nebo zprávu na Facebooku.
+        {intro}
       </p>
       <ul class="space-y-4 reveal">
         <li>
           <a
-            href={`mailto:${siteConfig.email}`}
+            href={`mailto:${email}`}
             class="inline-flex items-center gap-3 text-lg text-foreground hover:text-primary transition-colors"
           >
             <Icon name="lucide:mail" class="h-5 w-5" />
-            {siteConfig.email}
+            {email}
           </a>
         </li>
         {
-          siteConfig.socialLinks.facebook && (
+          facebook && (
             <li>
               <a
-                href={siteConfig.socialLinks.facebook}
+                href={facebook}
                 target="_blank"
                 rel="noopener noreferrer"
                 class="inline-flex items-center gap-3 text-lg text-foreground hover:text-primary transition-colors"

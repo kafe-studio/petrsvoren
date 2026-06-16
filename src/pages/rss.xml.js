@@ -1,28 +1,25 @@
 import rss from "@astrojs/rss";
-import { getCollection } from "astro:content";
 import { siteConfig } from "../config/site";
+import { getArticles } from "../lib/content";
 
-export const prerender = true;
+// Články z D1 → SSR (D1 je dostupné až za běhu).
+export const prerender = false;
 
 export async function GET(context) {
-  const blog = await getCollection("blog");
+  const posts = await getArticles();
 
   return rss({
     title: siteConfig.name,
     description: siteConfig.description,
     site: context.site,
-    items: blog
-      .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
-      .map((post) => ({
-        title: post.data.title,
-        pubDate: post.data.pubDate,
-        description: post.data.description,
-        link: `/blog/${post.id}/`,
-        content: post.body,
-        customData: post.data.author
-          ? `<author>${post.data.author}</author>`
-          : undefined,
-      })),
+    items: posts.map((post) => ({
+      title: post.title,
+      pubDate: post.pubDate ?? undefined,
+      description: post.description,
+      link: `/blog/${post.slug}/`,
+      content: post.body,
+      customData: post.author ? `<author>${post.author}</author>` : undefined,
+    })),
     customData: `<language>${siteConfig.lang}</language>`,
   });
 }

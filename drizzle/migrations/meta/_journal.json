@@ -15,6 +15,13 @@
       "when": 1781529555781,
       "tag": "0001_nappy_the_captain",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1781548868214,
+      "tag": "0002_secret_stone_men",
+      "breakpoints": true
     }
   ]
 }

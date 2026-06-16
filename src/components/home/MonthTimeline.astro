@@ -1,6 +1,4 @@
 ---
-import { Image } from "astro:assets";
-import { getCollection } from "astro:content";
 import {
   monthLabel,
   monthShort,
@@ -8,6 +6,7 @@ import {
   monthsRange,
   currentMonth,
 } from "../../config/monthly";
+import { getAlbumMonths } from "../../lib/content";
 
 // Výběr měsíce na homepage. Souvislá osa všech měsíců od 2023 do aktuálního
 // (roste s časem). Měsíce s albem mají náhled a jsou klikatelné; prázdné jsou
@@ -15,8 +14,8 @@ import {
 // otevře galerii. V pásu je vidět ~5 měsíců, posouvá se tažením / scrollem.
 const START = "2023-01";
 
-const all = await getCollection("monthly");
-const albumMonths = [...new Set(all.map((p) => p.data.month))];
+const albums = await getAlbumMonths();
+const albumMonths = albums.map((a) => a.month);
 
 // Konec osy = pozdější z (aktuální měsíc, nejnovější album) — kdyby přibyl měsíc dopředu.
 const cm = currentMonth();
@@ -29,12 +28,7 @@ const end =
     : cm;
 
 const albumData = new Map(
-  albumMonths.map((m) => {
-    const ps = all
-      .filter((p) => p.data.month === m)
-      .sort((a, b) => a.data.order - b.data.order);
-    return [m, { cover: ps[0]?.data.cover, count: ps.length }];
-  }),
+  albums.map((a) => [a.month, { coverId: a.coverId, count: a.count }]),
 );
 
 // Pravidlo: každý měsíční výběr musí mít aspoň 10 fotek. Upozorni při buildu, kdyby ne.
@@ -56,7 +50,7 @@ const stops = monthsRange(START, end).map((m) => {
     short: monthShort(m),
     year: m.slice(0, 4),
     hasAlbum: !!a,
-    cover: a?.cover,
+    coverId: a?.coverId ?? null,
     count: a?.count ?? 0,
   };
 });
@@ -100,13 +94,12 @@ const fotky = (n: number) =>
                 aria-hidden={s.month === activeMonth ? undefined : "true"}
                 tabindex={s.month === activeMonth ? undefined : -1}
               >
-                {s.cover && (
-                  <Image
-                    src={s.cover}
+                {s.coverId && (
+                  <img
+                    src={`/img/${s.coverId}/`}
                     alt={`Výběr ${s.label}`}
-                    widths={[640, 1280]}
-                    sizes="(min-width: 1024px) 64rem, 100vw"
                     loading="lazy"
+                    decoding="async"
                     class="mtl-card-img"
                   />
                 )}
@@ -140,13 +133,12 @@ const fotky = (n: number) =>
                 aria-current={s.month === activeMonth ? "true" : undefined}
               >
                 <span class="mtl-thumb">
-                  {s.cover ? (
-                    <Image
-                      src={s.cover}
+                  {s.coverId ? (
+                    <img
+                      src={`/img/${s.coverId}/`}
                       alt=""
-                      widths={[160, 320]}
-                      sizes="20vw"
                       loading="lazy"
+                      decoding="async"
                       class="mtl-thumb-img"
                     />
                   ) : (

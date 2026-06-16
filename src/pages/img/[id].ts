@@ -11,14 +11,32 @@ export const prerender = false;
 export const GET: APIRoute = async ({ params }) => {
   const id = params.id ?? "";
   const db = await getDb();
-  const row = await db
+  // ID je unikátní napříč tabulkami — zkus fotky, pak tipy, pak články.
+  const photo = await db
     .select({ key: schema.photos.r2Key })
     .from(schema.photos)
     .where(eq(schema.photos.id, id))
     .get();
-  if (!row) return new Response("Not found", { status: 404 });
+  let key = photo?.key ?? null;
+  if (!key) {
+    const tip = await db
+      .select({ key: schema.tips.r2Key })
+      .from(schema.tips)
+      .where(eq(schema.tips.id, id))
+      .get();
+    key = tip?.key ?? null;
+  }
+  if (!key) {
+    const article = await db
+      .select({ key: schema.articles.r2Key })
+      .from(schema.articles)
+      .where(eq(schema.articles.id, id))
+      .get();
+    key = article?.key ?? null;
+  }
+  if (!key) return new Response("Not found", { status: 404 });
 
-  const obj = await env.PHOTOS.get(row.key);
+  const obj = await env.PHOTOS.get(key);
   if (!obj) return new Response("Not found", { status: 404 });
 
   const headers = new Headers();

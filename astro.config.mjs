@@ -1,6 +1,7 @@
 import { defineConfig, fontProviders } from "astro/config";
 import cloudflare from "@astrojs/cloudflare";
 import sitemap from "@astrojs/sitemap";
+import svelte from "@astrojs/svelte";
 import tailwindcss from "@tailwindcss/vite";
 import icon from "astro-icon";
 import remarkReadingTime from "remark-reading-time";
@@ -15,7 +16,7 @@ export default defineConfig({
     persistState: true,
     prerenderEnvironment: "node",
   }),
-  integrations: [sitemap(), icon()],
+  integrations: [sitemap(), icon(), svelte()],
   markdown: {
     remarkPlugins: [
       remarkReadingTime,

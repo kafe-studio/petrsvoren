@@ -16,56 +16,55 @@
 //   • ve full view tlačítko vpravo nahoře = zpět na náhled (ne rovnou do galerie);
 //     z náhledu zavírá × v liště / Esc / klik na pozadí
 // Podrobnosti a možnosti úprav: docs/FOTOSABLONA.md (sekce „Velký náhled").
-import { Image } from "astro:assets";
-import { render } from "astro:content";
-import type { CollectionEntry } from "astro:content";
 import { siteConfig } from "../../config/site";
+import type { GridPhoto } from "../../lib/content";
 
-// Mřížka renderuje cokoli s caption/cover/coverAlt — sdílí ji galerie sekcí
-// (photos) i měsíční výběry (monthly), které mají stejný tvar dat.
+// Mřížka renderuje fotky z D1 (sdílí ji galerie sekcí i měsíční výběry).
+// Originály se servírují přes /img/<id>/. Delší text (bodyText) = volitelný popis na rozklik.
 interface Props {
-  photos: (CollectionEntry<"photos"> | CollectionEntry<"monthly">)[];
+  photos: GridPhoto[];
 }
 
 const { photos } = Astro.props;
 
-// Předrenderuj tělo (volitelný delší text) každé fotky; hasText řídí, zda se zobrazí.
-const items = await Promise.all(
-  photos.map(async (photo, index) => {
-    const { Content } = await render(photo);
-    return {
-      photo,
-      Content,
-      hasText: Boolean(photo.body?.trim()),
-      dialogId: `photo-${index}`,
-    };
-  }),
-);
+// Tělo (bodyText) → odstavce (rozdělené prázdným řádkem). hasText řídí zobrazení.
+const items = photos.map((photo, index) => ({
+  photo,
+  paras: (photo.bodyText ?? "")
+    .split(/\n\s*\n/)
+    .map((p) => p.trim())
+    .filter(Boolean),
+  get hasText() {
+    return this.paras.length > 0;
+  },
+  dialogId: `photo-${index}`,
+}));
 ---
 
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
   {
-    items.map(({ photo, Content, hasText, dialogId }, index) => (
+    items.map(({ photo, paras, hasText, dialogId }, index) => (
       <figure class="reveal">
         <button
           type="button"
           data-dialog-open={dialogId}
           class="group block w-full cursor-pointer"
-          aria-label={`Zobrazit detail: ${photo.data.caption}`}
+          aria-label={`Zobrazit detail: ${photo.caption}`}
         >
           <span class="block overflow-hidden bg-muted">
-            <Image
-              src={photo.data.cover}
-              alt={photo.data.coverAlt ?? photo.data.caption}
-              widths={[400, 800]}
-              sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+            <img
+              src={`/img/${photo.id}/`}
+              alt={photo.alt ?? photo.caption}
+              width={photo.width ?? undefined}
+              height={photo.height ?? undefined}
               loading="lazy"
+              decoding="async"
               class="block w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105"
             />
           </span>
         </button>
         <figcaption class="mt-3 text-sm text-muted-foreground">
-          {photo.data.caption}
+          {photo.caption}
         </figcaption>
 
         <dialog
@@ -141,22 +140,23 @@ const items = await Promise.all(
             class="lb-stage"
             aria-label="Zvětšit detail (podržet tlačítko myši)"
           >
-            <Image
-              src={photo.data.cover}
-              alt={photo.data.coverAlt ?? photo.data.caption}
-              widths={[800, 1600]}
-              sizes="100vw"
+            <img
+              src={`/img/${photo.id}/`}
+              alt={photo.alt ?? photo.caption}
               loading="lazy"
+              decoding="async"
               draggable={false}
               class="lb-img"
             />
           </button>
 
           <div class="lb-meta shrink-0 px-4 pb-1 pt-2 text-center">
-            <p class="text-sm font-medium">{photo.data.caption}</p>
+            <p class="text-sm font-medium">{photo.caption}</p>
             {hasText && (
               <div class="lb-text">
-                <Content />
+                {paras.map((p) => (
+                  <p>{p}</p>
+                ))}
               </div>
             )}
           </div>
@@ -173,15 +173,14 @@ const items = await Promise.all(
                   "lb-thumb min-w-0 flex-1 overflow-hidden rounded-sm",
                   { "is-current": i === index },
                 ]}
-                aria-label={`Fotka ${i + 1}: ${it.photo.data.caption}`}
+                aria-label={`Fotka ${i + 1}: ${it.photo.caption}`}
                 aria-current={i === index ? "true" : undefined}
               >
-                <Image
-                  src={it.photo.data.cover}
+                <img
+                  src={`/img/${it.photo.id}/`}
                   alt=""
-                  widths={[120, 240]}
-                  sizes="160px"
                   loading="lazy"
+                  decoding="async"
                   class="block h-12 w-full object-cover sm:h-14"
                 />
               </button>

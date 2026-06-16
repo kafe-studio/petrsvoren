@@ -1,5 +1,4 @@
 ---
-import { getCollection } from "astro:content";
 import {
   monthLabel,
   monthShort,
@@ -7,6 +6,7 @@ import {
   monthsRange,
   currentMonth,
 } from "../../config/monthly";
+import { getAlbumMonths } from "../../lib/content";
 
 // Osa měsíců v albu — bez náhledů, jen popisky. Přepíná mezi měsíci (album měsíce
 // = odkaz, prázdný měsíc = tlumený placeholder). Aktuální měsíc je zvýrazněný a po
@@ -17,8 +17,8 @@ interface Props {
 const { current } = Astro.props;
 const START = "2023-01";
 
-const all = await getCollection("monthly");
-const albumMonths = new Set(all.map((p) => p.data.month));
+const albums = await getAlbumMonths();
+const albumMonths = new Set(albums.map((a) => a.month));
 const cm = currentMonth();
 const latest = [...albumMonths].sort(
   (a, b) => monthOrdinal(b) - monthOrdinal(a),

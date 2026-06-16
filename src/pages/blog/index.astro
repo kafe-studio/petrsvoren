@@ -1,0 +1,44 @@
+---
+export const prerender = false;
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { getArticles, getTexts, txt } from "../../lib/content";
+
+const posts = await getArticles();
+const texts = await getTexts();
+const heading = txt(texts, "blog_heading", "Blog");
+const metadata = { title: heading, description: "Všechny články." };
+---
+
+<BaseLayout {metadata}>
+  <section class="pt-32 pb-16 px-6">
+    <div class="mx-auto max-w-4xl">
+      <h1 class="text-4xl font-extrabold mb-12 reveal">{heading}</h1>
+      {
+        posts.length === 0 && (
+          <p class="text-muted-foreground">Zatím žádné články.</p>
+        )
+      }
+      <div class="space-y-8">
+        {
+          posts.map((post) => (
+            <article class="reveal border-b border-border pb-8">
+              <a href={`/blog/${post.slug}/`} class="group">
+                <h2 class="text-xl font-bold group-hover:text-primary transition-colors">
+                  {post.title}
+                </h2>
+                {post.pubDate && (
+                  <p class="text-sm text-muted-foreground mt-1">
+                    <time datetime={post.pubDate.toISOString()}>
+                      {post.pubDate.toLocaleDateString("cs")}
+                    </time>
+                  </p>
+                )}
+                <p class="text-foreground/70 mt-2">{post.description}</p>
+              </a>
+            </article>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+</BaseLayout>

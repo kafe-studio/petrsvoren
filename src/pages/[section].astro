@@ -1,34 +1,33 @@
 ---
-export const prerender = true;
-import { getCollection } from "astro:content";
+export const prerender = false;
 import BaseLayout from "../layouts/BaseLayout.astro";
 import PhotoGrid from "../components/gallery/PhotoGrid.astro";
-import { sections } from "../config/site";
+import { getGallery, getSectionPhotos } from "../lib/content";
 
-export async function getStaticPaths() {
-  const all = await getCollection("photos");
-  return sections.map((section) => ({
-    params: { section: section.slug },
-    props: {
-      title: section.title,
-      photos: all
-        .filter((photo) => photo.data.section === section.slug)
-        .sort((a, b) => a.data.order - b.data.order),
-    },
-  }));
-}
+// Galerie sekce z D1 (galleries + photo_galleries). Title/description editovatelné v adminu.
+const slug = Astro.params.section ?? "";
+const gallery = await getGallery(slug);
+if (!gallery) return Astro.rewrite("/404");
 
-const { title, photos } = Astro.props;
-const metadata = { title, description: `Fotografie: ${title}` };
+const photos = await getSectionPhotos(slug);
+const title = gallery.title;
+const metadata = {
+  title,
+  description: gallery.description ?? `Fotografie: ${title}`,
+};
 ---
 
 <BaseLayout {metadata}>
   <section class="pt-28 pb-24 px-6">
     <div class="mx-auto max-w-7xl">
-      <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight mb-10 reveal">{title}</h1>
+      <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight mb-10 reveal">
+        {title}
+      </h1>
       {
         photos.length === 0 ? (
-          <p class="text-muted-foreground reveal">Tato sekce zatím nemá žádné fotografie.</p>
+          <p class="text-muted-foreground reveal">
+            Tato sekce zatím nemá žádné fotografie.
+          </p>
         ) : (
           <PhotoGrid photos={photos} />
         )
