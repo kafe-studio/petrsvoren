@@ -133,17 +133,17 @@
 <div class="space-y-6">
   <!-- Živý náhled -->
   {#if variant === "bg"}
-    <div class="relative aspect-[16/7] w-full overflow-hidden rounded-lg border border-border bg-background">
+    <div class="relative aspect-[16/7] w-full overflow-hidden rounded-lg bg-black">
       <div class="absolute inset-0" style={imgStyle}></div>
       <div class="relative p-5">
-        <p class="text-lg font-bold">Ukázka stránky</p>
-        <p class="mt-1 text-sm text-muted-foreground">
-          Takhle prosvítá podkladová fotka za obsahem webu.
+        <p class="text-lg font-bold text-white">Ukázka stránky</p>
+        <p class="mt-1 text-sm text-white/60">
+          Takhle prosvítá podkladová fotka za obsahem webu (na černém pozadí).
         </p>
         <div class="mt-3 space-y-1.5">
-          <div class="h-2 w-3/4 rounded bg-foreground/15"></div>
-          <div class="h-2 w-2/3 rounded bg-foreground/15"></div>
-          <div class="h-2 w-1/2 rounded bg-foreground/15"></div>
+          <div class="h-2 w-3/4 rounded bg-white/20"></div>
+          <div class="h-2 w-2/3 rounded bg-white/20"></div>
+          <div class="h-2 w-1/2 rounded bg-white/20"></div>
         </div>
       </div>
     </div>
