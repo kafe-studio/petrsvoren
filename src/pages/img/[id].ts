@@ -42,6 +42,11 @@ export const GET: APIRoute = async ({ params }) => {
   const headers = new Headers();
   obj.writeHttpMetadata(headers);
   headers.set("etag", obj.httpEtag);
-  headers.set("cache-control", "public, max-age=31536000, immutable");
+  // Krátká cache + okamžité servírování staré verze při revalidaci. Po úpravě
+  // fotky (stejný klíč) se nová verze projeví do hodiny; ETag řeší revalidaci.
+  headers.set(
+    "cache-control",
+    "public, max-age=3600, stale-while-revalidate=604800",
+  );
   return new Response(obj.body, { headers });
 };

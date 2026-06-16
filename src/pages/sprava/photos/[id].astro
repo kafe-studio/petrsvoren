@@ -2,6 +2,7 @@
 export const prerender = false;
 import AdminLayout from "../../../layouts/AdminLayout.astro";
 import DeleteButton from "../../../components/admin/DeleteButton.astro";
+import PhotoEditor from "../../../components/admin/PhotoEditor.svelte";
 import { getDb, schema } from "../../../db";
 import { eq } from "drizzle-orm";
 
@@ -61,6 +62,15 @@ const metadata = { title: "Úprava fotky", description: "Detail fotky." };
               alt={photo.alt ?? photo.caption}
               class="w-full max-h-[50vh] object-contain rounded-lg bg-neutral-900"
             />
+
+            <details class="rounded-xl border border-border bg-card p-4">
+              <summary class="cursor-pointer text-sm font-semibold">
+                Upravit fotku (oříznout, otočit, převrátit)
+              </summary>
+              <div class="mt-4">
+                <PhotoEditor client:only="svelte" id={photo.id} bust={Date.now()} />
+              </div>
+            </details>
 
             <div>
               <label class="block text-sm font-medium mb-1.5" for="caption">
