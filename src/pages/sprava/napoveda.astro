@@ -1,0 +1,296 @@
+---
+export const prerender = false;
+import AdminLayout from "../../layouts/AdminLayout.astro";
+const metadata = { title: "Nápověda", description: "Návody pro správu webu." };
+
+// Obsah nápovědy — sekce s kotvami pro rychlou navigaci.
+const toc = [
+  ["zaklady", "Přihlášení a základy"],
+  ["fotky", "Fotky — nahrání a úprava"],
+  ["editor-fotky", "Editor fotky (oříznutí, otočení)"],
+  ["hromadne", "Hromadné akce s fotkami"],
+  ["galerie", "Galerie (sekce)"],
+  ["mesic", "Výběr měsíce"],
+  ["blog", "Blog / články"],
+  ["tipy", "Tipy / Aktuálně"],
+  ["pozadi", "Pozadí hlavní stránky"],
+  ["texty", "Texty webu"],
+  ["newsletter", "Newsletter"],
+  ["statistiky", "Statistiky"],
+];
+---
+
+<AdminLayout {metadata}>
+  <div class="mx-auto max-w-3xl">
+    <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight mb-2">
+      Nápověda
+    </h1>
+    <p class="text-muted-foreground mb-8">
+      Návody pro všechny činnosti při správě webu. Klikni na téma:
+    </p>
+
+    <nav class="mb-12 grid grid-cols-1 sm:grid-cols-2 gap-2">
+      {
+        toc.map(([id, label]) => (
+          <a
+            href={`#${id}`}
+            class="rounded-lg border border-border bg-card px-4 py-2 text-sm transition-colors hover:border-primary"
+          >
+            {label}
+          </a>
+        ))
+      }
+    </nav>
+
+    <div
+      class="prose prose-neutral max-w-none prose-headings:scroll-mt-24 prose-h2:text-2xl prose-h2:font-extrabold prose-h2:mt-12 prose-h2:mb-3 prose-h3:text-lg prose-h3:font-bold prose-h3:mt-6 prose-li:my-1"
+    >
+      <h2 id="zaklady">Přihlášení a základy</h2>
+      <ul>
+        <li>
+          Administrace je na adrese <strong>petrsvoren.com/sprava/</strong>.
+          Přihlašuješ se <strong>e-mailem a heslem</strong>.
+        </li>
+        <li>
+          Pod přihlašovacím formulářem může být ochrana proti robotům
+          (Turnstile) — většinou se ověří sama, případně zaškrtni políčko.
+        </li>
+        <li>
+          <strong>Zapomenuté heslo:</strong> na přihlašovací stránce klikni na „Zapomenuté
+          heslo", zadej e-mail — přijde odkaz pro nastavení nového hesla.
+        </li>
+        <li>
+          <strong>Odhlášení:</strong> tlačítko „Odhlásit" dole v levém menu.
+        </li>
+        <li>
+          Vlevo je menu se všemi sekcemi. Změny se na webu projeví <strong>ihned
+          po uložení</strong> (web čte z databáze).
+        </li>
+      </ul>
+
+      <h2 id="fotky">Fotky — nahrání a úprava</h2>
+      <h3>Nahrání fotek</h3>
+      <ol>
+        <li>Menu → <strong>Nahrát fotky</strong>.</li>
+        <li>
+          Přetáhni fotky do plochy, nebo klikni a vyber je. Můžeš nahrát
+          <strong>jednu i víc najednou</strong> (dávka).
+        </li>
+        <li>
+          U každé fotky se automaticky načtou rozměry a <strong>EXIF</strong>
+          (clona, čas, ISO…), pokud je fotka obsahuje.
+        </li>
+      </ol>
+      <p>
+        Nahraná fotka se zatím nezobrazuje na webu, dokud ji nezařadíš do galerie
+        nebo nepřiřadíš k měsíci (viz níže).
+      </p>
+      <h3>Úprava fotky</h3>
+      <ol>
+        <li>Menu → <strong>Fotky</strong> → klikni na fotku.</li>
+        <li>Nastav podle potřeby:</li>
+      </ol>
+      <ul>
+        <li><strong>Popisek</strong> — krátký text pod fotkou.</li>
+        <li>
+          <strong>Alt text</strong> — popis pro čtečky a vyhledávače (přístupnost).
+        </li>
+        <li>
+          <strong>Delší text</strong> — volitelný delší popis, který se ukáže po
+          rozkliknutí fotky ve velkém náhledu.
+        </li>
+        <li>
+          <strong>Měsíc výběru</strong> — vyber měsíc z kalendáře (viz „Výběr měsíce").
+        </li>
+        <li>
+          <strong>Zobrazit EXIF</strong> — zapne zobrazení technických údajů u fotky.
+        </li>
+        <li>
+          <strong>Galerie</strong> — zaškrtni, do kterých galerií fotka patří;
+          „hlavní" označí krycí (titulní) fotku galerie.
+        </li>
+      </ol>
+      <p>Nakonec klikni <strong>Uložit</strong>.</p>
+
+      <h2 id="editor-fotky">Editor fotky (oříznutí, otočení)</h2>
+      <ol>
+        <li>V úpravě fotky rozbal <strong>„Upravit fotku (oříznout, otočit, převrátit)"</strong>.</li>
+        <li>
+          Můžeš <strong>otočit</strong> vlevo/vpravo, <strong>převrátit</strong>
+          vodorovně/svisle, zvolit <strong>poměr stran</strong> (volně, 1:1, 4:3,
+          3:2, 16:9) a táhnutím vybrat <strong>výřez</strong>.
+        </li>
+        <li><strong>Uložit úpravy</strong> — upravená verze nahradí originál.</li>
+      </ol>
+      <p class="text-sm">
+        Pozn.: úprava přepíše fotku natrvalo. Změna se na webu projeví do hodiny
+        (kvůli mezipaměti); v adminu hned.
+      </p>
+
+      <h2 id="hromadne">Hromadné akce s fotkami</h2>
+      <p>Menu → <strong>Fotky</strong>. Vlevo nahoře na každé dlaždici je zaškrtávátko.</p>
+      <ul>
+        <li><strong>Vybrat vše</strong> — zaškrtne všechny fotky.</li>
+        <li><strong>Stáhnout</strong> — stáhne vybrané fotky jako jeden ZIP.</li>
+        <li>
+          <strong>Vypnout / Zapnout</strong> — skryje fotky z webu (zůstanou v
+          systému) nebo je zase zobrazí. Skryté mají štítek „Skrytá".
+        </li>
+        <li><strong>Smazat</strong> — trvale odstraní vybrané fotky.</li>
+      </ul>
+      <p>Klik na samotnou fotku (ne na zaškrtávátko) otevře její úpravu.</p>
+
+      <h2 id="galerie">Galerie (sekce)</h2>
+      <p>
+        Galerie = sekce webu (Street, Lidé, Samota, Krajina, Cesty…). Menu →
+        <strong>Galerie</strong>.
+      </p>
+      <ul>
+        <li>
+          <strong>Vytvořit galerii:</strong> zadej název (slug do URL se doplní
+          sám) a volitelně popis.
+        </li>
+        <li><strong>Upravit:</strong> název, popis, pořadí (menší číslo = dřív).</li>
+        <li><strong>Smazat:</strong> tlačítko u galerie.</li>
+      </ul>
+      <p>
+        <strong>Jak dostat fotku do galerie:</strong> otevři fotku (Fotky → fotka)
+        a v sekci „Galerie" ji zaškrtni. „Hlavní" určí titulní fotku galerie
+        (zobrazí se jako dlaždice na úvodu a v sekci).
+      </p>
+
+      <h2 id="mesic">Výběr měsíce</h2>
+      <p>
+        „Výběr měsíce" je časová osa galerií po měsících (na úvodu i na stránce
+        /mesic/).
+      </p>
+      <ol>
+        <li>Otevři fotku (Fotky → fotka).</li>
+        <li>
+          U pole <strong>Měsíc výběru</strong> vyber měsíc z <strong>kalendáře</strong>.
+        </li>
+        <li>Ulož. Fotka se objeví ve výběru daného měsíce.</li>
+      </ol>
+      <p>Chceš-li fotku z měsíce odebrat, měsíc u ní vymaž a ulož.</p>
+
+      <h2 id="blog">Blog / články</h2>
+      <ol>
+        <li>Menu → <strong>Blog</strong>.</li>
+        <li>
+          <strong>Nový článek:</strong> napiš název a klikni „Vytvořit" — otevře
+          se editor.
+        </li>
+        <li>
+          Vyplň <strong>perex</strong> (krátký popis), <strong>datum</strong>,
+          autora, rubriku a tagy (oddělené čárkou).
+        </li>
+        <li>
+          Text piš v <strong>editoru</strong>: tučně, kurzíva, nadpisy, seznamy,
+          citace, odkaz.
+        </li>
+        <li>
+          <strong>🖼 Vložit fotku z galerie</strong> — vloží fotku z knihovny
+          přímo do textu.
+        </li>
+        <li>
+          <strong>🔗 Odkaz na stránku</strong> — vloží odkaz na stránku webu
+          (sekce, výběr měsíce, jiný článek…). Označ text a vyber stránku, nebo
+          jen vyber stránku.
+        </li>
+        <li><strong>Titulní obrázek</strong> — volitelně nahraj.</li>
+        <li>
+          <strong>Uložit článek.</strong> Tlačítkem „Zobrazit →" si ho otevřeš na
+          webu. Mazání tlačítkem „Smazat".
+        </li>
+      </ol>
+
+      <h2 id="tipy">Tipy / Aktuálně</h2>
+      <p>
+        Upoutávky v sekci „Aktuálně" na úvodní stránce. Menu → <strong>Tipy</strong>.
+      </p>
+      <ul>
+        <li>
+          <strong>Nový tip:</strong> nadpis, text, volitelný odkaz a obrázek,
+          zaškrtnutí „Aktivní".
+        </li>
+        <li><strong>Úprava:</strong> uprav pole u existujícího a „Uložit".</li>
+        <li>
+          <strong>Vypnutí:</strong> odškrtni „Aktivní" — tip zmizí z webu, ale
+          zůstane uložený. <strong>Smazat</strong> ho odstraní úplně.
+        </li>
+      </ul>
+
+      <h2 id="pozadi">Pozadí hlavní stránky</h2>
+      <ol>
+        <li>Menu → <strong>Pozadí webu</strong>.</li>
+        <li>
+          <strong>Vybrat z galerie</strong> nebo <strong>Nahrát novou</strong>
+          fotku na pozadí úvodu.
+        </li>
+        <li>
+          Nastav <strong>průhlednost</strong>, <strong>zarovnání</strong>,
+          <strong>přizpůsobení velikosti</strong> (vyplnit / vejít),
+          <strong>tonalitu</strong> (černobíle, sépie) a <strong>barevné filtry</strong>
+          (jas, kontrast, sytost, odstín).
+        </li>
+        <li>Náhled se mění živě. Klikni <strong>Uložit pozadí</strong>.</li>
+      </ol>
+
+      <h2 id="texty">Texty webu</h2>
+      <p>
+        Menu → <strong>Texty webu</strong>. Úprava textů na webu, změna se projeví
+        ihned:
+      </p>
+      <ul>
+        <li>Název webu, popis (SEO), <strong>hero podtitul</strong> na úvodu.</li>
+        <li>Nadpisy sekcí (Aktuálně, Výběr měsíce, Blog, Kontakt).</li>
+        <li><strong>Kontaktní e-mail</strong> a <strong>Facebook</strong>.</li>
+        <li>
+          <strong>Odesílací adresa e-mailů</strong> (pro newsletter a obnovu hesla).
+        </li>
+        <li><strong>Turnstile sitekey</strong> (ochrana proti robotům).</li>
+      </ul>
+
+      <h2 id="newsletter">Newsletter</h2>
+      <h3>Jak funguje odběr</h3>
+      <ul>
+        <li>
+          Návštěvník zadá e-mail v patičce webu → přijde mu <strong>potvrzovací
+          odkaz</strong> → po kliknutí je odběr aktivní (tzv. double opt-in).
+        </li>
+        <li>
+          V seznamu odběratelů má nepotvrzený štítek <strong>„nepotvrzeno"</strong>.
+          Rozesílá se <strong>jen potvrzeným</strong>.
+        </li>
+      </ul>
+      <h3>Správa odběratelů</h3>
+      <ul>
+        <li>
+          <strong>Přidat adresáta</strong> ručně (pole nahoře) — takový je rovnou
+          potvrzený, nemusí klikat.
+        </li>
+        <li><strong>Odebrat</strong> u kohokoli v seznamu.</li>
+      </ul>
+      <h3>Rozeslání</h3>
+      <ol>
+        <li>Menu → <strong>Newsletter</strong>.</li>
+        <li>Vyplň <strong>předmět</strong> a napiš text v editoru (jako u blogu).</li>
+        <li>
+          <strong>Rozeslat potvrzeným</strong> → e-mail dostanou všichni potvrzení
+          odběratelé (každý má odhlašovací odkaz).
+        </li>
+      </ol>
+      <p class="text-sm">
+        Tip: přidej si vlastní e-mail jako adresáta a pošli zkušební newsletter
+        nejdřív na sebe.
+      </p>
+
+      <h2 id="statistiky">Statistiky</h2>
+      <p>
+        Menu → <strong>Statistiky</strong>. Ukazuje, kolikrát kdo otevřel fotky ve
+        velkém náhledu — celkový počet zobrazení a <strong>žebříček nejprohlíženějších
+        fotek</strong>. Počet zobrazení je i na dlaždicích ve „Fotky".
+      </p>
+    </div>
+  </div>
+</AdminLayout>
