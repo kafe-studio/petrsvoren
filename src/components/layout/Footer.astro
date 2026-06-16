@@ -9,12 +9,14 @@ let email = siteConfig.email;
 let facebook = siteConfig.socialLinks.facebook;
 let name = siteConfig.name;
 let description = siteConfig.description;
+let turnstileSitekey = "";
 try {
   const texts = await getTexts();
   email = txt(texts, "contact_email", email);
   facebook = txt(texts, "facebook_url", facebook);
   name = txt(texts, "site_name", name);
   description = txt(texts, "site_description", description);
+  turnstileSitekey = txt(texts, "turnstile_sitekey", "");
 } catch {
   /* D1 nedostupné (prerender) — ponech fallbacky */
 }
@@ -56,7 +58,7 @@ try {
       </div>
     </div>
     <div class="mt-12 border-t border-border pt-8">
-      <form id="nl-subscribe" class="mx-auto mb-8 max-w-md text-center">
+      <form id="nl-subscribe" data-sitekey={turnstileSitekey} class="mx-auto mb-8 max-w-md text-center">
         <label for="nl-email" class="block text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">
           Odběr novinek
         </label>
@@ -67,10 +69,16 @@ try {
             type="email"
             required
             placeholder="vas@email.cz"
-            class="flex-1 rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:border-primary"
+            class="flex-1 rounded-lg border border-border bg-transparent px-3 py-2 text-sm outline-none focus:border-foreground"
           />
-          <button type="submit" class="btn-primary shrink-0 px-4 py-2 text-sm">Přihlásit</button>
+          <button
+            type="submit"
+            class="shrink-0 rounded-lg border border-foreground/30 px-4 py-2 text-sm text-foreground transition-colors hover:bg-foreground hover:text-background"
+          >
+            Odebírat
+          </button>
         </div>
+        <div id="nl-ts" class="mt-3 flex justify-center"></div>
         <p id="nl-msg" class="mt-2 hidden text-xs"></p>
       </form>
       <p class="text-center text-xs text-muted-foreground">
@@ -81,29 +89,82 @@ try {
 </footer>
 
 <script>
+  type TS = {
+    render: (el: Element, opts: Record<string, unknown>) => string;
+    getResponse: (id: string) => string;
+    reset: (id: string) => void;
+  };
   function setupSubscribe() {
     const form = document.getElementById("nl-subscribe") as HTMLFormElement | null;
     if (!form || form.dataset.bound) return;
     form.dataset.bound = "1";
     const msg = document.getElementById("nl-msg");
+    const tsBox = document.getElementById("nl-ts");
+    const sitekey = form.dataset.sitekey || "";
+    const w = window as unknown as { turnstile?: TS };
+    let widgetId: string | null = null;
+    let loading = false;
+
+    const show = (text: string, ok: boolean) => {
+      if (!msg) return;
+      msg.textContent = text;
+      msg.className = `mt-2 text-xs ${ok ? "text-foreground" : "text-red-500"}`;
+    };
+
+    // Turnstile načti až při zájmu o odběr (focus do pole), ne na každé stránce.
+    function loadTurnstile() {
+      if (!sitekey || !tsBox || widgetId !== null || loading) return;
+      loading = true;
+      const render = () => {
+        if (!w.turnstile) {
+          setTimeout(render, 200);
+          return;
+        }
+        widgetId = w.turnstile.render(tsBox, {
+          sitekey,
+          theme: "auto",
+          size: "flexible",
+        });
+      };
+      if (document.querySelector("script[data-turnstile]")) {
+        render();
+        return;
+      }
+      const sc = document.createElement("script");
+      sc.src =
+        "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+      sc.async = true;
+      sc.defer = true;
+      sc.dataset.turnstile = "1";
+      sc.onload = render;
+      document.head.appendChild(sc);
+    }
+    document
+      .getElementById("nl-email")
+      ?.addEventListener("focus", loadTurnstile, { once: true });
+
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       const data = new FormData(form);
-      const show = (text: string, ok: boolean) => {
-        if (!msg) return;
-        msg.textContent = text;
-        msg.className = `mt-2 text-xs ${ok ? "text-foreground" : "text-red-500"}`;
-      };
+      let token: string | undefined;
+      if (sitekey && w.turnstile && widgetId !== null) {
+        token = w.turnstile.getResponse(widgetId);
+        if (!token) {
+          show("Potvrď prosím, že nejsi robot.", false);
+          return;
+        }
+      }
       try {
         const res = await fetch("/api/newsletter/subscribe/", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: data.get("email") }),
+          body: JSON.stringify({ email: data.get("email"), turnstileToken: token }),
         });
         const j = (await res.json().catch(() => ({}))) as { error?: string };
         if (!res.ok) throw new Error(j.error ?? "Přihlášení selhalo.");
         show("Hotovo! Děkujeme za odběr.", true);
         form.reset();
+        if (sitekey && w.turnstile && widgetId !== null) w.turnstile.reset(widgetId);
       } catch (err) {
         show(err instanceof Error ? err.message : "Chyba.", false);
       }

@@ -1,6 +1,8 @@
 ---
 export const prerender = false;
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import { getTexts, txt } from "../../lib/content";
+const sitekey = txt(await getTexts(), "turnstile_sitekey", "");
 const metadata = { title: "Přihlášení", description: "Přihlášení do administrace." };
 const inputClass =
   "w-full rounded-lg border border-border bg-card px-4 py-3 text-foreground outline-none focus:border-primary transition-colors";
@@ -19,9 +21,20 @@ const inputClass =
           <label for="password" class="block text-sm font-medium mb-1.5">Heslo</label>
           <input id="password" name="password" type="password" autocomplete="current-password" required class={inputClass} />
         </div>
+        {sitekey && <div class="cf-turnstile" data-sitekey={sitekey} data-theme="auto"></div>}
         <p id="login-error" class="hidden text-sm text-red-500"></p>
         <button type="submit" id="login-btn" class="btn-primary w-full">Přihlásit se</button>
       </form>
+      {
+        sitekey && (
+          <script
+            is:inline
+            src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+            async
+            defer
+          />
+        )
+      }
       <p class="mt-4 text-center text-sm">
         <a href="/sprava/forgot/" class="text-muted-foreground hover:text-foreground hover:underline">
           Zapomenuté heslo?
@@ -53,6 +66,7 @@ const inputClass =
           body: JSON.stringify({
             username: data.get("username"),
             password: data.get("password"),
+            turnstileToken: data.get("cf-turnstile-response"),
           }),
         });
         if (!res.ok) {

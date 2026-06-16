@@ -12,5 +12,6 @@ declare namespace App {
 declare namespace Cloudflare {
   interface Env {
     AUTH_SECRET?: string;
+    TURNSTILE_SECRET?: string;
   }
 }

@@ -25,6 +25,12 @@ export const TEXT_FIELDS: readonly TextField[] = [
     type: "text",
     hint: 'Např. "Petr Svoreň <noreply@petrsvoren.com>". Doména musí být onboardovaná v Cloudflare Email Sending.',
   },
+  {
+    key: "turnstile_sitekey",
+    label: "Turnstile sitekey (anti-spam)",
+    type: "text",
+    hint: "Veřejný sitekey z Cloudflare Turnstile. Po vložení se ochrana zapne na přihlášení a odběru novinek.",
+  },
 ] as const;
 
 export const TEXT_KEYS: readonly string[] = TEXT_FIELDS.map((f) => f.key);

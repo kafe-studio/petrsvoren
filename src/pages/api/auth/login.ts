@@ -3,13 +3,14 @@ import { env } from "cloudflare:workers";
 import { eq } from "drizzle-orm";
 import { getDb, schema } from "../../../db";
 import { verifyPassword, createSession, SESSION_COOKIE } from "../../../lib/auth";
+import { verifyTurnstile } from "../../../lib/turnstile";
 
 export const prerender = false;
 
 // Přihlášení jménem + heslem → podepsaná session cookie. Mimo /api/admin, aby ho
 // middleware nechránil (jinak by se nešlo přihlásit).
 export const POST: APIRoute = async ({ request, cookies }) => {
-  let body: { username?: unknown; password?: unknown };
+  let body: { username?: unknown; password?: unknown; turnstileToken?: unknown };
   try {
     body = await request.json();
   } catch {
@@ -19,6 +20,15 @@ export const POST: APIRoute = async ({ request, cookies }) => {
   const password = typeof body.password === "string" ? body.password : "";
   if (!username || !password) {
     return Response.json({ error: "Vyplň jméno i heslo." }, { status: 400 });
+  }
+
+  const tsToken =
+    typeof body.turnstileToken === "string" ? body.turnstileToken : undefined;
+  if (!(await verifyTurnstile(tsToken, request.headers.get("cf-connecting-ip")))) {
+    return Response.json(
+      { error: "Ověření proti robotům selhalo, zkus to znovu." },
+      { status: 403 },
+    );
   }
 
   const secret =
