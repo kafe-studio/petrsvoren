@@ -2,12 +2,16 @@
 export const prerender = false;
 import AdminLayout from "../../layouts/AdminLayout.astro";
 import { getDb, schema } from "../../db";
+import { SUPERADMIN } from "../../lib/auth";
+
+const current = Astro.locals.adminEmail;
+const isSuper = current === SUPERADMIN;
 
 const db = await getDb();
-const users = await db
-  .select({ username: schema.adminUsers.username })
-  .from(schema.adminUsers);
-const current = Astro.locals.adminEmail;
+// Superadmin vidí všechny účty; ostatní jen svůj.
+const users = isSuper
+  ? await db.select({ username: schema.adminUsers.username }).from(schema.adminUsers)
+  : [{ username: current ?? "" }];
 const metadata = { title: "Změna hesla", description: "Změna hesla uživatele." };
 const inputCls =
   "w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:border-primary focus:outline-none";
@@ -21,15 +25,24 @@ const inputCls =
     <form id="pw-form" class="space-y-4">
       <div>
         <label class="block text-sm font-medium mb-1">Uživatel</label>
-        <select name="username" class={inputCls}>
-          {
-            users.map((u) => (
-              <option value={u.username} selected={u.username === current}>
-                {u.username}
-              </option>
-            ))
-          }
-        </select>
+        {
+          isSuper ? (
+            <select name="username" class={inputCls}>
+              {users.map((u) => (
+                <option value={u.username} selected={u.username === current}>
+                  {u.username}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <>
+              <input type="hidden" name="username" value={current} />
+              <p class="rounded-lg border border-border bg-card px-3 py-2 text-sm text-muted-foreground">
+                {current}
+              </p>
+            </>
+          )
+        }
       </div>
       <div>
         <label class="block text-sm font-medium mb-1">Nové heslo (min. 8 znaků)</label>

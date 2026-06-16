@@ -4,6 +4,9 @@
 const ENC = new TextEncoder();
 const PBKDF2_ITERATIONS = 100_000;
 export const SESSION_COOKIE = "pv_admin";
+
+// Superadmin smí měnit heslo komukoli; ostatní jen sobě.
+export const SUPERADMIN = "kacirek.jiri@gmail.com";
 const SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 30; // 30 dní
 
 function toHex(buf: ArrayBuffer | Uint8Array): string {
