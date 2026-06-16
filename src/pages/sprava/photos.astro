@@ -37,28 +37,130 @@ const metadata = { title: "Fotky", description: "Správa fotografií." };
             Zatím žádné fotky. <a href="/sprava/upload/" class="underline">Nahraj první</a>.
           </p>
         ) : (
-          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-            {photos.map((p) => (
-              <a
-                href={`/sprava/photos/${p.id}/`}
-                class="group relative block overflow-hidden rounded-sm bg-neutral-900 aspect-square"
+          <div id="photos-manager">
+            {/* Lišta hromadných akcí */}
+            <div class="mb-4 flex flex-wrap items-center gap-3 rounded-lg border border-border bg-card px-4 py-2.5">
+              <label class="flex items-center gap-2 text-sm cursor-pointer">
+                <input type="checkbox" id="select-all" />
+                Vybrat vše
+              </label>
+              <span id="sel-count" class="text-sm text-muted-foreground">
+                Vybráno 0
+              </span>
+              <button
+                type="button"
+                id="bulk-delete"
+                class="ml-auto rounded-lg border border-red-500/40 px-3 py-1.5 text-sm text-red-500 transition-colors hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-40"
+                disabled
               >
-                <img
-                  src={`/img/${p.id}/`}
-                  alt={p.alt ?? p.caption}
-                  loading="lazy"
-                  class="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                />
-                <span class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent px-2 py-1.5">
-                  <span class="block truncate text-xs text-white">
-                    {p.caption || "Bez názvu"}
-                  </span>
-                </span>
-              </a>
-            ))}
+                Smazat vybrané
+              </button>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+              {photos.map((p) => (
+                <div
+                  class="photo-tile group relative overflow-hidden rounded-sm bg-neutral-900 aspect-square"
+                  data-id={p.id}
+                >
+                  <a href={`/sprava/photos/${p.id}/`} class="block h-full w-full">
+                    <img
+                      src={`/img/${p.id}/`}
+                      alt={p.alt ?? p.caption}
+                      loading="lazy"
+                      class="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
+                    <span class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent px-2 py-1.5">
+                      <span class="block truncate text-xs text-white">
+                        {p.caption || "Bez názvu"}
+                      </span>
+                    </span>
+                  </a>
+                  <label
+                    class="absolute left-1.5 top-1.5 z-10 flex h-7 w-7 cursor-pointer items-center justify-center rounded-md bg-black/50 backdrop-blur-sm"
+                    title="Vybrat fotku"
+                  >
+                    <input
+                      type="checkbox"
+                      class="photo-check h-4 w-4 cursor-pointer"
+                      value={p.id}
+                    />
+                  </label>
+                </div>
+              ))}
+            </div>
           </div>
         )
       }
     </div>
   </section>
+
+  <script>
+    import { toast } from "../../lib/admin-toast";
+
+    function setup() {
+      const root = document.getElementById("photos-manager");
+      if (!root || root.dataset.bound) return;
+      root.dataset.bound = "1";
+
+      const selectAll = root.querySelector<HTMLInputElement>("#select-all");
+      const countEl = root.querySelector<HTMLElement>("#sel-count");
+      const delBtn = root.querySelector<HTMLButtonElement>("#bulk-delete");
+      const checks = () =>
+        Array.from(root.querySelectorAll<HTMLInputElement>(".photo-check"));
+
+      function selectedIds(): string[] {
+        return checks()
+          .filter((c) => c.checked)
+          .map((c) => c.value);
+      }
+
+      function refresh() {
+        const all = checks();
+        const sel = all.filter((c) => c.checked);
+        if (countEl) countEl.textContent = `Vybráno ${sel.length}`;
+        if (delBtn) delBtn.disabled = sel.length === 0;
+        if (selectAll) {
+          selectAll.checked = sel.length > 0 && sel.length === all.length;
+          selectAll.indeterminate = sel.length > 0 && sel.length < all.length;
+        }
+      }
+
+      selectAll?.addEventListener("change", () => {
+        checks().forEach((c) => (c.checked = selectAll.checked));
+        refresh();
+      });
+      checks().forEach((c) => c.addEventListener("change", refresh));
+
+      delBtn?.addEventListener("click", async () => {
+        const ids = selectedIds();
+        if (ids.length === 0) return;
+        if (!confirm(`Opravdu smazat ${ids.length} fotek? Nelze vrátit.`)) return;
+        delBtn.disabled = true;
+        delBtn.textContent = "Mažu…";
+        try {
+          const res = await fetch("/api/sprava/photos/bulk-delete/", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ids }),
+          });
+          const j = (await res.json().catch(() => ({}))) as {
+            error?: string;
+            deleted?: number;
+          };
+          if (!res.ok) throw new Error(j.error || "Mazání selhalo.");
+          toast(`Smazáno ${j.deleted} fotek.`, "success");
+          setTimeout(() => location.reload(), 400);
+        } catch (err) {
+          toast(err instanceof Error ? err.message : "Chyba.", "error");
+          delBtn.disabled = false;
+          delBtn.textContent = "Smazat vybrané";
+        }
+      });
+
+      refresh();
+    }
+
+    document.addEventListener("astro:page-load", setup);
+  </script>
 </AdminLayout>

@@ -85,9 +85,12 @@ const metadata = { title: "Úprava fotky", description: "Detail fotky." };
 
             <div>
               <label class="block text-sm font-medium mb-1.5" for="month">
-                Měsíc výběru (RRRR-MM, volitelné)
+                Měsíc výběru (volitelné)
               </label>
-              <input id="month" name="month" type="text" placeholder="2026-06" class={inputClass} value={photo.month ?? ""} />
+              <input id="month" name="month" type="month" class={inputClass} value={photo.month ?? ""} />
+              <p class="mt-1 text-xs text-muted-foreground">
+                Vyber měsíc z kalendáře, nebo nech prázdné. Fotka se objeví ve „Výběru měsíce".
+              </p>
             </div>
 
             <fieldset class="rounded-xl border border-border bg-card p-4">
