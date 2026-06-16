@@ -23,6 +23,10 @@
       "bucket_name": "petrsvoren-photos"
     }
   ],
+  // Cloudflare Email Sending — odesílání e-mailů (obnova hesla, newsletter).
+  // Doména petrsvoren.com musí být onboardovaná: dashboard → Compute & AI →
+  // Email Service → Email Sending → Onboard Domain (přidá SPF/DKIM).
+  "send_email": [{ "name": "EMAIL" }],
   // Vlastní doména (zóna petrsvoren.com v účtu 5 Kafe). Custom domain = CF
   // automaticky spravuje DNS + TLS cert pro Worker.
   "routes": [

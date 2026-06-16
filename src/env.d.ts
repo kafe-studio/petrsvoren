@@ -12,6 +12,5 @@ declare namespace App {
 declare namespace Cloudflare {
   interface Env {
     AUTH_SECRET?: string;
-    RESEND_API_KEY?: string;
   }
 }

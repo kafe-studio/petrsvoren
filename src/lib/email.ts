@@ -1,11 +1,10 @@
-// Odesílání e-mailů přes Resend REST API. Klíč = Workers secret RESEND_API_KEY.
+// Odesílání e-mailů přes Cloudflare Email Sending (binding `send_email` → env.EMAIL).
 // Odesílací adresa (from) je konfigurovatelná v adminu (site_texts: mail_from);
-// dokud nemáš v Resendu ověřenou doménu, funguje jen onboarding@resend.dev
-// (a to pouze na e-mail majitele účtu).
+// doména v adrese musí být onboardovaná v CF Email Sending (SPF/DKIM).
 import { env } from "cloudflare:workers";
 import { getTexts, txt } from "./content";
 
-export const DEFAULT_FROM = "Petr Svoreň <onboarding@resend.dev>";
+export const DEFAULT_FROM = "Petr Svoreň <noreply@petrsvoren.com>";
 
 export async function mailFrom(): Promise<string> {
   try {
@@ -14,6 +13,26 @@ export async function mailFrom(): Promise<string> {
   } catch {
     return DEFAULT_FROM;
   }
+}
+
+// "Jméno <adresa@doména>" nebo "adresa@doména" → { email, name? }.
+function parseFrom(from: string): { email: string; name?: string } {
+  const m = from.match(/^\s*(.*?)\s*<([^>]+)>\s*$/);
+  if (m && m[2]) return { email: m[2].trim(), name: m[1] || undefined };
+  return { email: from.trim() };
+}
+
+// Jednoduchý plain-text fallback z HTML (kvůli klientům i antispamu).
+function htmlToText(html: string): string {
+  return html
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/(p|div|h[1-6]|li)>/gi, "\n")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/\n{3,}/g, "\n\n")
+    .replace(/[ \t]+/g, " ")
+    .trim();
 }
 
 export interface SendResult {
@@ -28,30 +47,26 @@ export async function sendEmail(opts: {
   from?: string;
   replyTo?: string;
 }): Promise<SendResult> {
-  const key = env.RESEND_API_KEY;
-  if (!key) return { ok: false, error: "RESEND_API_KEY není nastaven." };
-  const from = opts.from ?? (await mailFrom());
+  const binding = env.EMAIL;
+  if (!binding) return { ok: false, error: "Email Sending binding není dostupný." };
+  const from = parseFrom(opts.from ?? (await mailFrom()));
   try {
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${key}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from,
-        to: opts.to,
-        subject: opts.subject,
-        html: opts.html,
-        ...(opts.replyTo ? { reply_to: opts.replyTo } : {}),
-      }),
+    await binding.send({
+      to: opts.to,
+      from: from.name ? { email: from.email, name: from.name } : from.email,
+      subject: opts.subject,
+      html: opts.html,
+      text: htmlToText(opts.html),
+      ...(opts.replyTo ? { replyTo: opts.replyTo } : {}),
     });
-    if (!res.ok) {
-      const t = await res.text().catch(() => "");
-      return { ok: false, error: `Resend ${res.status}: ${t.slice(0, 300)}` };
-    }
     return { ok: true };
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : "Odeslání selhalo." };
+    const err = e as { code?: string; message?: string };
+    return {
+      ok: false,
+      error: err.code
+        ? `${err.code}: ${err.message ?? ""}`.trim()
+        : err.message ?? "Odeslání selhalo.",
+    };
   }
 }

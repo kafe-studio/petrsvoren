@@ -21,9 +21,9 @@ export const TEXT_FIELDS: readonly TextField[] = [
   { key: "facebook_url", label: "Facebook URL", type: "text" },
   {
     key: "mail_from",
-    label: "Odesílací adresa e-mailů (Resend)",
+    label: "Odesílací adresa e-mailů",
     type: "text",
-    hint: 'Např. "Petr Svoreň <noreply@tvojedomena.cz>". Doména musí být ověřená v Resendu.',
+    hint: 'Např. "Petr Svoreň <noreply@petrsvoren.com>". Doména musí být onboardovaná v Cloudflare Email Sending.',
   },
 ] as const;
 
