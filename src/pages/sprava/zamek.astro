@@ -1,0 +1,82 @@
+---
+export const prerender = false;
+import AdminLayout from "../../layouts/AdminLayout.astro";
+import { getTexts, txt } from "../../lib/content";
+
+const texts = await getTexts();
+const locked = txt(texts, "site_locked", "") === "1";
+const lockText = txt(
+  texts,
+  "lock_text",
+  "Připravujeme nové stránky. Brzy se vrátíme.",
+);
+const metadata = { title: "Zámek webu", description: "Uzamčení webu." };
+const inputCls =
+  "w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:border-primary focus:outline-none";
+---
+
+<AdminLayout {metadata}>
+  <div class="mx-auto max-w-xl">
+    <h1 class="text-3xl font-extrabold tracking-tight mb-2">Zámek webu</h1>
+    <p class="text-muted-foreground mb-8">
+      Když je web zamčený, návštěvníci uvidí jen úvodní fotku a tvůj text —
+      zbytek webu je skrytý. Administrace (/sprava) funguje dál normálně.
+    </p>
+
+    <form id="lock-form" class="space-y-5">
+      <label class="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3">
+        <input id="locked" type="checkbox" checked={locked} class="h-4 w-4" />
+        <span>
+          <span class="block font-medium">Zamknout web</span>
+          <span class="block text-sm text-muted-foreground">
+            Zapnuto = veřejný web ukáže jen úvodní obrazovku.
+          </span>
+        </span>
+      </label>
+
+      <div>
+        <label class="block text-sm font-medium mb-1">Text na úvodní obrazovce</label>
+        <textarea id="lock-text" rows="3" class={inputCls}>{lockText}</textarea>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <button type="submit" class="btn-primary">Uložit</button>
+        <span id="lock-status" class="text-sm text-muted-foreground">
+          {locked ? "Web je teď ZAMČENÝ." : "Web je veřejně přístupný."}
+        </span>
+        <a href="/" target="_blank" class="text-sm text-muted-foreground hover:underline">Náhled webu →</a>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    import { toast } from "../../lib/admin-toast";
+    function bind() {
+      const form = document.getElementById("lock-form") as HTMLFormElement | null;
+      if (!form || form.dataset.bound) return;
+      form.dataset.bound = "1";
+      const status = document.getElementById("lock-status");
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const locked = (document.getElementById("locked") as HTMLInputElement).checked;
+        const text = (document.getElementById("lock-text") as HTMLTextAreaElement).value;
+        try {
+          const res = await fetch("/api/sprava/lock/", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ locked, text }),
+          });
+          if (!res.ok) throw new Error("Uložení selhalo.");
+          if (status)
+            status.textContent = locked
+              ? "Web je teď ZAMČENÝ."
+              : "Web je veřejně přístupný.";
+          toast(locked ? "Web zamčen." : "Web odemčen.", "success");
+        } catch (err) {
+          toast(err instanceof Error ? err.message : "Chyba.", "error");
+        }
+      });
+    }
+    document.addEventListener("astro:page-load", bind);
+  </script>
+</AdminLayout>

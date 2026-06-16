@@ -1,0 +1,84 @@
+---
+export const prerender = false;
+import AdminLayout from "../../layouts/AdminLayout.astro";
+import { getDb, schema } from "../../db";
+
+const db = await getDb();
+const users = await db
+  .select({ username: schema.adminUsers.username })
+  .from(schema.adminUsers);
+const current = Astro.locals.adminEmail;
+const metadata = { title: "Změna hesla", description: "Změna hesla uživatele." };
+const inputCls =
+  "w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:border-primary focus:outline-none";
+---
+
+<AdminLayout {metadata}>
+  <div class="mx-auto max-w-md">
+    <h1 class="text-3xl font-extrabold tracking-tight mb-2">Změna hesla</h1>
+    <p class="text-muted-foreground mb-8">Nastav nové heslo pro admin účet.</p>
+
+    <form id="pw-form" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium mb-1">Uživatel</label>
+        <select name="username" class={inputCls}>
+          {
+            users.map((u) => (
+              <option value={u.username} selected={u.username === current}>
+                {u.username}
+              </option>
+            ))
+          }
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-1">Nové heslo (min. 8 znaků)</label>
+        <input name="password" type="password" minlength="8" autocomplete="new-password" class={inputCls} required />
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-1">Nové heslo znovu</label>
+        <input name="password2" type="password" minlength="8" autocomplete="new-password" class={inputCls} required />
+      </div>
+      <div class="flex items-center gap-3">
+        <button type="submit" class="btn-primary">Uložit heslo</button>
+        <span id="pw-status" class="text-sm text-muted-foreground"></span>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    import { toast } from "../../lib/admin-toast";
+    function bind() {
+      const form = document.getElementById("pw-form") as HTMLFormElement | null;
+      if (!form || form.dataset.bound) return;
+      form.dataset.bound = "1";
+      const status = document.getElementById("pw-status");
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const fd = new FormData(form);
+        const password = String(fd.get("password") ?? "");
+        if (password !== String(fd.get("password2") ?? "")) {
+          toast("Hesla se neshodují.", "error");
+          return;
+        }
+        if (status) status.textContent = "Ukládám…";
+        try {
+          const res = await fetch("/api/sprava/password/", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username: fd.get("username"), password }),
+          });
+          const j = (await res.json().catch(() => ({}))) as { error?: string };
+          if (!res.ok) throw new Error(j.error || "Uložení selhalo.");
+          if (status) status.textContent = "Heslo změněno ✓";
+          form.reset();
+          toast("Heslo změněno.", "success");
+        } catch (err) {
+          if (status) status.textContent = "";
+          toast(err instanceof Error ? err.message : "Chyba.", "error");
+        }
+      });
+    }
+    document.addEventListener("astro:page-load", bind);
+  </script>
+</AdminLayout>

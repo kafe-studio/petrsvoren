@@ -11,6 +11,7 @@ import { ClientRouter } from "astro:transitions";
 import { Font } from "astro:assets";
 import "../styles/global.css";
 import { siteConfig } from "../config/site";
+import { getTexts, txt, getHeroSettings } from "../lib/content";
 
 const { title, description, ogImage, canonical, metadata } = Astro.props;
 const finalTitle = metadata?.title || title;
@@ -18,6 +19,24 @@ const finalDescription = metadata?.description || description;
 const finalOgImage = metadata?.ogImage || ogImage;
 const finalCanonical = metadata?.canonical || canonical;
 const finalIgnoreTitleTemplate = metadata?.ignoreTitleTemplate || false;
+
+// Zámek webu — když je zapnutý, veřejné stránky ukážou jen úvodní fotku + text.
+let locked = false;
+let lockText = "";
+let lockName = siteConfig.name;
+let lockHeroStyle = "background-image:url('/hero.jpg');background-size:cover;background-position:center;";
+try {
+  const t = await getTexts();
+  locked = txt(t, "site_locked", "") === "1";
+  if (locked) {
+    lockText = txt(t, "lock_text", "");
+    lockName = txt(t, "site_name", siteConfig.name);
+    const hero = await getHeroSettings();
+    lockHeroStyle = `background-image:url('${hero.imageUrl}');background-size:${hero.fit};background-position:${hero.position};`;
+  }
+} catch {
+  /* D1 nedostupné (prerender) — web se nezamyká */
+}
 ---
 
 <!doctype html>
@@ -30,18 +49,39 @@ const finalIgnoreTitleTemplate = metadata?.ignoreTitleTemplate || false;
     <slot name="head" />
   </head>
   <body class="bg-background text-foreground antialiased tracking-tight">
-    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 z-50 rounded-md bg-primary px-4 py-2 text-white">Přeskočit</a>
-    <div
-      class="pointer-events-none fixed inset-0 z-0 bg-cover bg-center bg-no-repeat opacity-10"
-      style="background-image: url('/bg.jpg');"
-      aria-hidden="true"
-    >
-    </div>
-    <div class="relative z-10 flex min-h-screen flex-col overflow-x-hidden">
-      <Navbar />
-      <main id="main-content" class="relative grow"><slot /></main>
-      <Footer />
-    </div>
+    {
+      locked ? (
+        <section class="lock-screen">
+          <div class="lock-bg" style={lockHeroStyle} aria-hidden="true" />
+          <div class="lock-overlay" aria-hidden="true" />
+          <div class="lock-content">
+            <h1 class="lock-name">{lockName}</h1>
+            {lockText && <p class="lock-text">{lockText}</p>}
+          </div>
+        </section>
+      ) : (
+        <Fragment>
+          <a
+            href="#main-content"
+            class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 z-50 rounded-md bg-primary px-4 py-2 text-white"
+          >
+            Přeskočit
+          </a>
+          <div
+            class="pointer-events-none fixed inset-0 z-0 bg-cover bg-center bg-no-repeat opacity-10"
+            style="background-image: url('/bg.jpg');"
+            aria-hidden="true"
+          />
+          <div class="relative z-10 flex min-h-screen flex-col overflow-x-hidden">
+            <Navbar />
+            <main id="main-content" class="relative grow">
+              <slot />
+            </main>
+            <Footer />
+          </div>
+        </Fragment>
+      )
+    }
 
     <button
       id="to-top"
@@ -64,6 +104,50 @@ const finalIgnoreTitleTemplate = metadata?.ignoreTitleTemplate || false;
     </button>
 
     <style>
+      /* Zámek webu — celá obrazovka: fotka + ztmavení + vycentrovaný text. */
+      .lock-screen {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+      }
+      .lock-bg {
+        position: absolute;
+        inset: 0;
+        background-repeat: no-repeat;
+      }
+      .lock-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          to top,
+          rgb(0 0 0 / 0.85),
+          rgb(0 0 0 / 0.5)
+        );
+      }
+      .lock-content {
+        position: relative;
+        z-index: 1;
+        max-width: 40rem;
+        padding: 2rem;
+        text-align: center;
+        color: #fff;
+      }
+      .lock-name {
+        font-size: clamp(2rem, 6vw, 3.5rem);
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        margin-bottom: 1rem;
+      }
+      .lock-text {
+        font-size: clamp(1rem, 2.5vw, 1.25rem);
+        line-height: 1.6;
+        color: rgb(255 255 255 / 0.85);
+        white-space: pre-line;
+      }
+
       #to-top {
         position: fixed;
         right: 1.5rem;
