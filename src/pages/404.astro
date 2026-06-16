@@ -1,6 +1,9 @@
 ---
-export const prerender = true;
+// SSR (ne prerender), aby šlo na něj přesměrovat z dynamických SSR stránek
+// (Astro.rewrite('/404')) bez chyby 500. Status nastavujeme explicitně.
+export const prerender = false;
 import BaseLayout from "../layouts/BaseLayout.astro";
+Astro.response.status = 404;
 const metadata = { title: "404", description: "Stránka nenalezena.", ignoreTitleTemplate: true };
 ---
 

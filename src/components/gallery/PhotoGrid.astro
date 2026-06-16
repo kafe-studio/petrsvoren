@@ -418,8 +418,11 @@ const items = photos.map((photo, index) => ({
   function trackView(slug: string | undefined) {
     if (!slug || countedViews.has(slug)) return;
     countedViews.add(slug);
+    // Tělo + Content-Type jsou nutné — CF WAF blokuje „prázdné" POSTy (403).
     fetch(`/api/view/${encodeURIComponent(slug)}/`, {
       method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: "{}",
       keepalive: true,
     }).catch(() => {});
   }

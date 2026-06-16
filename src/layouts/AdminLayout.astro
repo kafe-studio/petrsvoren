@@ -135,7 +135,11 @@ const nav = [
       document.addEventListener("click", async (e) => {
         const btn = (e.target as HTMLElement | null)?.closest("#admin-logout");
         if (!btn) return;
-        await fetch("/api/auth/logout/", { method: "POST" }).catch(() => {});
+        await fetch("/api/auth/logout/", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: "{}",
+        }).catch(() => {});
         window.location.href = "/sprava/login";
       });
     </script>
