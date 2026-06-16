@@ -210,6 +210,57 @@ export async function getArticleBySlug(slug: string): Promise<ArticleItem | null
   return row ? toArticle(row) : null;
 }
 
+// ── Pozadí (hero) hlavní stránky ──────────────────────────────────────────────
+export interface HeroSettings {
+  imageUrl: string;
+  opacity: number; // 0..100
+  position: string; // background-position
+  fit: "cover" | "contain";
+  grayscale: number; // 0..100
+  sepia: number; // 0..100
+  brightness: number; // 0..200 (%)
+  contrast: number; // 0..200
+  saturate: number; // 0..200
+  hue: number; // 0..360 (deg)
+}
+
+export const HERO_DEFAULTS: HeroSettings = {
+  imageUrl: "/hero.jpg",
+  opacity: 100,
+  position: "center",
+  fit: "cover",
+  grayscale: 0,
+  sepia: 0,
+  brightness: 100,
+  contrast: 100,
+  saturate: 100,
+  hue: 0,
+};
+
+export async function getHeroSettings(): Promise<HeroSettings> {
+  try {
+    const texts = await getTexts();
+    const raw = texts["hero_settings"];
+    if (!raw) return HERO_DEFAULTS;
+    const parsed = JSON.parse(raw) as Partial<HeroSettings>;
+    return { ...HERO_DEFAULTS, ...parsed };
+  } catch {
+    return HERO_DEFAULTS;
+  }
+}
+
+// CSS filtr z nastavení tonality a barev.
+export function heroFilter(s: HeroSettings): string {
+  return [
+    `grayscale(${s.grayscale}%)`,
+    `sepia(${s.sepia}%)`,
+    `brightness(${s.brightness}%)`,
+    `contrast(${s.contrast}%)`,
+    `saturate(${s.saturate}%)`,
+    `hue-rotate(${s.hue}deg)`,
+  ].join(" ");
+}
+
 // ── Texty webu ────────────────────────────────────────────────────────────────
 export async function getTexts(): Promise<Record<string, string>> {
   const db = await getDb();

@@ -4,11 +4,27 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import Tips from "../components/home/Tips.astro";
 import MonthTimeline from "../components/home/MonthTimeline.astro";
 import { siteConfig } from "../config/site";
-import { getSectionCovers, getTexts, txt } from "../lib/content";
+import {
+  getSectionCovers,
+  getTexts,
+  txt,
+  getHeroSettings,
+  heroFilter,
+} from "../lib/content";
 
 const texts = await getTexts();
 const siteName = txt(texts, "site_name", siteConfig.name);
 const heroTagline = txt(texts, "hero_tagline", "Každodennosti");
+
+const hero = await getHeroSettings();
+const heroStyle = [
+  `background-image:url('${hero.imageUrl}')`,
+  `background-size:${hero.fit}`,
+  `background-position:${hero.position}`,
+  `background-repeat:no-repeat`,
+  `opacity:${hero.opacity / 100}`,
+  `filter:${heroFilter(hero)}`,
+].join(";");
 const metadata = {
   title: siteName,
   description: txt(texts, "site_description", siteConfig.description),
@@ -22,11 +38,8 @@ const sectionCover = await getSectionCovers();
 
 <BaseLayout {metadata}>
   <section class="relative min-h-[88vh] flex items-end overflow-hidden">
-    <div
-      class="absolute inset-0 bg-neutral-900 bg-cover bg-center"
-      style="background-image: url('/hero.jpg');"
-      aria-hidden="true"
-    >
+    <div class="absolute inset-0 bg-neutral-900" aria-hidden="true">
+      <div class="absolute inset-0" style={heroStyle}></div>
     </div>
     <div
       class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"

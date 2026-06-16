@@ -1,0 +1,33 @@
+---
+export const prerender = false;
+import AdminLayout from "../../layouts/AdminLayout.astro";
+import HeroEditor from "../../components/admin/HeroEditor.svelte";
+import { desc } from "drizzle-orm";
+import { getDb, schema } from "../../db";
+import { getHeroSettings } from "../../lib/content";
+
+const settings = await getHeroSettings();
+const db = await getDb();
+const photoRows = await db
+  .select({ id: schema.photos.id, caption: schema.photos.caption })
+  .from(schema.photos)
+  .orderBy(desc(schema.photos.createdAt));
+const photos = photoRows.map((p) => ({
+  id: p.id,
+  caption: p.caption || "Bez názvu",
+}));
+const metadata = { title: "Pozadí webu", description: "Editor pozadí hlavní stránky." };
+---
+
+<AdminLayout {metadata}>
+  <div class="mx-auto max-w-3xl">
+    <h1 class="text-3xl font-extrabold tracking-tight mb-2">
+      Pozadí hlavní stránky
+    </h1>
+    <p class="text-muted-foreground mb-8">
+      Vyber fotku na pozadí úvodu a nastav průhlednost, zarovnání, velikost,
+      tonalitu a barevné filtry. Náhled se mění živě.
+    </p>
+    <HeroEditor client:only="svelte" {settings} {photos} />
+  </div>
+</AdminLayout>
