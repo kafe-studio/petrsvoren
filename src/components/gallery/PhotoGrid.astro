@@ -234,6 +234,29 @@ const items = photos.map((photo, index) => ({
             {siteConfig.name}
           </a>
 
+          <form method="dialog" class="lb-fullx-form">
+            <button
+              type="submit"
+              class="lb-fullx"
+              aria-label="Zavřít"
+              title="Zavřít"
+            >
+              <svg
+                class="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="1.5"
+                  d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </form>
+
           <button
             type="button"
             data-zoom
@@ -697,11 +720,34 @@ const items = photos.map((photo, index) => ({
     display: block;
   }
 
-  /* Tlačítko zpět na náhled vpravo nahoře — jen ve full view (v náhledu je vše v liště). */
+  /* Ve full view vpravo nahoře: × zavřít (vpravo) + zpět na náhled (vlevo od ×). */
+  .lb-fullx-form {
+    display: none;
+  }
+  dialog.lb-full .lb-fullx-form {
+    display: block;
+  }
+  .lb-fullx {
+    position: fixed;
+    right: 0.7rem;
+    top: 0.55rem;
+    z-index: 41;
+    border-radius: 9999px;
+    padding: 0.4rem;
+    color: var(--lb-fg, #ededed);
+    opacity: 0.7;
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+  }
+  .lb-fullx:hover {
+    opacity: 1;
+  }
+
+  /* Tlačítko zpět na náhled — jen ve full view, vlevo od křížku. */
   .lb-close {
     display: none;
     position: fixed;
-    right: 0.7rem;
+    right: 3.4rem;
     top: 0.55rem;
     z-index: 40;
     border-radius: 9999px;
