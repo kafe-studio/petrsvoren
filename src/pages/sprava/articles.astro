@@ -1,0 +1,83 @@
+---
+export const prerender = false;
+import AdminLayout from "../../layouts/AdminLayout.astro";
+import { desc } from "drizzle-orm";
+import { getDb, schema } from "../../db";
+
+const db = await getDb();
+const articles = await db
+  .select()
+  .from(schema.articles)
+  .orderBy(desc(schema.articles.pubDate));
+const metadata = { title: "Blog", description: "Správa článků." };
+---
+
+<AdminLayout {metadata}>
+  <div class="mx-auto max-w-2xl">
+    <h1 class="text-3xl font-extrabold tracking-tight mb-2">Blog / články</h1>
+    <p class="text-muted-foreground mb-8">
+      Články na <a href="/blog/" class="underline">/blog/</a>. Nový vznikne
+      prázdný, pak ho rovnou rozepíšeš.
+    </p>
+
+    <form id="new-article" class="mb-10 flex gap-2">
+      <input
+        name="title"
+        type="text"
+        placeholder="Název nového článku"
+        class="flex-1 rounded-lg border border-border bg-card px-3 py-2 text-sm focus:border-primary focus:outline-none"
+        required
+      />
+      <button type="submit" class="btn-primary shrink-0">Vytvořit</button>
+    </form>
+
+    <div class="space-y-2">
+      {
+        articles.map((a) => (
+          <a
+            href={`/sprava/articles/${a.id}/`}
+            class="flex items-center justify-between rounded-lg border border-border bg-card px-4 py-3 transition-colors hover:border-primary"
+          >
+            <span class="min-w-0">
+              <span class="block truncate font-medium">{a.title}</span>
+              <span class="block text-xs text-muted-foreground">
+                {a.pubDate ? a.pubDate.toLocaleDateString("cs") : "—"} · /{a.slug}/
+              </span>
+            </span>
+            <span class="text-muted-foreground">&rarr;</span>
+          </a>
+        ))
+      }
+      {articles.length === 0 && (
+        <p class="text-muted-foreground text-sm">Zatím žádné články.</p>
+      )}
+    </div>
+  </div>
+
+  <script>
+    import { toast } from "../../lib/admin-toast";
+    function bind() {
+      const form = document.getElementById("new-article") as HTMLFormElement | null;
+      if (!form || form.dataset.bound) return;
+      form.dataset.bound = "1";
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        try {
+          const res = await fetch("/api/sprava/articles/", {
+            method: "POST",
+            body: new FormData(form),
+          });
+          const j = (await res.json().catch(() => ({}))) as {
+            error?: string;
+            id?: string;
+          };
+          if (!res.ok) throw new Error(j.error || "Vytvoření selhalo.");
+          location.href = `/sprava/articles/${j.id}/`;
+        } catch (err) {
+          toast(err instanceof Error ? err.message : "Chyba.", "error");
+        }
+      });
+    }
+    document.addEventListener("astro:page-load", bind);
+  </script>
+</AdminLayout>

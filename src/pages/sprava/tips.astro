@@ -1,0 +1,139 @@
+---
+export const prerender = false;
+import AdminLayout from "../../layouts/AdminLayout.astro";
+import { asc } from "drizzle-orm";
+import { getDb, schema } from "../../db";
+
+const db = await getDb();
+const tips = await db
+  .select()
+  .from(schema.tips)
+  .orderBy(asc(schema.tips.sortOrder));
+const metadata = { title: "Tipy", description: "Správa sekce Aktuálně." };
+
+const inputCls =
+  "w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:border-primary focus:outline-none";
+---
+
+<AdminLayout {metadata}>
+  <div class="mx-auto max-w-2xl">
+    <h1 class="text-3xl font-extrabold tracking-tight mb-2">
+      Tipy / Aktuálně
+    </h1>
+    <p class="text-muted-foreground mb-8">
+      Upoutávky v sekci „Aktuálně" na homepage. Vypnuté tipy se nezobrazují.
+    </p>
+
+    {/* Nový tip */}
+    <form
+      class="tip-form mb-10 rounded-xl border border-border bg-card p-5 space-y-3"
+      data-new
+      enctype="multipart/form-data"
+    >
+      <h2 class="font-semibold">Nový tip</h2>
+      <input name="title" type="text" placeholder="Nadpis" class={inputCls} required />
+      <textarea name="bodyText" rows="3" placeholder="Text upoutávky" class={inputCls}></textarea>
+      <input name="link" type="text" placeholder="Odkaz (volitelné, např. /blog/)" class={inputCls} />
+      <input name="image" type="file" accept="image/*" class={inputCls} />
+      <label class="flex items-center gap-2 text-sm">
+        <input name="active" type="checkbox" checked /> Aktivní
+      </label>
+      <button type="submit" class="btn-primary">Přidat tip</button>
+    </form>
+
+    <div class="space-y-4">
+      {
+        tips.map((t) => (
+          <form
+            class="tip-form rounded-xl border border-border bg-card p-5 space-y-3"
+            data-id={t.id}
+            enctype="multipart/form-data"
+          >
+            <div class="flex items-start gap-4">
+              {t.r2Key && (
+                <img
+                  src={`/img/${t.id}/`}
+                  alt=""
+                  class="h-20 w-20 shrink-0 rounded-lg object-cover"
+                />
+              )}
+              <div class="min-w-0 flex-1 space-y-3">
+                <input name="title" type="text" value={t.title} class={inputCls} required />
+                <textarea name="bodyText" rows="3" class={inputCls}>{t.bodyText ?? ""}</textarea>
+                <input name="link" type="text" value={t.link ?? ""} placeholder="Odkaz (volitelné)" class={inputCls} />
+                <div>
+                  <label class="block text-xs text-muted-foreground mb-1">
+                    Nahradit obrázek (volitelné)
+                  </label>
+                  <input name="image" type="file" accept="image/*" class={inputCls} />
+                </div>
+                <label class="flex items-center gap-2 text-sm">
+                  <input name="active" type="checkbox" checked={t.active} /> Aktivní
+                </label>
+              </div>
+            </div>
+            <div class="flex items-center gap-3">
+              <button type="submit" class="btn-primary">Uložit</button>
+              <button type="button" class="text-sm text-red-500 hover:underline" data-del={t.id}>
+                Smazat
+              </button>
+            </div>
+          </form>
+        ))
+      }
+      {tips.length === 0 && (
+        <p class="text-muted-foreground text-sm">Zatím žádné tipy.</p>
+      )}
+    </div>
+  </div>
+
+  <script>
+    import { toast } from "../../lib/admin-toast";
+
+    function bind() {
+      document.querySelectorAll<HTMLFormElement>(".tip-form").forEach((form) => {
+        if (form.dataset.bound) return;
+        form.dataset.bound = "1";
+        form.addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const isNew = form.hasAttribute("data-new");
+          const id = form.getAttribute("data-id");
+          const url = isNew ? "/api/sprava/tips/" : `/api/sprava/tips/${id}/`;
+          try {
+            const res = await fetch(url, {
+              method: isNew ? "POST" : "PATCH",
+              body: new FormData(form),
+            });
+            const j = (await res.json().catch(() => ({}))) as { error?: string };
+            if (!res.ok) throw new Error(j.error || "Uložení selhalo.");
+            toast(isNew ? "Tip přidán." : "Tip uložen.", "success");
+            setTimeout(() => location.reload(), 400);
+          } catch (err) {
+            toast(err instanceof Error ? err.message : "Chyba.", "error");
+          }
+        });
+      });
+
+      document.querySelectorAll<HTMLElement>("[data-del]").forEach((btn) => {
+        if (btn.dataset.bound) return;
+        btn.dataset.bound = "1";
+        btn.addEventListener("click", async () => {
+          if (!confirm("Opravdu smazat tento tip?")) return;
+          const id = btn.getAttribute("data-del");
+          try {
+            const res = await fetch(`/api/sprava/tips/${id}/`, {
+              method: "DELETE",
+            });
+            if (!res.ok) throw new Error("Smazání selhalo.");
+            toast("Tip smazán.", "success");
+            setTimeout(() => location.reload(), 300);
+          } catch (err) {
+            toast(err instanceof Error ? err.message : "Chyba.", "error");
+          }
+        });
+      });
+    }
+
+    document.addEventListener("astro:page-load", bind);
+  </script>
+</AdminLayout>

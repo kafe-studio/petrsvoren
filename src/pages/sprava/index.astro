@@ -29,7 +29,7 @@ const metadata = {
         Administrace
       </h1>
       <p class="text-muted-foreground mb-10">
-        Správa fotografií, galerií a textů. Přístup chrání Cloudflare Access.
+        Správa fotografií, galerií, tipů, blogu a textů webu.
       </p>
 
       {
@@ -89,16 +89,42 @@ const metadata = {
           </span>
           <span class="text-muted-foreground">&rarr;</span>
         </a>
-        <span
-          class="flex items-center justify-between rounded-lg border border-border bg-card px-5 py-4 opacity-60"
+        <a
+          href="/sprava/tips/"
+          class="flex items-center justify-between rounded-lg border border-border bg-card px-5 py-4 transition-colors hover:border-primary"
+        >
+          <span>
+            <span class="block font-medium">Tipy / Aktuálně</span>
+            <span class="block text-sm text-muted-foreground"
+              >Upoutávky na homepage</span
+            >
+          </span>
+          <span class="text-muted-foreground">&rarr;</span>
+        </a>
+        <a
+          href="/sprava/articles/"
+          class="flex items-center justify-between rounded-lg border border-border bg-card px-5 py-4 transition-colors hover:border-primary"
+        >
+          <span>
+            <span class="block font-medium">Blog / články</span>
+            <span class="block text-sm text-muted-foreground"
+              >Psaní a úprava článků (Markdown)</span
+            >
+          </span>
+          <span class="text-muted-foreground">&rarr;</span>
+        </a>
+        <a
+          href="/sprava/texts/"
+          class="flex items-center justify-between rounded-lg border border-border bg-card px-5 py-4 transition-colors hover:border-primary"
         >
           <span>
             <span class="block font-medium">Texty webu</span>
             <span class="block text-sm text-muted-foreground"
-              >Hero, popisky sekcí · připravuje se</span
+              >Hero podtitul, kontakt, nadpisy sekcí</span
             >
           </span>
-        </span>
+          <span class="text-muted-foreground">&rarr;</span>
+        </a>
       </nav>
     </div>
   </section>

@@ -1,0 +1,116 @@
+---
+export const prerender = false;
+import AdminLayout from "../../../layouts/AdminLayout.astro";
+import { eq } from "drizzle-orm";
+import { getDb, schema } from "../../../db";
+
+const id = Astro.params.id ?? "";
+const db = await getDb();
+const a = await db
+  .select()
+  .from(schema.articles)
+  .where(eq(schema.articles.id, id))
+  .get();
+if (!a) return Astro.rewrite("/404");
+
+let tags = "";
+if (a.tags) {
+  try {
+    const p = JSON.parse(a.tags);
+    if (Array.isArray(p)) tags = p.join(", ");
+  } catch {
+    /* ignoruj */
+  }
+}
+const pub = a.pubDate ? a.pubDate.toISOString().slice(0, 10) : "";
+const metadata = { title: `Článek: ${a.title}`, description: "Editace článku." };
+const inputCls =
+  "w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:border-primary focus:outline-none";
+---
+
+<AdminLayout {metadata}>
+  <div class="mx-auto max-w-2xl">
+    <a href="/sprava/articles/" class="text-sm text-muted-foreground hover:underline">&larr; Všechny články</a>
+    <h1 class="text-2xl font-extrabold tracking-tight mt-2 mb-6">Upravit článek</h1>
+
+    <form id="article-form" data-id={a.id} enctype="multipart/form-data" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium mb-1">Název</label>
+        <input name="title" type="text" value={a.title} class={inputCls} required />
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium mb-1">Slug (URL)</label>
+          <input name="slug" type="text" value={a.slug} class={inputCls} />
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Datum</label>
+          <input name="pubDate" type="date" value={pub} class={inputCls} />
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-1">Perex (popis)</label>
+        <textarea name="description" rows="2" class={inputCls}>{a.description}</textarea>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium mb-1">Autor</label>
+          <input name="author" type="text" value={a.author} class={inputCls} />
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Rubrika</label>
+          <input name="category" type="text" value={a.category ?? ""} class={inputCls} />
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-1">Tagy (oddělené čárkou)</label>
+        <input name="tags" type="text" value={tags} class={inputCls} />
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-1">Text článku (Markdown)</label>
+        <textarea name="body" rows="16" class={`${inputCls} font-mono`}>{a.body}</textarea>
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-1">Titulní obrázek</label>
+        {a.r2Key && <img src={`/img/${a.id}/`} alt="" class="mb-2 h-32 rounded-lg object-cover" />}
+        <input name="image" type="file" accept="image/*" class={inputCls} />
+      </div>
+      <div class="flex items-center gap-3 pt-2">
+        <button type="submit" class="btn-primary">Uložit článek</button>
+        <a href={`/blog/${a.slug}/`} target="_blank" class="text-sm text-muted-foreground hover:underline">Zobrazit →</a>
+        <button type="button" id="del" class="ml-auto text-sm text-red-500 hover:underline">Smazat</button>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    import { toast } from "../../../lib/admin-toast";
+    function bind() {
+      const form = document.getElementById("article-form") as HTMLFormElement | null;
+      if (!form || form.dataset.bound) return;
+      form.dataset.bound = "1";
+      const id = form.getAttribute("data-id");
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        try {
+          const res = await fetch(`/api/sprava/articles/${id}/`, {
+            method: "PATCH",
+            body: new FormData(form),
+          });
+          const j = (await res.json().catch(() => ({}))) as { error?: string };
+          if (!res.ok) throw new Error(j.error || "Uložení selhalo.");
+          toast("Článek uložen.", "success");
+        } catch (err) {
+          toast(err instanceof Error ? err.message : "Chyba.", "error");
+        }
+      });
+      document.getElementById("del")?.addEventListener("click", async () => {
+        if (!confirm("Opravdu smazat článek?")) return;
+        const res = await fetch(`/api/sprava/articles/${id}/`, { method: "DELETE" });
+        if (res.ok) location.href = "/sprava/articles/";
+        else toast("Smazání selhalo.", "error");
+      });
+    }
+    document.addEventListener("astro:page-load", bind);
+  </script>
+</AdminLayout>

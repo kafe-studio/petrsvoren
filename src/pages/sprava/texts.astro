@@ -1,0 +1,87 @@
+---
+export const prerender = false;
+import AdminLayout from "../../layouts/AdminLayout.astro";
+import { getTexts } from "../../lib/content";
+import { TEXT_FIELDS } from "../../lib/site-text-fields";
+
+const texts = await getTexts();
+const metadata = { title: "Texty webu", description: "Editace textů webu." };
+---
+
+<AdminLayout {metadata}>
+  <div class="mx-auto max-w-2xl">
+    <h1 class="text-3xl font-extrabold tracking-tight mb-2">Texty webu</h1>
+    <p class="text-muted-foreground mb-8">
+      Nadpisy a texty na veřejných stránkách. Změny se projeví ihned po uložení.
+    </p>
+
+    <form id="texts-form" class="space-y-6">
+      {
+        TEXT_FIELDS.map((f) => (
+          <div>
+            <label
+              for={`f-${f.key}`}
+              class="block text-sm font-medium mb-1.5"
+            >
+              {f.label}
+            </label>
+            {f.type === "textarea" ? (
+              <textarea id={`f-${f.key}`} name={f.key} rows="3" class="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:border-primary focus:outline-none">{texts[f.key] ?? ""}</textarea>
+            ) : (
+              <input
+                id={`f-${f.key}`}
+                name={f.key}
+                type="text"
+                value={texts[f.key] ?? ""}
+                class="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:border-primary focus:outline-none"
+              />
+            )}
+            {f.hint && (
+              <p class="mt-1 text-xs text-muted-foreground">{f.hint}</p>
+            )}
+          </div>
+        ))
+      }
+      <div class="flex items-center gap-3 pt-2">
+        <button type="submit" class="btn-primary"> Uložit texty </button>
+        <span id="texts-status" class="text-sm text-muted-foreground"></span>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    import { toast } from "../../lib/admin-toast";
+
+    function bind() {
+      const form = document.getElementById(
+        "texts-form",
+      ) as HTMLFormElement | null;
+      if (!form || form.dataset.bound) return;
+      form.dataset.bound = "1";
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const status = document.getElementById("texts-status");
+        const fd = new FormData(form);
+        const texts: Record<string, string> = {};
+        for (const [k, v] of fd.entries()) texts[k] = String(v);
+        if (status) status.textContent = "Ukládám…";
+        try {
+          const res = await fetch("/api/sprava/texts/", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ texts }),
+          });
+          const j = (await res.json().catch(() => ({}))) as { error?: string };
+          if (!res.ok) throw new Error(j.error || "Uložení selhalo.");
+          if (status) status.textContent = "Uloženo ✓";
+          toast("Texty uloženy.", "success");
+        } catch (err) {
+          if (status) status.textContent = "";
+          toast(err instanceof Error ? err.message : "Chyba.", "error");
+        }
+      });
+    }
+
+    document.addEventListener("astro:page-load", bind);
+  </script>
+</AdminLayout>
