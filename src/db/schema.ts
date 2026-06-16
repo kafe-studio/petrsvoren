@@ -40,6 +40,7 @@ export const photos = sqliteTable("photos", {
   exifJson: text("exif_json"), // serializovaná EXIF data
   width: integer("width"),
   height: integer("height"),
+  views: integer("views").notNull().default(0), // počet zobrazení (otevření v lightboxu)
   sortOrder: integer("sort_order").notNull().default(0),
   createdAt: createdAt(),
 });

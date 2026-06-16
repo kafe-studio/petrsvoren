@@ -410,6 +410,18 @@ const items = photos.map((photo, index) => ({
     if (!dlg.open) dlg.showModal();
     setZoom(dlg, full);
     lockScroll(true);
+    trackView(dlg.dataset.slug);
+  }
+
+  // Statistika zobrazení — jednou za fotku a načtení stránky.
+  const countedViews = new Set<string>();
+  function trackView(slug: string | undefined) {
+    if (!slug || countedViews.has(slug)) return;
+    countedViews.add(slug);
+    fetch(`/api/view/${encodeURIComponent(slug)}/`, {
+      method: "POST",
+      keepalive: true,
+    }).catch(() => {});
   }
 
   // Posun na předchozí/další fotku (wrap-around) podle aktuálně otevřeného.

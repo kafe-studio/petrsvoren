@@ -1,0 +1,79 @@
+---
+export const prerender = false;
+import AdminLayout from "../../layouts/AdminLayout.astro";
+import { desc, sql } from "drizzle-orm";
+import { getDb, schema } from "../../db";
+
+const db = await getDb();
+const photos = await db
+  .select({
+    id: schema.photos.id,
+    caption: schema.photos.caption,
+    views: schema.photos.views,
+  })
+  .from(schema.photos)
+  .orderBy(desc(schema.photos.views));
+
+const totalRow = await db
+  .select({ total: sql<number>`COALESCE(SUM(${schema.photos.views}), 0)` })
+  .from(schema.photos)
+  .get();
+const total = totalRow?.total ?? 0;
+const withViews = photos.filter((p) => p.views > 0).length;
+
+const metadata = { title: "Statistiky", description: "Statistiky prohlížení fotek." };
+---
+
+<AdminLayout {metadata}>
+  <div class="mx-auto max-w-3xl">
+    <h1 class="text-3xl font-extrabold tracking-tight mb-2">Statistiky</h1>
+    <p class="text-muted-foreground mb-8">
+      Počet zobrazení = kolikrát někdo otevřel fotku ve velkém náhledu.
+    </p>
+
+    <div class="mb-8 grid grid-cols-2 gap-3">
+      <div class="rounded-xl border border-border bg-card p-5">
+        <p class="text-3xl font-bold">{total}</p>
+        <p class="text-sm text-muted-foreground">zobrazení celkem</p>
+      </div>
+      <div class="rounded-xl border border-border bg-card p-5">
+        <p class="text-3xl font-bold">{withViews}</p>
+        <p class="text-sm text-muted-foreground">zobrazených fotek</p>
+      </div>
+    </div>
+
+    <h2 class="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-3">
+      Žebříček fotek
+    </h2>
+    {
+      photos.length === 0 ? (
+        <p class="text-muted-foreground">Zatím žádné fotky.</p>
+      ) : (
+        <ol class="space-y-1">
+          {photos.map((p, i) => (
+            <a
+              href={`/sprava/photos/${p.id}/`}
+              class="flex items-center gap-3 rounded-lg border border-border bg-card px-3 py-2 transition-colors hover:border-primary"
+            >
+              <span class="w-6 shrink-0 text-center text-sm text-muted-foreground">
+                {i + 1}.
+              </span>
+              <img
+                src={`/img/${p.id}/`}
+                alt=""
+                loading="lazy"
+                class="h-10 w-10 shrink-0 rounded object-cover bg-neutral-900"
+              />
+              <span class="min-w-0 flex-1 truncate text-sm">
+                {p.caption || "Bez názvu"}
+              </span>
+              <span class="shrink-0 text-sm font-semibold tabular-nums">
+                {p.views}
+              </span>
+            </a>
+          ))}
+        </ol>
+      )
+    }
+  </div>
+</AdminLayout>
