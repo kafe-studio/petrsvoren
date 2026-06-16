@@ -42,6 +42,97 @@ const finalIgnoreTitleTemplate = metadata?.ignoreTitleTemplate || false;
       <main id="main-content" class="relative grow"><slot /></main>
       <Footer />
     </div>
+
+    <button
+      id="to-top"
+      type="button"
+      aria-label="Nahoru na začátek stránky"
+      title="Nahoru"
+    >
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        aria-hidden="true"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.5"
+          d="M12 19V5M5 12l7-7 7 7"></path>
+      </svg>
+    </button>
+
+    <style>
+      #to-top {
+        position: fixed;
+        right: 1.5rem;
+        bottom: 1.5rem;
+        z-index: 40;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 9999px;
+        color: var(--foreground, #111);
+        background: color-mix(in srgb, var(--background, #fff) 80%, transparent);
+        border: 1px solid var(--border, #e5e5e5);
+        backdrop-filter: blur(6px);
+        opacity: 0;
+        transform: translateY(0.5rem);
+        pointer-events: none;
+        transition:
+          opacity 0.25s ease,
+          transform 0.25s ease,
+          background-color 0.2s ease;
+      }
+      #to-top.show {
+        opacity: 0.55;
+        transform: translateY(0);
+        pointer-events: auto;
+      }
+      #to-top.show:hover {
+        opacity: 1;
+      }
+      #to-top svg {
+        width: 1.15rem;
+        height: 1.15rem;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #to-top {
+          transition: opacity 0.2s ease;
+          transform: none;
+        }
+      }
+    </style>
+
+    <script>
+      // Decentní tlačítko „nahoru" — objeví se po odscrollování, plynule vyjede nahoru.
+      function setupToTop() {
+        const btn = document.getElementById("to-top");
+        if (!btn) return;
+        const onScroll = () => {
+          btn.classList.toggle("show", window.scrollY > 500);
+        };
+        if (!btn.dataset.bound) {
+          btn.dataset.bound = "1";
+          btn.addEventListener("click", () =>
+            window.scrollTo({ top: 0, behavior: "smooth" }),
+          );
+        }
+        // Posluchač scrollu navěšujeme jen jednou na okno.
+        const w = window as unknown as { __toTopBound?: boolean };
+        if (!w.__toTopBound) {
+          w.__toTopBound = true;
+          window.addEventListener("scroll", onScroll, { passive: true });
+        }
+        onScroll();
+      }
+      setupToTop();
+      document.addEventListener("astro:page-load", setupToTop);
+    </script>
+
     <script>
       function setupReveal() {
         const vh = window.innerHeight;

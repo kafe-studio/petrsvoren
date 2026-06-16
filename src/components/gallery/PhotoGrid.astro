@@ -718,12 +718,18 @@ const items = photos.map((photo, index) => ({
     display: block;
   }
 
-  /* Svislý posuvník pozadí — vždy vpravo dole; zvednutý nad pás náhledů, ať do něj nezasahuje. */
+  /* Svislý posuvník pozadí — vždy vpravo dole; zvednutý nad pás náhledů, ať do něj nezasahuje.
+     Vodorovně zarovnaný se šipkou pro listování (data-nav: right-2 / sm:right-4). */
   .lb-vslider {
     position: fixed;
-    right: 0.85rem;
+    right: 1.3rem;
     bottom: 5.5rem;
     z-index: 40;
+  }
+  @media (min-width: 640px) {
+    .lb-vslider {
+      right: 1.8rem;
+    }
   }
   .lb-vrange {
     -webkit-appearance: none;
