@@ -2,6 +2,7 @@
 export const prerender = false;
 import AdminLayout from "../../layouts/AdminLayout.astro";
 import { sections } from "../../config/site";
+import { listSnapshots } from "../../lib/snapshots";
 
 const pages = [
   { label: "Domů", href: "/" },
@@ -10,18 +11,32 @@ const pages = [
   { label: "Blog", href: "/blog/" },
   { label: "Kontakt", href: "/kontakt/" },
 ];
-const metadata = { title: "Náhled webu", description: "Živý náhled webu." };
+const snapshots = await listSnapshots();
+const metadata = {
+  title: "Náhled a historie",
+  description: "Živý náhled webu a návrat změn.",
+};
+
+function fmt(sec: number): string {
+  return new Date(sec * 1000).toLocaleString("cs", {
+    day: "numeric",
+    month: "numeric",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
 ---
 
 <AdminLayout {metadata}>
   <div class="mx-auto max-w-5xl">
-    <h1 class="text-3xl font-extrabold tracking-tight mb-2">Náhled webu</h1>
+    <h1 class="text-3xl font-extrabold tracking-tight mb-2">Náhled a historie</h1>
     <p class="text-muted-foreground mb-6">
-      Takhle web vypadá teď naživo. Udělej změnu v administraci, pak se sem vrať
-      a dej <strong>Obnovit</strong> — uvidíš výsledek. Když se nelíbí, vrať ho
-      v <a href="/sprava/historie/" class="underline">Historii změn</a>.
+      Nahoře vidíš web naživo, dole je historie změn s možností návratu.
     </p>
 
+    {/* ── Živý náhled ───────────────────────────────────────── */}
+    <h2 class="text-xl font-bold mb-3">Náhled webu</h2>
     <div class="mb-4 flex flex-wrap items-center gap-2">
       <select
         id="pv-page"
@@ -46,30 +61,94 @@ const metadata = { title: "Náhled webu", description: "Živý náhled webu." };
         Otevřít v novém okně ↗
       </a>
     </div>
-
     <iframe
       id="pv-frame"
       src="/"
       title="Náhled webu"
-      class="h-[72vh] w-full rounded-lg border border-border bg-white"></iframe>
+      class="h-[62vh] w-full rounded-lg border border-border bg-white"></iframe>
+
+    {/* ── Historie změn ─────────────────────────────────────── */}
+    <h2 id="historie" class="mt-12 text-xl font-bold mb-2">Historie změn</h2>
+    <p class="text-muted-foreground mb-5 text-sm">
+      Před každou změnou se uloží stav obsahu. U položky je napsáno, co se měnilo;
+      „Vrátit sem" web vrátí do stavu před tou změnou. Drží se posledních 6 verzí.
+    </p>
+
+    {
+      snapshots.length === 0 ? (
+        <p class="text-muted-foreground">
+          Zatím žádná historie — objeví se po první změně v administraci.
+        </p>
+      ) : (
+        <ol class="space-y-2">
+          {snapshots.map((s, i) => (
+            <li class="flex items-center justify-between gap-3 rounded-lg border border-border bg-card px-4 py-3">
+              <span class="min-w-0">
+                <span class="block font-medium">
+                  Změna: {s.label || "obsah webu"}
+                </span>
+                <span class="block text-xs text-muted-foreground">
+                  {fmt(s.createdAt)}
+                  {i === 0 ? " · poslední" : ""}
+                </span>
+              </span>
+              <button
+                type="button"
+                class="shrink-0 rounded-lg border border-border px-3 py-1.5 text-sm transition-colors hover:bg-muted"
+                data-restore={s.id}
+              >
+                Vrátit sem
+              </button>
+            </li>
+          ))}
+        </ol>
+      )
+    }
   </div>
 
   <script>
+    import { toast } from "../../lib/admin-toast";
     function bind() {
+      // Náhled webu
       const sel = document.getElementById("pv-page") as HTMLSelectElement | null;
       const frame = document.getElementById("pv-frame") as HTMLIFrameElement | null;
       const reload = document.getElementById("pv-reload");
       const open = document.getElementById("pv-open") as HTMLAnchorElement | null;
-      if (!sel || !frame || frame.dataset.bound) return;
-      frame.dataset.bound = "1";
+      if (frame && !frame.dataset.bound && sel) {
+        frame.dataset.bound = "1";
+        const load = () => {
+          frame.src = `${sel.value}?_=${Date.now()}`;
+          if (open) open.href = sel.value;
+        };
+        sel.addEventListener("change", load);
+        reload?.addEventListener("click", load);
+      }
 
-      const load = () => {
-        const base = sel.value;
-        frame.src = `${base}?_=${Date.now()}`;
-        if (open) open.href = base;
-      };
-      sel.addEventListener("change", load);
-      reload?.addEventListener("click", load);
+      // Historie změn
+      document.querySelectorAll<HTMLElement>("[data-restore]").forEach((b) => {
+        if (b.dataset.bound) return;
+        b.dataset.bound = "1";
+        b.addEventListener("click", async () => {
+          if (
+            !confirm(
+              "Vrátit obsah webu do tohoto stavu? Aktuální stav se uloží do historie, takže půjde vrátit zpět.",
+            )
+          )
+            return;
+          try {
+            const res = await fetch("/api/sprava/snapshots/restore/", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ id: b.getAttribute("data-restore") }),
+            });
+            if (!res.ok) throw new Error("Návrat selhal.");
+            toast("Obsah vrácen do vybrané verze.", "success");
+            setTimeout(() => location.reload(), 500);
+          } catch (err) {
+            toast(err instanceof Error ? err.message : "Chyba.", "error");
+          }
+        });
+      });
     }
     document.addEventListener("astro:page-load", bind);
   </script>

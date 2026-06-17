@@ -50,6 +50,9 @@
   const imgStyle = $derived(
     `background-image:url('${imageUrl}');background-size:${fit};background-position:${position};background-repeat:no-repeat;opacity:${opacity / 100};filter:${filter}`,
   );
+  const saveLabel = $derived(
+    variant === "hero" ? "Uložit fotografii" : "Uložit pozadí",
+  );
 
   const positions = [
     ["center", "Střed"],
@@ -121,7 +124,7 @@
         }),
       });
       if (!res.ok) throw new Error("Uložení selhalo.");
-      toast("Pozadí uloženo.", "success");
+      toast(variant === "hero" ? "Fotka uložena." : "Pozadí uloženo.", "success");
     } catch (err) {
       toast(err instanceof Error ? err.message : "Chyba.", "error");
     } finally {
@@ -235,7 +238,7 @@
 
   <div class="flex items-center gap-3">
     <button type="button" class="btn-primary" onclick={save} disabled={saving}>
-      {saving ? "Ukládám…" : "Uložit pozadí"}
+      {saving ? "Ukládám…" : saveLabel}
     </button>
     <button type="button" class="text-sm text-muted-foreground hover:underline" onclick={reset}>
       Vrátit filtry na výchozí

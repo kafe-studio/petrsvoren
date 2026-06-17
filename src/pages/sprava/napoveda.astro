@@ -6,8 +6,7 @@ const metadata = { title: "Nápověda", description: "Návody pro správu webu."
 // Obsah nápovědy — sekce s kotvami pro rychlou navigaci.
 const toc = [
   ["zaklady", "Přihlášení a základy"],
-  ["nahled", "Náhled webu"],
-  ["historie", "Historie změn (návrat zpět)"],
+  ["nahled", "Náhled a historie"],
   ["fotky", "Fotky — nahrání a úprava"],
   ["editor-fotky", "Editor fotky (oříznutí, otočení)"],
   ["hromadne", "Hromadné akce s fotkami"],
@@ -72,25 +71,27 @@ const toc = [
         </li>
       </ul>
 
-      <h2 id="nahled">Náhled webu</h2>
+      <h2 id="nahled">Náhled a historie</h2>
       <p>
-        Menu → <strong>Náhled webu</strong>. Ukáže skutečný web přímo v
-        administraci. Udělej změnu, vrať se sem a dej <strong>Obnovit</strong> —
-        uvidíš, jak se projevila. Nahoře přepneš stránku (Domů, sekce, Blog…)
-        nebo web otevřeš v novém okně.
+        Menu → <strong>Náhled a historie</strong>. Jedna stránka se dvěma částmi:
       </p>
-
-      <h2 id="historie">Historie změn (návrat zpět)</h2>
-      <p>
-        Menu → <strong>Historie změn</strong>. Před každou změnou v administraci
-        se automaticky uloží stav obsahu. Když se výsledek nelíbí, klikni u
-        některé verze na <strong>Vrátit sem</strong> a web se vrátí do té podoby
-        (fotky, galerie, texty, tipy, blog, pozadí). Drží se posledních pár verzí.
-      </p>
+      <ul>
+        <li>
+          <strong>Náhled webu</strong> — skutečný web přímo v administraci. Udělej
+          změnu, vrať se sem a dej <strong>Obnovit</strong> — uvidíš výsledek.
+          Nahoře přepneš stránku nebo web otevřeš v novém okně.
+        </li>
+        <li>
+          <strong>Historie změn</strong> — před každou změnou se automaticky uloží
+          stav obsahu (u položky je napsáno, co se měnilo). Klikni u verze na
+          <strong>Vrátit sem</strong> a web se vrátí do té podoby (fotky, galerie,
+          texty, tipy, blog, pozadí). Drží se posledních 6 verzí.
+        </li>
+      </ul>
       <p class="text-sm">
         Aktuální stav se před návratem taky uloží, takže návrat jde zase vrátit.
-        Tip: po větší úpravě zkontroluj výsledek v <strong>Náhledu webu</strong>;
-        když nesedí, vrať ho tady.
+        Postup: uprav → <strong>Obnovit</strong> náhled → když nesedí,
+        <strong>Vrátit sem</strong> v historii.
       </p>
 
       <h2 id="fotky">Fotky — nahrání a úprava</h2>

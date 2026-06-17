@@ -25,7 +25,7 @@ const DELETE_ORDER = [
   "site_texts",
 ] as const;
 
-export const MAX_SNAPSHOTS = 10;
+export const MAX_SNAPSHOTS = 6;
 
 // Uloží aktuální stav obsahu jako jeden snapshot a ořeže staré.
 export async function takeSnapshot(label: string): Promise<void> {
