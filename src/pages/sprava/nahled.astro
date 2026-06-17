@@ -1,0 +1,76 @@
+---
+export const prerender = false;
+import AdminLayout from "../../layouts/AdminLayout.astro";
+import { sections } from "../../config/site";
+
+const pages = [
+  { label: "Domů", href: "/" },
+  ...sections.map((s) => ({ label: s.title, href: `/${s.slug}/` })),
+  { label: "Výběr měsíce", href: "/mesic/" },
+  { label: "Blog", href: "/blog/" },
+  { label: "Kontakt", href: "/kontakt/" },
+];
+const metadata = { title: "Náhled webu", description: "Živý náhled webu." };
+---
+
+<AdminLayout {metadata}>
+  <div class="mx-auto max-w-5xl">
+    <h1 class="text-3xl font-extrabold tracking-tight mb-2">Náhled webu</h1>
+    <p class="text-muted-foreground mb-6">
+      Takhle web vypadá teď naživo. Udělej změnu v administraci, pak se sem vrať
+      a dej <strong>Obnovit</strong> — uvidíš výsledek. Když se nelíbí, vrať ho
+      v <a href="/sprava/historie/" class="underline">Historii změn</a>.
+    </p>
+
+    <div class="mb-4 flex flex-wrap items-center gap-2">
+      <select
+        id="pv-page"
+        class="rounded-lg border border-border bg-card px-3 py-2 text-sm focus:border-primary focus:outline-none"
+      >
+        {pages.map((p) => <option value={p.href}>{p.label}</option>)}
+      </select>
+      <button
+        type="button"
+        id="pv-reload"
+        class="rounded-lg border border-border px-3 py-2 text-sm hover:bg-muted"
+      >
+        Obnovit
+      </button>
+      <a
+        id="pv-open"
+        href="/"
+        target="_blank"
+        rel="noopener"
+        class="rounded-lg border border-border px-3 py-2 text-sm hover:bg-muted"
+      >
+        Otevřít v novém okně ↗
+      </a>
+    </div>
+
+    <iframe
+      id="pv-frame"
+      src="/"
+      title="Náhled webu"
+      class="h-[72vh] w-full rounded-lg border border-border bg-white"></iframe>
+  </div>
+
+  <script>
+    function bind() {
+      const sel = document.getElementById("pv-page") as HTMLSelectElement | null;
+      const frame = document.getElementById("pv-frame") as HTMLIFrameElement | null;
+      const reload = document.getElementById("pv-reload");
+      const open = document.getElementById("pv-open") as HTMLAnchorElement | null;
+      if (!sel || !frame || frame.dataset.bound) return;
+      frame.dataset.bound = "1";
+
+      const load = () => {
+        const base = sel.value;
+        frame.src = `${base}?_=${Date.now()}`;
+        if (open) open.href = base;
+      };
+      sel.addEventListener("change", load);
+      reload?.addEventListener("click", load);
+    }
+    document.addEventListener("astro:page-load", bind);
+  </script>
+</AdminLayout>

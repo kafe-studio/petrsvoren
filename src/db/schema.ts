@@ -122,6 +122,19 @@ export const passwordResets = sqliteTable("password_resets", {
   createdAt: createdAt(),
 });
 
+// Historie změn obsahu — snapshot vybraných tabulek (JSON) před každou změnou,
+// kvůli návratu zpět. Drží se jen posledních pár.
+export const snapshots = sqliteTable("snapshots", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(
+    () => new Date(),
+  ),
+  label: text("label").notNull().default(""),
+  data: text("data").notNull(),
+});
+
 // Odběratelé newsletteru. unsubscribeToken = odhlašovací/potvrzovací odkaz.
 // confirmed = double opt-in (po kliknutí na potvrzovací odkaz v e-mailu).
 export const subscribers = sqliteTable("subscribers", {

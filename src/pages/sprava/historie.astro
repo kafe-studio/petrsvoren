@@ -1,0 +1,89 @@
+---
+export const prerender = false;
+import AdminLayout from "../../layouts/AdminLayout.astro";
+import { listSnapshots } from "../../lib/snapshots";
+
+const snapshots = await listSnapshots();
+const metadata = { title: "Historie změn", description: "Návrat obsahu zpět." };
+
+function fmt(sec: number): string {
+  return new Date(sec * 1000).toLocaleString("cs", {
+    day: "numeric",
+    month: "numeric",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+---
+
+<AdminLayout {metadata}>
+  <div class="mx-auto max-w-2xl">
+    <h1 class="text-3xl font-extrabold tracking-tight mb-2">Historie změn</h1>
+    <p class="text-muted-foreground mb-8">
+      Každá uložená verze je stav obsahu <strong>před</strong> danou změnou.
+      Návratem se web vrátí do tohoto stavu (fotky, galerie, texty, tipy, blog,
+      pozadí). Drží se posledních {snapshots.length} verzí.
+    </p>
+
+    {
+      snapshots.length === 0 ? (
+        <p class="text-muted-foreground">
+          Zatím žádná historie — objeví se po první změně v administraci.
+        </p>
+      ) : (
+        <ol class="space-y-2">
+          {snapshots.map((s, i) => (
+            <li class="flex items-center justify-between gap-3 rounded-lg border border-border bg-card px-4 py-3">
+              <span class="min-w-0">
+                <span class="block font-medium">{s.label || "Změna obsahu"}</span>
+                <span class="block text-xs text-muted-foreground">
+                  {fmt(s.createdAt)}
+                  {i === 0 ? " · nejnovější" : ""}
+                </span>
+              </span>
+              <button
+                type="button"
+                class="shrink-0 rounded-lg border border-border px-3 py-1.5 text-sm transition-colors hover:bg-muted"
+                data-restore={s.id}
+              >
+                Vrátit sem
+              </button>
+            </li>
+          ))}
+        </ol>
+      )
+    }
+  </div>
+
+  <script>
+    import { toast } from "../../lib/admin-toast";
+    function bind() {
+      document.querySelectorAll<HTMLElement>("[data-restore]").forEach((b) => {
+        if (b.dataset.bound) return;
+        b.dataset.bound = "1";
+        b.addEventListener("click", async () => {
+          if (
+            !confirm(
+              "Vrátit obsah webu do tohoto stavu? Aktuální stav se uloží do historie, takže půjde vrátit zpět.",
+            )
+          )
+            return;
+          try {
+            const res = await fetch("/api/sprava/snapshots/restore/", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ id: b.getAttribute("data-restore") }),
+            });
+            if (!res.ok) throw new Error("Návrat selhal.");
+            toast("Obsah vrácen do vybrané verze.", "success");
+            setTimeout(() => location.reload(), 500);
+          } catch (err) {
+            toast(err instanceof Error ? err.message : "Chyba.", "error");
+          }
+        });
+      });
+    }
+    document.addEventListener("astro:page-load", bind);
+  </script>
+</AdminLayout>
