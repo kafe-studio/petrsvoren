@@ -18,7 +18,9 @@ const metadata = {
 };
 
 function fmt(sec: number): string {
+  // Worker běží v UTC → vynutíme český čas (řeší i letní/zimní čas).
   return new Date(sec * 1000).toLocaleString("cs", {
+    timeZone: "Europe/Prague",
     day: "numeric",
     month: "numeric",
     year: "numeric",
