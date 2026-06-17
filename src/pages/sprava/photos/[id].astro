@@ -63,31 +63,6 @@ const metadata = { title: "Úprava fotky", description: "Detail fotky." };
               class="w-full max-h-[50vh] object-contain rounded-lg bg-neutral-900"
             />
 
-            <div>
-              <button
-                type="button"
-                id="pv-toggle"
-                class="rounded-lg border border-border px-4 py-2 text-sm hover:bg-muted"
-              >
-                Náhled
-              </button>
-              <div id="pv-wrap" class="mt-3 hidden rounded-lg bg-neutral-900 p-5 text-neutral-100">
-                <p class="mb-3 text-[10px] uppercase tracking-widest text-neutral-400">
-                  Náhled — jak fotku uvidí návštěvník po rozkliknutí
-                </p>
-                <p id="pv-caption" class="text-center text-sm font-medium"></p>
-                <div id="pv-text" class="mx-auto mt-1 max-w-xl text-center text-sm leading-relaxed text-neutral-300"></div>
-                <dl id="pv-exif" style="display:none" class="mx-auto mt-3 max-w-xs grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-xs text-neutral-300">
-                  {exifEntries.map(([k, v]) => (
-                    <>
-                      <dt class="text-neutral-500">{k}</dt>
-                      <dd>{String(v)}</dd>
-                    </>
-                  ))}
-                </dl>
-              </div>
-            </div>
-
             <details class="rounded-xl border border-border bg-card p-4">
               <summary class="cursor-pointer text-sm font-semibold">
                 Upravit fotku (oříznout, otočit, převrátit)
@@ -213,42 +188,6 @@ const metadata = { title: "Úprava fotky", description: "Detail fotky." };
         cover.disabled = !assign.checked;
         if (!assign.checked) cover.checked = false;
       });
-    });
-
-    // Náhled — jak fotku uvidí návštěvník (živě podle polí), uložení až potvrdí.
-    const pvToggle = document.getElementById("pv-toggle");
-    const pvWrap = document.getElementById("pv-wrap");
-    const pvCaption = document.getElementById("pv-caption");
-    const pvText = document.getElementById("pv-text");
-    const pvExif = document.getElementById("pv-exif");
-    const elCaption = form.querySelector<HTMLInputElement>("#caption");
-    const elBody = form.querySelector<HTMLTextAreaElement>("#bodyText");
-    const elExif = form.querySelector<HTMLInputElement>("#showExif");
-    const esc = (s: string) =>
-      s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    function syncPreview() {
-      if (pvCaption) pvCaption.textContent = elCaption?.value ?? "";
-      if (pvText)
-        pvText.innerHTML = (elBody?.value ?? "")
-          .split(/\n\s*\n/)
-          .map((p) => p.trim())
-          .filter(Boolean)
-          .map((p) => `<p>${esc(p)}</p>`)
-          .join("");
-      if (pvExif)
-        (pvExif as HTMLElement).style.display =
-          elExif?.checked && pvExif.children.length > 0 ? "grid" : "none";
-    }
-    [elCaption, elBody].forEach((el) =>
-      el?.addEventListener("input", syncPreview),
-    );
-    elExif?.addEventListener("change", syncPreview);
-    pvToggle?.addEventListener("click", () => {
-      if (!pvWrap) return;
-      const show = pvWrap.classList.contains("hidden");
-      pvWrap.classList.toggle("hidden", !show);
-      pvToggle.textContent = show ? "Skrýt náhled" : "Náhled";
-      if (show) syncPreview();
     });
 
     form.addEventListener("submit", async (e) => {

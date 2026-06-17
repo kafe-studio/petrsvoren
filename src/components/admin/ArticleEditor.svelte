@@ -69,28 +69,6 @@
   let imageFiles = $state<FileList | undefined>();
   let saving = $state(false);
 
-  // Náhled článku (jak bude vypadat na webu) před uložením.
-  let showPreview = $state(false);
-  let previewHtml = $state("");
-  let previewImg = $state<string | null>(null);
-  function togglePreview() {
-    if (!showPreview && bodyEditor) {
-      previewHtml = bodyEditor.getDocHTML();
-      const f = imageFiles?.[0];
-      previewImg = f
-        ? URL.createObjectURL(f)
-        : article.hasImage
-          ? `/img/${article.id}/`
-          : null;
-    }
-    showPreview = !showPreview;
-  }
-  function fmtDate(d: string): string {
-    if (!d) return "";
-    const dt = new Date(d);
-    return isNaN(dt.getTime()) ? "" : dt.toLocaleDateString("cs");
-  }
-
   const inputCls =
     "w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:border-primary focus:outline-none";
 
@@ -136,25 +114,6 @@
 </script>
 
 <form onsubmit={save} class="space-y-4">
-  {#if showPreview}
-    <div class="rounded-lg border border-border bg-card p-5">
-      <p class="mb-4 text-xs font-bold uppercase tracking-widest text-muted-foreground">
-        Náhled — takto bude článek vypadat
-      </p>
-      <article class="prose prose-neutral max-w-none">
-        <h1>{title || "Bez názvu"}</h1>
-        <p class="text-sm text-muted-foreground">
-          {fmtDate(pubDate)}{author ? ` · ${author}` : ""}
-        </p>
-        {#if previewImg}
-          <img src={previewImg} alt="" class="rounded-lg" />
-        {/if}
-        <!-- eslint-disable-next-line -->
-        {@html previewHtml}
-      </article>
-    </div>
-  {/if}
-
   <div>
     <label class="block text-sm font-medium mb-1">Název</label>
     <input bind:value={title} type="text" class={inputCls} required />
@@ -267,13 +226,6 @@
     <input bind:files={imageFiles} type="file" accept="image/*" class={inputCls} />
   </div>
   <div class="flex items-center gap-3 pt-2">
-    <button
-      type="button"
-      class="rounded-lg border border-border px-4 py-2 text-sm hover:bg-muted"
-      onclick={togglePreview}
-    >
-      {showPreview ? "Skrýt náhled" : "Náhled"}
-    </button>
     <button type="submit" class="btn-primary" disabled={saving}>
       {saving ? "Ukládám…" : "Uložit článek"}
     </button>
