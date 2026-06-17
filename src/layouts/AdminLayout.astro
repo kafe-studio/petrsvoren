@@ -81,6 +81,7 @@ const nav = [
                   <a
                     href={`/sprava/napoveda/#${item.help}`}
                     data-help
+                    data-go={item.href}
                     title={`Nápověda: ${item.label}`}
                     aria-label={`Nápověda k tématu ${item.label}`}
                     class="shrink-0 rounded-md p-1.5 text-muted-foreground/60 transition-colors hover:bg-muted hover:text-foreground"
@@ -180,11 +181,15 @@ const nav = [
         );
         if (!a) return;
         e.preventDefault();
+        // Nápověda k tématu v malém okně…
         window.open(
           a.getAttribute("href") ?? "/sprava/napoveda/",
           "pv-napoveda",
           "width=460,height=780,scrollbars=yes,resizable=yes",
         );
+        // …a zároveň otevři příslušnou sekci v hlavním okně.
+        const go = a.getAttribute("data-go");
+        if (go) window.location.href = go;
       });
     </script>
   </body>
