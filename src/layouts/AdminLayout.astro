@@ -21,21 +21,22 @@ const here = Astro.url.pathname;
 const isActive = (href: string) =>
   href === "/sprava/" ? here === "/sprava/" : here.startsWith(href);
 
+// help = kotva v /sprava/napoveda (otevře se v malém okně přes „?").
 const nav = [
-  { href: "/sprava/", label: "Přehled", icon: "lucide:layout-dashboard" },
-  { href: "/sprava/nahled/", label: "Náhled a historie", icon: "lucide:eye" },
-  { href: "/sprava/upload/", label: "Nahrát fotky", icon: "lucide:upload" },
-  { href: "/sprava/photos/", label: "Fotky", icon: "lucide:image" },
-  { href: "/sprava/galleries/", label: "Galerie", icon: "lucide:folder" },
-  { href: "/sprava/stats/", label: "Statistiky", icon: "lucide:bar-chart-3" },
-  { href: "/sprava/tips/", label: "Tipy", icon: "lucide:megaphone" },
-  { href: "/sprava/articles/", label: "Blog", icon: "lucide:newspaper" },
-  { href: "/sprava/newsletter/", label: "Newsletter", icon: "lucide:mail" },
-  { href: "/sprava/hero/", label: "Pozadí webu", icon: "lucide:image-plus" },
-  { href: "/sprava/texts/", label: "Texty webu", icon: "lucide:type" },
-  { href: "/sprava/zamek/", label: "Zámek webu", icon: "lucide:lock" },
-  { href: "/sprava/heslo/", label: "Změnit heslo", icon: "lucide:key-round" },
-  { href: "/sprava/napoveda/", label: "Nápověda", icon: "lucide:circle-help" },
+  { href: "/sprava/", label: "Přehled", icon: "lucide:layout-dashboard", help: "zaklady" },
+  { href: "/sprava/nahled/", label: "Náhled a historie", icon: "lucide:eye", help: "nahled" },
+  { href: "/sprava/upload/", label: "Nahrát fotky", icon: "lucide:upload", help: "fotky" },
+  { href: "/sprava/photos/", label: "Fotky", icon: "lucide:image", help: "fotky" },
+  { href: "/sprava/galleries/", label: "Galerie", icon: "lucide:folder", help: "galerie" },
+  { href: "/sprava/stats/", label: "Statistiky", icon: "lucide:bar-chart-3", help: "statistiky" },
+  { href: "/sprava/tips/", label: "Tipy", icon: "lucide:megaphone", help: "tipy" },
+  { href: "/sprava/articles/", label: "Blog", icon: "lucide:newspaper", help: "blog" },
+  { href: "/sprava/newsletter/", label: "Newsletter", icon: "lucide:mail", help: "newsletter" },
+  { href: "/sprava/hero/", label: "Pozadí webu", icon: "lucide:image-plus", help: "pozadi" },
+  { href: "/sprava/texts/", label: "Texty webu", icon: "lucide:type", help: "texty" },
+  { href: "/sprava/zamek/", label: "Zámek webu", icon: "lucide:lock", help: "zamek" },
+  { href: "/sprava/heslo/", label: "Změnit heslo", icon: "lucide:key-round", help: "heslo" },
+  { href: "/sprava/napoveda/", label: "Nápověda", icon: "lucide:circle-help", help: undefined },
 ];
 ---
 
@@ -62,19 +63,32 @@ const nav = [
         <nav class="flex flex-col gap-1" aria-label="Administrace">
           {
             nav.map((item) => (
-              <a
-                href={item.href}
-                aria-current={isActive(item.href) ? "page" : undefined}
-                class:list={[
-                  "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
-                  isActive(item.href)
-                    ? "bg-primary/10 text-primary font-medium"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground",
-                ]}
-              >
-                <Icon name={item.icon} class="size-4" />
-                {item.label}
-              </a>
+              <div class="flex items-center gap-1">
+                <a
+                  href={item.href}
+                  aria-current={isActive(item.href) ? "page" : undefined}
+                  class:list={[
+                    "flex flex-1 items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
+                    isActive(item.href)
+                      ? "bg-primary/10 text-primary font-medium"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                  ]}
+                >
+                  <Icon name={item.icon} class="size-4" />
+                  {item.label}
+                </a>
+                {item.help && (
+                  <a
+                    href={`/sprava/napoveda/#${item.help}`}
+                    data-help
+                    title={`Nápověda: ${item.label}`}
+                    aria-label={`Nápověda k tématu ${item.label}`}
+                    class="shrink-0 rounded-md p-1.5 text-muted-foreground/60 transition-colors hover:bg-muted hover:text-foreground"
+                  >
+                    <Icon name="lucide:circle-help" class="size-4" />
+                  </a>
+                )}
+              </div>
             ))
           }
         </nav>
@@ -157,6 +171,20 @@ const nav = [
           t.getAttribute("data-toggle-pw") ?? "",
         ) as HTMLInputElement | null;
         if (inp) inp.type = inp.type === "password" ? "text" : "password";
+      });
+
+      // „?" u položek menu — otevře nápovědu k tématu v malém okně.
+      document.addEventListener("click", (e) => {
+        const a = (e.target as HTMLElement | null)?.closest<HTMLAnchorElement>(
+          "[data-help]",
+        );
+        if (!a) return;
+        e.preventDefault();
+        window.open(
+          a.getAttribute("href") ?? "/sprava/napoveda/",
+          "pv-napoveda",
+          "width=460,height=780,scrollbars=yes,resizable=yes",
+        );
       });
     </script>
   </body>
