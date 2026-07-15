@@ -110,12 +110,14 @@ const metadata = { title: "Fotky", description: "Správa fotografií." };
                   <option value="">— galerie —</option>
                   {galleries.map((g) => <option value={g.id}>{g.title}</option>)}
                 </select>
-                <input
-                  id="bulk-month"
-                  type="month"
-                  class="rounded-lg border border-border bg-card px-2 py-1.5 text-sm outline-none focus:border-primary"
-                  title="Do výběru měsíce"
-                />
+                <label class="flex items-center gap-1.5 text-sm text-muted-foreground">
+                  Výběr měsíce:
+                  <input
+                    id="bulk-month"
+                    type="month"
+                    class="rounded-lg border border-border bg-card px-2 py-1.5 text-sm outline-none focus:border-primary"
+                  />
+                </label>
                 <button
                   type="button"
                   id="bulk-assign"

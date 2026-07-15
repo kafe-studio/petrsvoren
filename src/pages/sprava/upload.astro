@@ -46,13 +46,15 @@ const metadata = { title: "Nahrát fotky", description: "Nahrání fotografií."
             ))
           }
         </select>
-        <input
-          id="up-month"
-          type="month"
-          value={preMonth}
-          class="rounded-lg border border-border bg-card px-2 py-1.5 text-sm outline-none focus:border-primary"
-          title="Výběr měsíce"
-        />
+        <label class="flex items-center gap-1.5 text-sm text-muted-foreground">
+          Výběr měsíce:
+          <input
+            id="up-month"
+            type="month"
+            value={preMonth}
+            class="rounded-lg border border-border bg-card px-2 py-1.5 text-sm outline-none focus:border-primary"
+          />
+        </label>
         <span class="text-xs text-muted-foreground">
           Vše nahrané se sem přiřadí (nech prázdné = nezařazeno).
         </span>
