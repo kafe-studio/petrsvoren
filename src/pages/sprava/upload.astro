@@ -1,6 +1,21 @@
 ---
 export const prerender = false;
 import AdminLayout from "../../layouts/AdminLayout.astro";
+import { getDb, schema } from "../../db";
+
+let galleries: { id: string; title: string }[] = [];
+try {
+  const db = await getDb();
+  galleries = await db
+    .select({ id: schema.galleries.id, title: schema.galleries.title })
+    .from(schema.galleries)
+    .orderBy(schema.galleries.sortOrder);
+} catch {
+  /* DB nedostupné — cíl bude prázdný */
+}
+// Předvyplnění cíle z odkazu (např. z galerie: ?gallery=<id>, z měsíce: ?month=RRRR-MM).
+const preGallery = Astro.url.searchParams.get("gallery") ?? "";
+const preMonth = Astro.url.searchParams.get("month") ?? "";
 const metadata = { title: "Nahrát fotky", description: "Nahrání fotografií." };
 ---
 
@@ -10,10 +25,38 @@ const metadata = { title: "Nahrát fotky", description: "Nahrání fotografií."
       <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight mb-2">
         Nahrát fotky
       </h1>
-      <p class="text-muted-foreground mb-8">
-        Přetáhni fotky sem nebo vyber ze zařízení. Jednotlivě i dávkou. Zařazení
-        do galerií a texty nastavíš v dalším kroku.
+      <p class="text-muted-foreground mb-6">
+        Přetáhni fotky sem nebo vyber ze zařízení. Jednotlivě i dávkou. Můžeš je
+        rovnou zařadit do galerie a/nebo výběru měsíce, nebo doladit později.
       </p>
+
+      <div class="mb-6 flex flex-wrap items-center gap-2 rounded-lg border border-border bg-card px-4 py-3">
+        <span class="text-sm font-medium">Zařadit rovnou do:</span>
+        <select
+          id="up-gallery"
+          class="rounded-lg border border-border bg-card px-2 py-1.5 text-sm outline-none focus:border-primary"
+          title="Galerie"
+        >
+          <option value="">— galerie (volitelné) —</option>
+          {
+            galleries.map((g) => (
+              <option value={g.id} selected={g.id === preGallery}>
+                {g.title}
+              </option>
+            ))
+          }
+        </select>
+        <input
+          id="up-month"
+          type="month"
+          value={preMonth}
+          class="rounded-lg border border-border bg-card px-2 py-1.5 text-sm outline-none focus:border-primary"
+          title="Výběr měsíce"
+        />
+        <span class="text-xs text-muted-foreground">
+          Vše nahrané se sem přiřadí (nech prázdné = nezařazeno).
+        </span>
+      </div>
 
       <label
         id="dropzone"
@@ -128,6 +171,11 @@ const metadata = { title: "Nahrát fotky", description: "Nahrání fotografií."
         fd.append("height", String(h));
         const ex = await readExif(file);
         if (ex) fd.append("exifJson", JSON.stringify(ex));
+        // Cíl zařazení (galerie / měsíc), pokud je zvolený.
+        const gid = (document.getElementById("up-gallery") as HTMLSelectElement | null)?.value;
+        if (gid) fd.append("galleryId", gid);
+        const mon = (document.getElementById("up-month") as HTMLInputElement | null)?.value;
+        if (mon) fd.append("month", mon);
         const res = await fetch("/api/sprava/upload/", {
           method: "POST",
           body: fd,

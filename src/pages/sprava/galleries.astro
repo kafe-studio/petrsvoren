@@ -55,9 +55,17 @@ const metadata = { title: "Galerie", description: "Správa galerií." };
               >
                 {g.description ?? ""}
               </textarea>
-              <button type="button" class="g-save btn-outline text-sm py-1.5 px-4">
-                Uložit
-              </button>
+              <div class="flex flex-wrap items-center gap-3">
+                <button type="button" class="g-save btn-outline text-sm py-1.5 px-4">
+                  Uložit
+                </button>
+                <a
+                  href={`/sprava/upload/?gallery=${g.id}`}
+                  class="text-sm font-medium text-primary hover:underline"
+                >
+                  Nahrát fotky do galerie →
+                </a>
+              </div>
             </li>
           ))
         }

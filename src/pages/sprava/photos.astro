@@ -5,6 +5,7 @@ import { getDb, schema } from "../../db";
 import { desc } from "drizzle-orm";
 
 let photos: (typeof schema.photos.$inferSelect)[] = [];
+let galleries: { id: string; title: string }[] = [];
 let assigned = new Set<string>();
 let dbError = "";
 try {
@@ -13,6 +14,10 @@ try {
     .select()
     .from(schema.photos)
     .orderBy(desc(schema.photos.createdAt));
+  galleries = await db
+    .select({ id: schema.galleries.id, title: schema.galleries.title })
+    .from(schema.galleries)
+    .orderBy(schema.galleries.sortOrder);
   // Fotky zařazené aspoň do jedné galerie (kvůli štítku „nepřiřazeno").
   const links = await db
     .select({ photoId: schema.photoGalleries.photoId })
@@ -49,47 +54,79 @@ const metadata = { title: "Fotky", description: "Správa fotografií." };
         ) : (
           <div id="photos-manager">
             {/* Lišta hromadných akcí */}
-            <div class="mb-4 flex flex-wrap items-center gap-3 rounded-lg border border-border bg-card px-4 py-2.5">
-              <label class="flex items-center gap-2 text-sm cursor-pointer">
-                <input type="checkbox" id="select-all" />
-                Vybrat vše
-              </label>
-              <span id="sel-count" class="text-sm text-muted-foreground">
-                Vybráno 0
-              </span>
-              <div class="ml-auto flex flex-wrap items-center gap-2">
+            <div class="mb-4 space-y-2.5 rounded-lg border border-border bg-card px-4 py-2.5">
+              <div class="flex flex-wrap items-center gap-3">
+                <label class="flex items-center gap-2 text-sm cursor-pointer">
+                  <input type="checkbox" id="select-all" />
+                  Vybrat vše
+                </label>
+                <span id="sel-count" class="text-sm text-muted-foreground">
+                  Vybráno 0
+                </span>
+                <div class="ml-auto flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    id="bulk-download"
+                    class="rounded-lg border border-border px-3 py-1.5 text-sm transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40"
+                    disabled
+                  >
+                    Stáhnout
+                  </button>
+                  <button
+                    type="button"
+                    id="bulk-hide"
+                    class="rounded-lg border border-border px-3 py-1.5 text-sm transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40"
+                    disabled
+                  >
+                    Vypnout
+                  </button>
+                  <button
+                    type="button"
+                    id="bulk-show"
+                    class="rounded-lg border border-border px-3 py-1.5 text-sm transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40"
+                    disabled
+                  >
+                    Zapnout
+                  </button>
+                  <button
+                    type="button"
+                    id="bulk-delete"
+                    class="rounded-lg border border-red-500/40 px-3 py-1.5 text-sm text-red-500 transition-colors hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-40"
+                    disabled
+                  >
+                    Smazat
+                  </button>
+                </div>
+              </div>
+
+              {/* Zařazení vybraných do galerie / výběru měsíce */}
+              <div class="flex flex-wrap items-center gap-2 border-t border-border pt-2.5">
+                <span class="text-sm text-muted-foreground">Zařadit vybrané:</span>
+                <select
+                  id="bulk-gallery"
+                  class="rounded-lg border border-border bg-card px-2 py-1.5 text-sm outline-none focus:border-primary"
+                  title="Do galerie"
+                >
+                  <option value="">— galerie —</option>
+                  {galleries.map((g) => <option value={g.id}>{g.title}</option>)}
+                </select>
+                <input
+                  id="bulk-month"
+                  type="month"
+                  class="rounded-lg border border-border bg-card px-2 py-1.5 text-sm outline-none focus:border-primary"
+                  title="Do výběru měsíce"
+                />
                 <button
                   type="button"
-                  id="bulk-download"
+                  id="bulk-assign"
                   class="rounded-lg border border-border px-3 py-1.5 text-sm transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40"
                   disabled
                 >
-                  Stáhnout
+                  Přiřadit
                 </button>
-                <button
-                  type="button"
-                  id="bulk-hide"
-                  class="rounded-lg border border-border px-3 py-1.5 text-sm transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40"
-                  disabled
-                >
-                  Vypnout
-                </button>
-                <button
-                  type="button"
-                  id="bulk-show"
-                  class="rounded-lg border border-border px-3 py-1.5 text-sm transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40"
-                  disabled
-                >
-                  Zapnout
-                </button>
-                <button
-                  type="button"
-                  id="bulk-delete"
-                  class="rounded-lg border border-red-500/40 px-3 py-1.5 text-sm text-red-500 transition-colors hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-40"
-                  disabled
-                >
-                  Smazat
-                </button>
+                <span class="text-xs text-muted-foreground">
+                  (galerie přidá, měsíc nastaví)
+                </span>
               </div>
             </div>
 
@@ -164,7 +201,10 @@ const metadata = { title: "Fotky", description: "Správa fotografií." };
       const dlBtn = root.querySelector<HTMLButtonElement>("#bulk-download");
       const hideBtn = root.querySelector<HTMLButtonElement>("#bulk-hide");
       const showBtn = root.querySelector<HTMLButtonElement>("#bulk-show");
-      const actionBtns = [delBtn, dlBtn, hideBtn, showBtn];
+      const assignBtn = root.querySelector<HTMLButtonElement>("#bulk-assign");
+      const gallerySel = root.querySelector("#bulk-gallery") as HTMLSelectElement | null;
+      const monthInp = root.querySelector("#bulk-month") as HTMLInputElement | null;
+      const actionBtns = [delBtn, dlBtn, hideBtn, showBtn, assignBtn];
       const checks = () =>
         Array.from(root.querySelectorAll<HTMLInputElement>(".photo-check"));
 
@@ -237,6 +277,36 @@ const metadata = { title: "Fotky", description: "Správa fotografií." };
 
       hideBtn?.addEventListener("click", () => setVisibility(true));
       showBtn?.addEventListener("click", () => setVisibility(false));
+
+      assignBtn?.addEventListener("click", async () => {
+        const ids = selectedIds();
+        if (ids.length === 0) return;
+        const galleryId = gallerySel?.value ?? "";
+        const month = monthInp?.value ?? "";
+        if (!galleryId && !month) {
+          toast("Vyber galerii nebo měsíc.", "error");
+          return;
+        }
+        assignBtn.disabled = true;
+        try {
+          const res = await fetch("/api/sprava/photos/assign/", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ids, galleryId, month }),
+          });
+          const j = (await res.json().catch(() => ({}))) as { error?: string };
+          if (!res.ok) throw new Error(j.error || "Přiřazení selhalo.");
+          const parts = [];
+          if (galleryId)
+            parts.push("do galerie „" + (gallerySel?.selectedOptions[0]?.text ?? "") + "“");
+          if (month) parts.push("do měsíce " + month);
+          toast(`Přiřazeno ${ids.length} fotek ${parts.join(" a ")}.`, "success");
+          setTimeout(() => location.reload(), 500);
+        } catch (err) {
+          toast(err instanceof Error ? err.message : "Chyba.", "error");
+          assignBtn.disabled = false;
+        }
+      });
 
       selectAll?.addEventListener("change", () => {
         checks().forEach((c) => (c.checked = selectAll.checked));
